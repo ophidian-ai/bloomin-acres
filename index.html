@@ -1,0 +1,829 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Bloomin' Acres — Farmstand & Bakery</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400;1,600&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600&display=swap" rel="stylesheet" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            wheat: '#EDA339', sage: '#7A9B8E', 'sage-dark': '#4E6E64',
+            'sage-light': '#A8C4BB', rust: '#C85A3A', berry: '#8B3A3A',
+            earth: '#4A3322', 'earth-mid': '#6B4C35',
+            cream: '#FAF0E6', 'cream-dark': '#F0E4D0', 'cream-warm': '#EDD9B8',
+          },
+          fontFamily: {
+            display: ['"Playfair Display"', 'Georgia', 'serif'],
+            sans: ['"DM Sans"', 'system-ui', 'sans-serif'],
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    :root {
+      --wheat-gold:   #EDA339;
+      --sage-green:   #7A9B8E;
+      --sage-dark:    #4E6E64;
+      --sage-light:   #A8C4BB;
+      --burnt-orange: #C85A3A;
+      --berry-red:    #8B3A3A;
+      --earth-brown:  #4A3322;
+      --earth-mid:    #6B4C35;
+      --farm-cream:   #FAF0E6;
+      --cream-dark:   #F0E4D0;
+      --cream-warm:   #EDD9B8;
+      --font-display: 'Playfair Display', Georgia, serif;
+      --font-body:    'DM Sans', system-ui, sans-serif;
+      --shadow-card:
+        0 2px 4px rgba(74,51,34,.06),
+        0 8px 24px rgba(74,51,34,.10),
+        0 20px 40px rgba(74,51,34,.08);
+      --shadow-card-hover:
+        0 4px 8px rgba(74,51,34,.08),
+        0 16px 40px rgba(200,90,58,.14),
+        0 32px 64px rgba(74,51,34,.12);
+      --shadow-btn:
+        0 2px 8px rgba(200,90,58,.25),
+        0 8px 24px rgba(200,90,58,.18);
+      --shadow-btn-hover:
+        0 4px 12px rgba(200,90,58,.35),
+        0 12px 32px rgba(200,90,58,.22);
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+    body {
+      font-family: var(--font-body);
+      background-color: var(--farm-cream);
+      color: var(--earth-brown);
+      line-height: 1.7;
+      overflow-x: hidden;
+    }
+    h1, h2, h3 { font-family: var(--font-display); letter-spacing: -0.03em; line-height: 1.15; }
+    img { display: block; max-width: 100%; }
+    :focus-visible { outline: 2px solid var(--burnt-orange); outline-offset: 3px; border-radius: 2px; }
+
+    /* Grain overlay */
+    body::after {
+      content: '';
+      position: fixed; inset: 0; z-index: 9999;
+      pointer-events: none; opacity: 0.04;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23n)'/%3E%3C/svg%3E");
+      background-size: 300px 300px;
+    }
+
+    /* ─── Animations ─────────────────────────────────────── */
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(28px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes bounce {
+      0%, 100% { transform: translateY(0); }
+      50%       { transform: translateY(9px); }
+    }
+    .animate-fade-up {
+      opacity: 0; transform: translateY(28px);
+      transition: opacity 0.75s cubic-bezier(.22,1,.36,1), transform 0.75s cubic-bezier(.22,1,.36,1);
+    }
+    .animate-fade-up.visible { opacity: 1; transform: translateY(0); }
+    .stagger-1 { transition-delay: .1s; }
+    .stagger-2 { transition-delay: .2s; }
+    .stagger-3 { transition-delay: .3s; }
+
+    .hero-in { animation: fadeUp 1.1s cubic-bezier(.22,1,.36,1) both; }
+    .hero-d1 { animation-delay: .15s; }
+    .hero-d2 { animation-delay: .4s; }
+    .hero-d3 { animation-delay: .65s; }
+
+    .scroll-cta {
+      display: inline-block;
+      animation: bounce 2.2s ease-in-out infinite;
+      transition: opacity 0.3s ease;
+    }
+    .scroll-cta:hover  { opacity: 0.45; }
+    .scroll-cta:active { transform: scale(0.88); }
+
+    /* ─── Cards ─────────────────────────────────────────── */
+    .product-card {
+      border-radius: 6px; overflow: hidden;
+      background: var(--farm-cream);
+      box-shadow: var(--shadow-card);
+      transition: transform 0.45s cubic-bezier(.22,1,.36,1), box-shadow 0.45s cubic-bezier(.22,1,.36,1);
+    }
+    .product-card:hover { transform: translateY(-7px); box-shadow: var(--shadow-card-hover); }
+    .product-card:hover .card-img { transform: scale(1.05); }
+    .product-card:active { transform: translateY(-2px); }
+    .card-img { transition: transform 0.65s cubic-bezier(.22,1,.36,1); width: 100%; height: 260px; object-fit: cover; }
+
+    /* ─── Overline labels ────────────────────────────────── */
+    .overline {
+      display: block; font-family: var(--font-body);
+      font-size: .72rem; font-weight: 600;
+      letter-spacing: .22em; text-transform: uppercase;
+      margin-bottom: .875rem;
+    }
+
+    /* ─── CTA Button ─────────────────────────────────────── */
+    .cta-btn {
+      display: inline-flex; align-items: center; gap: .6rem;
+      background: var(--burnt-orange); color: var(--farm-cream);
+      font-family: var(--font-body); font-weight: 600; font-size: .95rem;
+      letter-spacing: .05em; text-decoration: none;
+      padding: .9rem 2.25rem; border-radius: 3px;
+      box-shadow: var(--shadow-btn);
+      transition: transform 0.3s cubic-bezier(.22,1,.36,1), box-shadow 0.3s cubic-bezier(.22,1,.36,1), background 0.2s ease;
+    }
+    .cta-btn:hover  { background: #b34e31; transform: translateY(-2px); box-shadow: var(--shadow-btn-hover); }
+    .cta-btn:active { transform: translateY(0); box-shadow: var(--shadow-btn); }
+
+    /* ─── Footer ─────────────────────────────────────────── */
+    .footer-link {
+      font-size: .875rem; color: rgba(250,240,230,.5);
+      text-decoration: none; letter-spacing: .05em;
+      transition: color 0.25s ease;
+    }
+    .footer-link:hover { color: var(--wheat-gold); }
+    .social-icon { opacity: .5; transition: opacity 0.25s ease, transform 0.3s cubic-bezier(.22,1,.36,1); }
+    .social-icon:hover  { opacity: 1; transform: translateY(-3px); }
+    .social-icon:active { transform: translateY(0); }
+
+    /* ─── Hours glass card ───────────────────────────────── */
+    .hours-card {
+      background: rgba(250,240,230,.08);
+      border: 1px solid rgba(250,240,230,.14);
+      border-radius: 4px; padding: 1.5rem 1.75rem;
+      -webkit-backdrop-filter: blur(4px);
+      backdrop-filter: blur(4px);
+    }
+
+    /* ─── Process step icon circles ─────────────────────── */
+    .step-icon {
+      width: 5rem; height: 5rem; border-radius: 50%;
+      margin: 0 auto 1.5rem;
+      display: flex; align-items: center; justify-content: center;
+      position: relative; z-index: 1;
+    }
+
+    /* ─── Responsive ─────────────────────────────────────── */
+    @media (max-width: 1024px) {
+      .cards-grid { grid-template-columns: 1fr 1fr !important; }
+    }
+    @media (max-width: 768px) {
+      .welcome-grid,
+      .visit-grid   { grid-template-columns: 1fr !important; gap: 2.5rem !important; }
+      .steps-grid   { grid-template-columns: 1fr 1fr !important; gap: 2rem 1.5rem !important; }
+      .step-connector { display: none !important; }
+    }
+    @media (max-width: 580px) {
+      .cards-grid { grid-template-columns: 1fr !important; }
+    }
+    @media (max-width: 480px) {
+      .steps-grid { grid-template-columns: 1fr !important; }
+    }
+  </style>
+  <style>
+    /* Fixed sign-in nav */
+    .signin-nav {
+      position: fixed; top: 0; right: 0; z-index: 200;
+      padding: .9rem 1.5rem;
+      display: flex; align-items: center;
+    }
+    .signin-btn {
+      display: inline-flex; align-items: center; gap: .45rem;
+      font-family: var(--font-body);
+      font-size: .72rem; font-weight: 600;
+      letter-spacing: .12em; text-transform: uppercase;
+      color: rgba(250,240,230,.55);
+      text-decoration: none;
+      padding: .4rem .85rem;
+      border: 1px solid rgba(250,240,230,.15);
+      border-radius: 4px;
+      background: rgba(0,0,0,.18);
+      -webkit-backdrop-filter: blur(6px);
+      backdrop-filter: blur(6px);
+      transition: color .2s, border-color .2s, background .2s;
+    }
+    .signin-btn:hover {
+      color: var(--wheat-gold);
+      border-color: rgba(237,163,57,.4);
+      background: rgba(0,0,0,.32);
+    }
+    .signin-btn:focus-visible {
+      outline: 2px solid var(--wheat-gold);
+      outline-offset: 3px;
+    }
+  </style>
+</head>
+<body>
+
+<!-- Fixed sign-in link -->
+<nav class="signin-nav" aria-label="Account">
+  <a href="admin.html" class="signin-btn">
+    <svg width="11" height="11" viewBox="0 0 11 11" fill="none" aria-hidden="true">
+      <circle cx="5.5" cy="3.5" r="2.2" stroke="currentColor" stroke-width="1.3"/>
+      <path d="M1 10c0-2.485 2.015-4.5 4.5-4.5S10 7.515 10 10" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/>
+    </svg>
+    Sign In
+  </a>
+</nav>
+
+<!-- ══════════════════════════════════════════════════════════
+     1. HERO — Sun-dappled garden entrance
+════════════════════════════════════════════════════════════ -->
+<section id="hero" style="
+  min-height: 100svh; position: relative;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  background-color: #263B28;
+  background-image:
+    radial-gradient(ellipse 90% 70% at 5% 10%,  rgba(60,95,75,.95)   0%, transparent 60%),
+    radial-gradient(ellipse 75% 60% at 95% 90%,  rgba(237,163,57,.4)  0%, transparent 55%),
+    radial-gradient(ellipse 55% 45% at 50% 55%,  rgba(250,240,230,.08) 0%, transparent 50%),
+    radial-gradient(ellipse 40% 30% at 80% 15%,  rgba(74,51,34,.5)    0%, transparent 45%);
+  overflow: hidden;
+">
+  <!-- Corner botanical sprigs -->
+  <div aria-hidden="true" style="position:absolute;top:2.5rem;left:2.5rem;opacity:.2;transform:rotate(-12deg);">
+    <svg viewBox="0 0 60 90" width="72" height="108" fill="none">
+      <path d="M30 88 Q27 55 30 8" stroke="#A8C4BB" stroke-width="2"/>
+      <path d="M30 62 Q8 54 6 38 Q20 42 30 62Z"  fill="#A8C4BB"/>
+      <path d="M30 44 Q52 36 54 18 Q38 22 30 44Z" fill="#7A9B8E"/>
+      <path d="M30 76 Q12 70 10 58 Q22 60 30 76Z" fill="#A8C4BB" opacity=".65"/>
+    </svg>
+  </div>
+  <div aria-hidden="true" style="position:absolute;top:2rem;right:2.5rem;opacity:.16;transform:rotate(18deg) scaleX(-1);">
+    <svg viewBox="0 0 60 90" width="62" height="93" fill="none">
+      <path d="M30 88 Q27 55 30 8" stroke="#A8C4BB" stroke-width="1.5"/>
+      <path d="M30 62 Q8 54 6 38 Q20 42 30 62Z"  fill="#A8C4BB"/>
+      <path d="M30 44 Q52 36 54 18 Q38 22 30 44Z" fill="#7A9B8E"/>
+    </svg>
+  </div>
+  <div aria-hidden="true" style="position:absolute;bottom:5rem;right:3rem;opacity:.14;transform:rotate(155deg);">
+    <svg viewBox="0 0 60 90" width="80" height="120" fill="none">
+      <path d="M30 88 Q27 55 30 8" stroke="#EDA339" stroke-width="2"/>
+      <path d="M30 62 Q8 54 6 38 Q20 42 30 62Z"  fill="#C8A96E"/>
+      <path d="M30 44 Q52 36 54 18 Q38 22 30 44Z" fill="#EDA339"/>
+    </svg>
+  </div>
+  <div aria-hidden="true" style="position:absolute;bottom:4rem;left:3rem;opacity:.11;transform:rotate(195deg) scaleX(-1);">
+    <svg viewBox="0 0 60 90" width="65" height="97" fill="none">
+      <path d="M30 88 Q27 55 30 8" stroke="#EDA339" stroke-width="1.5"/>
+      <path d="M30 62 Q8 54 6 38 Q20 42 30 62Z"  fill="#C8A96E"/>
+      <path d="M30 44 Q52 36 54 18 Q38 22 30 44Z" fill="#EDA339"/>
+    </svg>
+  </div>
+
+  <!-- Hero content -->
+  <div class="hero-in" style="text-align:center;padding:2rem;max-width:700px;position:relative;z-index:1;">
+    <img
+      src="brand-assets/color-logo.png"
+      alt="Bloomin' Acres — Farmstand & Bakery"
+      class="hero-in hero-d1"
+      style="width:min(400px,80vw);margin:0 auto 1.75rem;filter:drop-shadow(0 10px 40px rgba(0,0,0,.45));"
+    />
+    <p class="hero-in hero-d2" style="
+      font-family:var(--font-display); font-style:italic;
+      font-size:clamp(.85rem,2.4vw,1.15rem);
+      color:rgba(250,240,230,.75);
+      letter-spacing:.22em; text-transform:uppercase;
+      margin-bottom:3.5rem;
+    ">Homegrown &nbsp;·&nbsp; Homemade &nbsp;·&nbsp; Heartfelt</p>
+    <a href="#welcome" class="hero-in hero-d3 scroll-cta" aria-label="Scroll down">
+      <svg viewBox="0 0 24 24" width="30" height="30" fill="none"
+           stroke="rgba(250,240,230,.6)" stroke-width="1.5"
+           stroke-linecap="round" stroke-linejoin="round">
+        <line x1="12" y1="4" x2="12" y2="20"/>
+        <polyline points="18 14 12 20 6 14"/>
+      </svg>
+    </a>
+  </div>
+</section>
+
+
+<!-- ══════════════════════════════════════════════════════════
+     2. WELCOME — Brand story
+════════════════════════════════════════════════════════════ -->
+<section id="welcome" style="
+  background-color: var(--farm-cream);
+  padding: 5.5rem 1.5rem;
+  position: relative; overflow: hidden;
+">
+  <!-- Top wheat divider -->
+  <div aria-hidden="true" style="display:flex;justify-content:center;margin-bottom:3rem;">
+    <svg viewBox="0 0 320 40" width="300" height="38">
+      <line x1="0"   y1="20" x2="118" y2="20" stroke="#C8A96E" stroke-width="1" opacity=".5"/>
+      <line x1="202" y1="20" x2="320" y2="20" stroke="#C8A96E" stroke-width="1" opacity=".5"/>
+      <line x1="160" y1="37" x2="160" y2="5" stroke="#8B6914" stroke-width="1.5"/>
+      <ellipse cx="153" cy="28" rx="4.5" ry="7.5" fill="#C8A96E" opacity=".8" transform="rotate(-20,153,28)"/>
+      <ellipse cx="167" cy="26" rx="4.5" ry="7.5" fill="#C8A96E" opacity=".8" transform="rotate(20,167,26)"/>
+      <ellipse cx="151" cy="18" rx="4"   ry="7"   fill="#C8A96E" opacity=".75" transform="rotate(-15,151,18)"/>
+      <ellipse cx="169" cy="16" rx="4"   ry="7"   fill="#C8A96E" opacity=".75" transform="rotate(15,169,16)"/>
+      <ellipse cx="160" cy="8"  rx="3.5" ry="6"   fill="#C8A96E" opacity=".9"/>
+    </svg>
+  </div>
+
+  <!-- Sprout watermark -->
+  <img src="brand-assets/sprout.png" aria-hidden="true" loading="lazy" style="
+    position:absolute; right:-2rem; bottom:-3rem;
+    width:290px; opacity:.06; transform:rotate(8deg);
+    pointer-events:none; user-select:none;
+  "/>
+
+  <div class="welcome-grid animate-fade-up" style="
+    max-width:1100px; margin:0 auto;
+    display:grid; grid-template-columns:1fr 1fr;
+    gap:4rem; align-items:center;
+  ">
+    <!-- Text -->
+    <div>
+      <span class="overline" style="color:var(--sage-dark);">Our Story</span>
+      <h2 style="font-size:clamp(2rem,4vw,3.1rem);color:var(--earth-brown);margin-bottom:1.5rem;">
+        Where the garden<br/><em>meets the oven.</em>
+      </h2>
+      <p style="font-size:1.05rem;line-height:1.75;color:var(--earth-mid);max-width:480px;">
+        Bloomin' Acres started with a backyard sourdough starter and a garden bed that kept
+        growing. Now every week we bring our long-fermented loaves, sun-kissed produce, and
+        fresh-from-the-oven pastries right to you — made entirely by hand, with ingredients
+        grown just steps from your door.
+      </p>
+      <div style="display:flex;align-items:center;gap:.875rem;margin-top:2rem;">
+        <img src="brand-assets/sprout.png" alt="Bloomin' Acres sprout"
+             style="width:48px;height:48px;object-fit:contain;flex-shrink:0;" />
+        <p style="
+          font-family:var(--font-display); font-style:italic;
+          font-size:.95rem; color:var(--sage-dark);
+        ">"Handcrafted with love, grown with intention."</p>
+      </div>
+    </div>
+
+    <!-- Image -->
+    <div style="border-radius:4px;overflow:hidden;position:relative;box-shadow:var(--shadow-card);">
+      <img src="https://placehold.co/640x480/7A9B8E/FAF0E6?text=At+the+Farmstand"
+           alt="The Bloomin' Acres farmstand" loading="lazy"
+           style="width:100%;height:420px;object-fit:cover;" />
+      <div style="position:absolute;inset:0;background:linear-gradient(to top,rgba(74,51,34,.55) 0%,transparent 50%);"></div>
+      <div style="position:absolute;inset:0;background:rgba(122,155,142,.16);mix-blend-mode:multiply;"></div>
+    </div>
+  </div>
+</section>
+
+
+<!-- ══════════════════════════════════════════════════════════
+     3. WHAT WE MAKE — 3-card grid
+════════════════════════════════════════════════════════════ -->
+<section id="what-we-make" style="
+  background-color: var(--cream-dark);
+  padding: 5.5rem 1.5rem; position: relative;
+">
+  <div class="animate-fade-up" style="text-align:center;margin-bottom:3.5rem;">
+    <span class="overline" style="color:var(--burnt-orange);">Crafted with care</span>
+    <h2 style="font-size:clamp(2rem,4vw,3rem);color:var(--earth-brown);margin-bottom:1.25rem;">What We Make</h2>
+    <div aria-hidden="true" style="display:flex;justify-content:center;">
+      <svg viewBox="0 0 280 36" width="260" height="32">
+        <line x1="0"   y1="18" x2="100" y2="18" stroke="#C8A96E" stroke-width="1" opacity=".45"/>
+        <line x1="180" y1="18" x2="280" y2="18" stroke="#C8A96E" stroke-width="1" opacity=".45"/>
+        <line x1="140" y1="34" x2="140" y2="4" stroke="#8B6914" stroke-width="1.5"/>
+        <ellipse cx="134" cy="26" rx="4.5" ry="7.5" fill="#C8A96E" opacity=".75" transform="rotate(-20,134,26)"/>
+        <ellipse cx="146" cy="24" rx="4.5" ry="7.5" fill="#C8A96E" opacity=".75" transform="rotate(20,146,24)"/>
+        <ellipse cx="132" cy="16" rx="4"   ry="7"   fill="#C8A96E" opacity=".7"  transform="rotate(-15,132,16)"/>
+        <ellipse cx="148" cy="14" rx="4"   ry="7"   fill="#C8A96E" opacity=".7"  transform="rotate(15,148,14)"/>
+        <ellipse cx="140" cy="7"  rx="3.5" ry="6"   fill="#C8A96E" opacity=".85"/>
+      </svg>
+    </div>
+  </div>
+
+  <div class="cards-grid" style="
+    max-width:1100px; margin:0 auto;
+    display:grid; grid-template-columns:repeat(3,1fr); gap:2rem;
+  ">
+    <!-- Card 1 -->
+    <article class="product-card animate-fade-up">
+      <div style="position:relative;overflow:hidden;">
+        <img src="https://placehold.co/600x400/C8A96E/4A3322?text=Sourdough+Loaves"
+             alt="Artisan sourdough loaves" loading="lazy" class="card-img"/>
+        <div style="position:absolute;inset:0;background:linear-gradient(to top,rgba(74,51,34,.65) 0%,transparent 52%);"></div>
+        <div style="position:absolute;inset:0;background:rgba(200,90,58,.1);mix-blend-mode:multiply;"></div>
+      </div>
+      <div style="padding:1.5rem 1.75rem 2rem;">
+        <h3 style="font-size:1.3rem;color:var(--earth-brown);margin-bottom:.5rem;letter-spacing:-.02em;">Sourdough Loaves</h3>
+        <p style="font-size:.9rem;color:var(--earth-mid);line-height:1.65;">
+          Long-fermented, hand-shaped, baked to a crackling crust. Classic, jalapeño cheddar, and seasonal varieties.
+        </p>
+      </div>
+    </article>
+
+    <!-- Card 2 -->
+    <article class="product-card animate-fade-up stagger-1">
+      <div style="position:relative;overflow:hidden;">
+        <img src="https://placehold.co/600x400/7A9B8E/FAF0E6?text=Fresh+Produce"
+             alt="Fresh seasonal produce" loading="lazy" class="card-img"/>
+        <div style="position:absolute;inset:0;background:linear-gradient(to top,rgba(74,51,34,.6) 0%,transparent 52%);"></div>
+        <div style="position:absolute;inset:0;background:rgba(122,155,142,.18);mix-blend-mode:multiply;"></div>
+      </div>
+      <div style="padding:1.5rem 1.75rem 2rem;">
+        <h3 style="font-size:1.3rem;color:var(--earth-brown);margin-bottom:.5rem;letter-spacing:-.02em;">Fresh Produce</h3>
+        <p style="font-size:.9rem;color:var(--earth-mid);line-height:1.65;">
+          Seasonal vegetables and herbs harvested fresh from our garden beds — vibrant, clean, and grown with care.
+        </p>
+      </div>
+    </article>
+
+    <!-- Card 3 -->
+    <article class="product-card animate-fade-up stagger-2">
+      <div style="position:relative;overflow:hidden;">
+        <img src="https://placehold.co/600x400/8B3A3A/FAF0E6?text=Seasonal+Pastries"
+             alt="Seasonal pastries and baked goods" loading="lazy" class="card-img"/>
+        <div style="position:absolute;inset:0;background:linear-gradient(to top,rgba(74,51,34,.65) 0%,transparent 52%);"></div>
+        <div style="position:absolute;inset:0;background:rgba(139,58,58,.15);mix-blend-mode:multiply;"></div>
+      </div>
+      <div style="padding:1.5rem 1.75rem 2rem;">
+        <h3 style="font-size:1.3rem;color:var(--earth-brown);margin-bottom:.5rem;letter-spacing:-.02em;">Seasonal Pastries</h3>
+        <p style="font-size:.9rem;color:var(--earth-mid);line-height:1.65;">
+          Gourmet snickerdoodles, sourdough muffins, and pantry staples that rotate with the season and the harvest.
+        </p>
+      </div>
+    </article>
+  </div>
+</section>
+
+
+<!-- ══════════════════════════════════════════════════════════
+     4. FROM SEED TO TABLE — Process steps
+════════════════════════════════════════════════════════════ -->
+<section id="process" style="
+  background-color: var(--cream-warm);
+  background-image: radial-gradient(circle, rgba(74,51,34,.065) 1px, transparent 1px);
+  background-size: 24px 24px;
+  padding: 5.5rem 1.5rem;
+">
+  <div style="max-width:1100px;margin:0 auto;">
+    <div class="animate-fade-up" style="text-align:center;margin-bottom:4rem;">
+      <span class="overline" style="color:var(--sage-dark);">The journey</span>
+      <h2 style="font-size:clamp(2rem,4vw,3rem);color:var(--earth-brown);">From Seed to Table</h2>
+    </div>
+
+    <div class="steps-grid" style="display:grid;grid-template-columns:repeat(4,1fr);gap:0;position:relative;">
+      <!-- Dashed connector line -->
+      <div class="step-connector" aria-hidden="true" style="
+        position:absolute; top:2.4rem; left:12.5%; right:12.5%; height:1px;
+        background:repeating-linear-gradient(to right,var(--sage-green) 0,var(--sage-green) 8px,transparent 8px,transparent 18px);
+        opacity:.38;
+      "></div>
+
+      <!-- Step 1: Sow -->
+      <div class="step animate-fade-up" style="text-align:center;padding:0 1.5rem;">
+        <div class="step-icon" style="background:var(--sage-green);box-shadow:0 4px 16px rgba(122,155,142,.3),0 8px 32px rgba(122,155,142,.15);">
+          <svg viewBox="0 0 32 32" width="26" height="26" fill="none">
+            <path d="M16 28V15" stroke="#FAF0E6" stroke-width="2" stroke-linecap="round"/>
+            <path d="M16 21 Q7 18 5 9 Q14 9 16 21Z" fill="#FAF0E6" opacity=".9"/>
+            <path d="M16 14 Q25 11 27 3 Q18 3 16 14Z" fill="#FAF0E6" opacity=".7"/>
+          </svg>
+        </div>
+        <h3 style="font-size:1.15rem;color:var(--earth-brown);margin-bottom:.4rem;">Sow</h3>
+        <p style="font-size:.875rem;color:var(--earth-mid);line-height:1.65;">Seeds go in the ground with intention — chosen for flavor, not just yield.</p>
+      </div>
+
+      <!-- Step 2: Harvest -->
+      <div class="step animate-fade-up stagger-1" style="text-align:center;padding:0 1.5rem;">
+        <div class="step-icon" style="background:var(--wheat-gold);box-shadow:0 4px 16px rgba(237,163,57,.3),0 8px 32px rgba(237,163,57,.15);">
+          <svg viewBox="0 0 32 32" width="26" height="26" fill="none">
+            <path d="M8 17 Q8 26 16 26 Q24 26 24 17" stroke="#4A3322" stroke-width="2" fill="rgba(74,51,34,.12)" stroke-linecap="round"/>
+            <line x1="8" y1="17" x2="24" y2="17" stroke="#4A3322" stroke-width="2" stroke-linecap="round"/>
+            <path d="M12 17 Q12 10 16 8 Q20 10 20 17" stroke="#4A3322" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+          </svg>
+        </div>
+        <h3 style="font-size:1.15rem;color:var(--earth-brown);margin-bottom:.4rem;">Harvest</h3>
+        <p style="font-size:.875rem;color:var(--earth-mid);line-height:1.65;">Picked at peak ripeness, brought straight from field to stand.</p>
+      </div>
+
+      <!-- Step 3: Bake -->
+      <div class="step animate-fade-up stagger-2" style="text-align:center;padding:0 1.5rem;">
+        <div class="step-icon" style="background:var(--burnt-orange);box-shadow:0 4px 16px rgba(200,90,58,.3),0 8px 32px rgba(200,90,58,.15);">
+          <svg viewBox="0 0 32 32" width="26" height="26" fill="none">
+            <rect x="4" y="15" width="24" height="13" rx="2" stroke="#FAF0E6" stroke-width="1.5" fill="rgba(250,240,230,.08)"/>
+            <path d="M10 15 Q10 7 16 5 Q22 7 22 15" fill="#FAF0E6" opacity=".85"/>
+            <line x1="9" y1="20" x2="23" y2="20" stroke="#FAF0E6" stroke-width="1" opacity=".5"/>
+          </svg>
+        </div>
+        <h3 style="font-size:1.15rem;color:var(--earth-brown);margin-bottom:.4rem;">Bake</h3>
+        <p style="font-size:.875rem;color:var(--earth-mid);line-height:1.65;">72-hour ferment, hand-shaped, baked hot until the crust sings.</p>
+      </div>
+
+      <!-- Step 4: Share -->
+      <div class="step animate-fade-up stagger-3" style="text-align:center;padding:0 1.5rem;">
+        <div class="step-icon" style="background:var(--berry-red);box-shadow:0 4px 16px rgba(139,58,58,.3),0 8px 32px rgba(139,58,58,.15);">
+          <svg viewBox="0 0 32 32" width="26" height="26" fill="none">
+            <path d="M16 25 Q5 18 5 11 Q5 5 11 5 Q14 5 16 9 Q18 5 21 5 Q27 5 27 11 Q27 18 16 25Z"
+                  fill="#FAF0E6" opacity=".9"/>
+          </svg>
+        </div>
+        <h3 style="font-size:1.15rem;color:var(--earth-brown);margin-bottom:.4rem;">Share</h3>
+        <p style="font-size:.875rem;color:var(--earth-mid);line-height:1.65;">Every loaf and basket finds a home — yours, hopefully.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<!-- ══════════════════════════════════════════════════════════
+     5. WHAT'S FRESH — Seasonal menu
+════════════════════════════════════════════════════════════ -->
+<section id="menu" style="
+  background-color: var(--earth-brown);
+  background-image:
+    radial-gradient(ellipse 60% 50% at 8%  8%,  rgba(60,95,55,.3)  0%, transparent 55%),
+    radial-gradient(ellipse 50% 40% at 92% 92%, rgba(237,163,57,.12) 0%, transparent 55%);
+  padding: 5.5rem 1.5rem; position: relative;
+">
+  <!-- Wheat stalk corners -->
+  <div aria-hidden="true" style="position:absolute;top:3rem;left:2.5rem;opacity:.18;transform:rotate(-8deg);">
+    <svg viewBox="0 0 30 95" width="28" height="90" fill="none">
+      <line x1="15" y1="92" x2="15" y2="10" stroke="#C8A96E" stroke-width="1.5"/>
+      <ellipse cx="9"  cy="72" rx="4" ry="8.5" fill="#C8A96E" transform="rotate(-25,9,72)"/>
+      <ellipse cx="21" cy="64" rx="4" ry="8.5" fill="#C8A96E" transform="rotate(25,21,64)"/>
+      <ellipse cx="9"  cy="52" rx="3.5" ry="7.5" fill="#C8A96E" transform="rotate(-20,9,52)"/>
+      <ellipse cx="21" cy="44" rx="3.5" ry="7.5" fill="#C8A96E" transform="rotate(20,21,44)"/>
+      <ellipse cx="15" cy="34" rx="3"   ry="6.5" fill="#C8A96E"/>
+    </svg>
+  </div>
+  <div aria-hidden="true" style="position:absolute;top:3rem;right:2.5rem;opacity:.18;transform:rotate(8deg) scaleX(-1);">
+    <svg viewBox="0 0 30 95" width="28" height="90" fill="none">
+      <line x1="15" y1="92" x2="15" y2="10" stroke="#C8A96E" stroke-width="1.5"/>
+      <ellipse cx="9"  cy="72" rx="4" ry="8.5" fill="#C8A96E" transform="rotate(-25,9,72)"/>
+      <ellipse cx="21" cy="64" rx="4" ry="8.5" fill="#C8A96E" transform="rotate(25,21,64)"/>
+      <ellipse cx="9"  cy="52" rx="3.5" ry="7.5" fill="#C8A96E" transform="rotate(-20,9,52)"/>
+      <ellipse cx="21" cy="44" rx="3.5" ry="7.5" fill="#C8A96E" transform="rotate(20,21,44)"/>
+      <ellipse cx="15" cy="34" rx="3"   ry="6.5" fill="#C8A96E"/>
+    </svg>
+  </div>
+
+  <div class="animate-fade-up" style="text-align:center;margin-bottom:2.75rem;">
+    <span class="overline" style="color:var(--sage-light);">What's in season</span>
+    <h2 style="font-size:clamp(2rem,4vw,3rem);color:var(--farm-cream);">At the Stand</h2>
+  </div>
+
+  <!-- Parchment menu card: template as header image, plain cream below -->
+  <div class="animate-fade-up" style="
+    max-width:620px; margin:0 auto;
+    border-radius:4px; overflow:hidden;
+    box-shadow:
+      0 2px 4px rgba(0,0,0,.18),
+      0 14px 44px rgba(0,0,0,.38),
+      0 44px 88px rgba(0,0,0,.22);
+    position:relative;
+  ">
+    <!-- Template header: clipped to show just the logo area -->
+    <div style="overflow:hidden; height:220px; background-color:var(--farm-cream);">
+      <img src="brand-assets/blank-menu-template.png"
+           alt="" aria-hidden="true"
+           style="width:100%;display:block;object-fit:cover;object-position:top;height:100%;" />
+    </div>
+
+    <!-- Menu content on plain parchment -->
+    <div style="
+      background-color:var(--farm-cream);
+      background-image: repeating-linear-gradient(
+        transparent 0px, transparent 27px, rgba(200,169,110,.18) 27px, rgba(200,169,110,.18) 28px
+      );
+      padding:1.25rem 3.5rem 3rem;
+      position:relative;
+    ">
+    <!-- Wheat divider -->
+    <div aria-hidden="true" style="display:flex;justify-content:center;margin-bottom:1.25rem;">
+      <svg viewBox="0 0 200 28" width="180" height="24">
+          <line x1="0"   y1="14" x2="78"  y2="14" stroke="#C8A96E" stroke-width=".8" opacity=".5"/>
+          <line x1="122" y1="14" x2="200" y2="14" stroke="#C8A96E" stroke-width=".8" opacity=".5"/>
+          <line x1="100" y1="26" x2="100" y2="4" stroke="#8B6914" stroke-width="1.2"/>
+          <ellipse cx="95"  cy="20" rx="3.5" ry="6" fill="#C8A96E" opacity=".8" transform="rotate(-20,95,20)"/>
+          <ellipse cx="105" cy="18" rx="3.5" ry="6" fill="#C8A96E" opacity=".8" transform="rotate(20,105,18)"/>
+          <ellipse cx="100" cy="10" rx="3"   ry="5" fill="#C8A96E" opacity=".85"/>
+        </svg>
+      </div>
+
+    <!-- Category headers + items helper style -->
+    <style>
+      .menu-cat-head {
+        font-family: var(--font-display); font-size: .7rem; letter-spacing: .22em;
+        text-transform: uppercase; color: var(--sage-dark); text-align: center;
+        border-top: 1px solid rgba(122,155,142,.3); border-bottom: 1px solid rgba(122,155,142,.3);
+        padding: .4rem 0; margin-bottom: .9rem;
+      }
+      .menu-row { display: flex; align-items: baseline; gap: .5rem; margin-bottom: .5rem; }
+      .menu-row:last-child { margin-bottom: 0; }
+      .menu-name { font-family: var(--font-display); font-size: .92rem; color: var(--earth-brown); white-space: nowrap; }
+      .menu-dot  { flex: 1; border-bottom: 1px dotted rgba(74,51,34,.22); margin-bottom: 3px; }
+      .menu-price { font-family: var(--font-display); font-size: .92rem; font-weight: 600; color: var(--burnt-orange); white-space: nowrap; }
+    </style>
+
+    <!-- Sourdough Artisan Loaves -->
+    <div style="margin-bottom:1.6rem;">
+      <h4 class="menu-cat-head">Sourdough Artisan Loaves</h4>
+      <div class="menu-row"><span class="menu-name">Classic</span><span class="menu-dot"></span><span class="menu-price">$8</span></div>
+      <div class="menu-row"><span class="menu-name">Jalapeño Cheddar</span><span class="menu-dot"></span><span class="menu-price">$12</span></div>
+      <div class="menu-row"><span class="menu-name">Seasonal Special</span><span class="menu-dot"></span><span class="menu-price">$14</span></div>
+    </div>
+
+    <!-- Sourdough Favorites -->
+    <div style="margin-bottom:1.6rem;">
+      <h4 class="menu-cat-head">Sourdough Favorites</h4>
+      <div class="menu-row"><span class="menu-name">English Muffins</span><span class="menu-dot"></span><span class="menu-price">$8</span></div>
+      <div class="menu-row"><span class="menu-name">Pancake Mix</span><span class="menu-dot"></span><span class="menu-price">$8</span></div>
+      <div class="menu-row"><span class="menu-name">Pita Pockets</span><span class="menu-dot"></span><span class="menu-price">$8</span></div>
+      <div class="menu-row"><span class="menu-name">Flight Box</span><span class="menu-dot"></span><span class="menu-price">$16</span></div>
+    </div>
+
+    <!-- Sweet & Pantry -->
+    <div>
+      <h4 class="menu-cat-head">Sweet &amp; Pantry</h4>
+      <div class="menu-row"><span class="menu-name">Gourmet Snickerdoodles</span><span class="menu-dot"></span><span class="menu-price">$10</span></div>
+      <div class="menu-row"><span class="menu-name">Organic Freeze-Dried Eggs</span><span class="menu-dot"></span><span class="menu-price">$8</span></div>
+    </div>
+
+    </div><!-- end menu content -->
+  </div><!-- end card wrapper -->
+</section>
+
+
+<!-- ══════════════════════════════════════════════════════════
+     6. VISIT US — Hours & directions
+════════════════════════════════════════════════════════════ -->
+<section id="visit" style="
+  background-color: var(--sage-dark);
+  background-image:
+    radial-gradient(ellipse 65% 55% at 15% 85%, rgba(74,51,34,.42)  0%, transparent 60%),
+    radial-gradient(ellipse 50% 40% at 88% 18%, rgba(237,163,57,.14) 0%, transparent 55%);
+  padding: 5.5rem 1.5rem; color: var(--farm-cream);
+">
+  <div class="visit-grid animate-fade-up" style="
+    max-width:1100px; margin:0 auto;
+    display:grid; grid-template-columns:1fr 1fr;
+    gap:4rem; align-items:center;
+  ">
+    <!-- Info -->
+    <div>
+      <span class="overline" style="color:rgba(250,240,230,.5);">Come see us</span>
+      <h2 style="font-size:clamp(2rem,4vw,3rem);color:var(--farm-cream);margin-bottom:2rem;letter-spacing:-.03em;">
+        The stand is open<br/><em>and the bread is warm.</em>
+      </h2>
+
+      <div class="hours-card" style="margin-bottom:1.75rem;">
+        <p style="font-weight:600;letter-spacing:.12em;font-size:.72rem;text-transform:uppercase;color:var(--wheat-gold);margin-bottom:.875rem;">Hours</p>
+        <div style="display:grid;grid-template-columns:auto 1fr;gap:.3rem 1.5rem;font-size:.93rem;line-height:1.6;">
+          <span style="opacity:.75;">Tues – Thurs</span><span>10a – 6p</span>
+          <span style="opacity:.75;">Friday</span><span>2p – 6p</span>
+          <span style="opacity:.75;">Saturday</span><span>4p – 6p <span style="opacity:.6;font-size:.82em;">(market season)</span></span>
+          <span style="opacity:.75;">Sun &amp; Mon</span><span style="opacity:.6;">Closed</span>
+        </div>
+      </div>
+
+      <div style="font-size:.93rem;line-height:1.85;opacity:.78;margin-bottom:2rem;">
+        <p>3650 N State Road 9<br/>Hope, IN &nbsp;47246</p>
+        <p style="margin-top:.4rem;">
+          <a href="mailto:c.lefler@bloominacresgreens.net"
+             style="color:var(--wheat-gold);text-decoration:none;transition:opacity .25s ease;"
+             onmouseover="this.style.opacity='.65'" onmouseout="this.style.opacity='1'">
+            c.lefler@bloominacresgreens.net
+          </a>
+        </p>
+        <p>
+          <a href="tel:8126032442"
+             style="color:var(--wheat-gold);text-decoration:none;transition:opacity .25s ease;"
+             onmouseover="this.style.opacity='.65'" onmouseout="this.style.opacity='1'">
+            (812) 603-2442
+          </a>
+        </p>
+      </div>
+
+      <a href="https://maps.google.com/?q=3650+N+State+Road+9+Hope+IN+47246"
+         target="_blank" rel="noopener" class="cta-btn">
+        Get Directions
+        <svg viewBox="0 0 16 16" width="14" height="14" fill="none"
+             stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="3" y1="8" x2="13" y2="8"/>
+          <polyline points="9 4 13 8 9 12"/>
+        </svg>
+      </a>
+    </div>
+
+    <!-- Map placeholder -->
+    <div style="border-radius:4px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,.28),0 16px 48px rgba(0,0,0,.22);position:relative;">
+      <img src="https://placehold.co/640x460/4E6E64/A8C4BB?text=Hope%2C+IN"
+           alt="Map showing Bloomin' Acres location in Hope, IN" loading="lazy"
+           style="width:100%;height:420px;object-fit:cover;" />
+      <div style="position:absolute;bottom:0;left:0;right:0;height:70px;background:linear-gradient(to top,rgba(78,110,100,.5),transparent);"></div>
+    </div>
+  </div>
+</section>
+
+
+<!-- ══════════════════════════════════════════════════════════
+     7. FOOTER
+════════════════════════════════════════════════════════════ -->
+<footer style="
+  background-color: var(--earth-brown);
+  background-image: radial-gradient(ellipse 65% 45% at 50% 105%, rgba(200,90,58,.1) 0%, transparent 60%);
+  padding: 4.5rem 1.5rem 2.5rem;
+  color: rgba(250,240,230,.65);
+">
+  <div style="max-width:860px;margin:0 auto;text-align:center;">
+    <img src="brand-assets/color-logo.png"
+         alt="Bloomin' Acres Farmstand & Bakery"
+         style="width:200px;margin:0 auto 1.75rem;opacity:.96;" />
+
+    <!-- Sunflower dotted divider -->
+    <div aria-hidden="true" style="display:flex;justify-content:center;margin-bottom:1.5rem;">
+      <svg viewBox="0 0 360 24" width="320" height="24">
+        <line x1="0"   y1="12" x2="160" y2="12" stroke="#C8A96E" stroke-width="1" stroke-dasharray="4 6" opacity=".32"/>
+        <line x1="200" y1="12" x2="360" y2="12" stroke="#C8A96E" stroke-width="1" stroke-dasharray="4 6" opacity=".32"/>
+        <circle cx="180" cy="12" r="4.5" fill="#EDA339"/>
+        <g fill="#C85A3A" opacity=".62">
+          <ellipse cx="180" cy="3.5" rx="1.8" ry="3.5" transform="rotate(0,180,12)"/>
+          <ellipse cx="180" cy="3.5" rx="1.8" ry="3.5" transform="rotate(45,180,12)"/>
+          <ellipse cx="180" cy="3.5" rx="1.8" ry="3.5" transform="rotate(90,180,12)"/>
+          <ellipse cx="180" cy="3.5" rx="1.8" ry="3.5" transform="rotate(135,180,12)"/>
+          <ellipse cx="180" cy="3.5" rx="1.8" ry="3.5" transform="rotate(180,180,12)"/>
+          <ellipse cx="180" cy="3.5" rx="1.8" ry="3.5" transform="rotate(225,180,12)"/>
+          <ellipse cx="180" cy="3.5" rx="1.8" ry="3.5" transform="rotate(270,180,12)"/>
+          <ellipse cx="180" cy="3.5" rx="1.8" ry="3.5" transform="rotate(315,180,12)"/>
+        </g>
+      </svg>
+    </div>
+
+    <p style="font-family:var(--font-display);font-style:italic;font-size:.93rem;letter-spacing:.1em;color:rgba(250,240,230,.45);margin-bottom:2rem;">
+      Homeground &nbsp;·&nbsp; Homemade &nbsp;·&nbsp; Heartfelt
+    </p>
+
+    <!-- Nav links -->
+    <nav aria-label="Footer navigation" style="display:flex;justify-content:center;flex-wrap:wrap;gap:.5rem 2rem;margin-bottom:2.5rem;">
+      <a href="#welcome"      class="footer-link">Our Story</a>
+      <a href="#what-we-make" class="footer-link">What We Make</a>
+      <a href="#menu"         class="footer-link">Menu</a>
+      <a href="#visit"        class="footer-link">Visit Us</a>
+    </nav>
+
+    <!-- Social icons + Indiana Grown badge -->
+    <div style="display:flex;justify-content:center;align-items:center;gap:1.5rem;flex-wrap:wrap;margin-bottom:2.75rem;">
+      <!-- Instagram -->
+      <a href="#" class="social-icon" aria-label="Follow us on Instagram">
+        <svg viewBox="0 0 24 24" width="22" height="22" fill="none"
+             stroke="rgba(250,240,230,.75)" stroke-width="1.5">
+          <rect x="2" y="2" width="20" height="20" rx="5"/>
+          <circle cx="12" cy="12" r="5"/>
+          <circle cx="17.5" cy="6.5" r="1" fill="rgba(250,240,230,.75)" stroke="none"/>
+        </svg>
+      </a>
+      <!-- Facebook -->
+      <a href="#" class="social-icon" aria-label="Follow us on Facebook">
+        <svg viewBox="0 0 24 24" width="22" height="22" fill="rgba(250,240,230,.75)">
+          <path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/>
+        </svg>
+      </a>
+
+      <!-- Divider -->
+      <div aria-hidden="true" style="width:1px;height:34px;background:rgba(250,240,230,.14);"></div>
+
+      <!-- Indiana Grown badge -->
+      <div style="display:flex;flex-direction:column;align-items:center;gap:.3rem;">
+        <span style="font-size:.62rem;font-weight:600;letter-spacing:.18em;text-transform:uppercase;color:rgba(250,240,230,.38);">Member of</span>
+        <img src="brand-assets/badge.png"
+             alt="Indiana Grown member"
+             loading="lazy"
+             style="
+               width:50px; height:50px;
+               border-radius:50%;
+               object-fit:cover; object-position:50% 45%;
+               box-shadow:0 2px 10px rgba(0,0,0,.4);
+               border:2px solid rgba(91,158,42,.55);
+             " />
+        <span style="font-size:.75rem;font-weight:600;color:var(--wheat-gold);letter-spacing:.04em;">Indiana Grown</span>
+      </div>
+    </div>
+
+    <p style="font-size:.72rem;color:rgba(250,240,230,.28);">
+      &copy; 2026 Bloomin' Acres Farmstand &amp; Bakery. All rights reserved.
+    </p>
+  </div>
+</footer>
+
+<script>
+  const observer = new IntersectionObserver(
+    (entries) => entries.forEach(e => {
+      if (e.isIntersecting) {
+        e.target.classList.add('visible');
+        observer.unobserve(e.target);
+      }
+    }),
+    { threshold: 0.1 }
+  );
+  document.querySelectorAll('.animate-fade-up').forEach(el => observer.observe(el));
+</script>
+
+</body>
+</html>

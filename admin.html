@@ -1,0 +1,890 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Admin — Bloomin' Acres</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400;1,600&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            'wheat-gold': '#EDA339', 'sage-green': '#7A9B8E', 'sage-dark': '#4E6E64',
+            'burnt-orange': '#C85A3A', 'earth-brown': '#4A3322', 'earth-mid': '#6B4C35',
+            'farm-cream': '#FAF0E6', 'cream-dark': '#F0E4D0', 'cream-warm': '#EDD9B8',
+          },
+          fontFamily: {
+            playfair: ['"Playfair Display"', 'Georgia', 'serif'],
+            sans: ['"DM Sans"', 'sans-serif'],
+          }
+        }
+      }
+    };
+  </script>
+  <style>
+    :root {
+      --wheat-gold: #EDA339; --sage-green: #7A9B8E; --sage-dark: #4E6E64;
+      --burnt-orange: #C85A3A; --earth-brown: #4A3322; --earth-mid: #6B4C35;
+      --farm-cream: #FAF0E6; --cream-dark: #F0E4D0; --cream-warm: #EDD9B8;
+      --sidebar-w: 240px;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'DM Sans', sans-serif;
+      background-color: #2A1E14;
+      color: var(--farm-cream);
+      min-height: 100vh;
+    }
+    body::after {
+      content: '';
+      position: fixed; inset: 0; z-index: 9999; pointer-events: none; opacity: .035;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23n)'/%3E%3C/svg%3E");
+    }
+
+    /* ===== LOGIN OVERLAY ===== */
+    #login-overlay {
+      position: fixed; inset: 0; z-index: 1000;
+      background: radial-gradient(ellipse at center, rgba(74,51,34,.97) 0%, rgba(30,20,12,.99) 100%);
+      display: flex; align-items: center; justify-content: center;
+      padding: 1rem;
+    }
+    #login-overlay.hidden { display: none; }
+    .login-card {
+      background: var(--earth-brown);
+      border: 1px solid rgba(237,163,57,.2);
+      border-radius: 10px;
+      padding: 3rem 2.5rem 2.5rem;
+      width: 100%; max-width: 400px;
+      box-shadow: 0 8px 32px rgba(0,0,0,.5), 0 2px 0 rgba(237,163,57,.1) inset;
+    }
+    .login-logo { height: 64px; display: block; margin: 0 auto 1.5rem; }
+    .login-title {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.4rem; font-weight: 600;
+      text-align: center; margin-bottom: .35rem;
+      color: var(--farm-cream);
+    }
+    .login-sub {
+      font-size: .78rem; text-align: center;
+      color: rgba(250,240,230,.45); letter-spacing: .06em;
+      margin-bottom: 2rem;
+    }
+    .field-label {
+      display: block;
+      font-size: .72rem; font-weight: 600; letter-spacing: .12em;
+      text-transform: uppercase; color: rgba(250,240,230,.55);
+      margin-bottom: .4rem;
+    }
+    .field-input {
+      width: 100%; padding: .65rem .9rem;
+      background: rgba(0,0,0,.25);
+      border: 1px solid rgba(237,163,57,.2);
+      border-radius: 5px; color: var(--farm-cream);
+      font-family: 'DM Sans', sans-serif; font-size: .95rem;
+      margin-bottom: 1.1rem;
+      transition: border-color .2s;
+    }
+    .field-input:focus { outline: none; border-color: var(--wheat-gold); }
+    .field-input::placeholder { color: rgba(250,240,230,.25); }
+    .btn-login {
+      width: 100%; padding: .75rem;
+      background: var(--burnt-orange);
+      color: var(--farm-cream); border: none; border-radius: 5px;
+      font-family: 'DM Sans', sans-serif; font-size: .9rem;
+      font-weight: 600; letter-spacing: .05em;
+      cursor: pointer;
+      box-shadow: 0 2px 8px rgba(200,90,58,.4), 0 4px 20px rgba(200,90,58,.2);
+      transition: transform .15s, box-shadow .15s;
+    }
+    .btn-login:hover { transform: translateY(-1px); box-shadow: 0 4px 16px rgba(200,90,58,.5), 0 8px 32px rgba(200,90,58,.25); }
+    .btn-login:active { transform: translateY(0); }
+    .btn-login:focus-visible { outline: 2px solid var(--wheat-gold); outline-offset: 3px; }
+    .login-error {
+      background: rgba(139,58,58,.25); border: 1px solid rgba(139,58,58,.5);
+      border-radius: 4px; padding: .6rem .85rem;
+      font-size: .82rem; color: #f5a0a0;
+      margin-bottom: 1rem; display: none;
+    }
+
+    /* ===== DASHBOARD LAYOUT ===== */
+    #dashboard { display: none; min-height: 100vh; }
+    #dashboard.visible { display: flex; flex-direction: column; }
+
+    /* Top bar */
+    .topbar {
+      background-color: var(--earth-brown);
+      border-bottom: 1px solid rgba(237,163,57,.12);
+      padding: .75rem 1.5rem;
+      display: flex; align-items: center; justify-content: space-between;
+      gap: 1rem;
+      position: sticky; top: 0; z-index: 100;
+    }
+    .topbar-left { display: flex; align-items: center; gap: 1rem; }
+    .topbar-logo { height: 40px; object-fit: contain; }
+    .topbar-badge {
+      font-size: .65rem; font-weight: 600; letter-spacing: .12em;
+      text-transform: uppercase; color: rgba(237,163,57,.6);
+      background: rgba(237,163,57,.08); border: 1px solid rgba(237,163,57,.2);
+      padding: .2rem .55rem; border-radius: 3px;
+    }
+    .topbar-right { display: flex; align-items: center; gap: .75rem; }
+    .topbar-user {
+      font-size: .8rem; color: rgba(250,240,230,.5);
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 200px;
+    }
+    .btn-ghost {
+      font-family: 'DM Sans', sans-serif;
+      font-size: .78rem; font-weight: 500; letter-spacing: .07em;
+      text-transform: uppercase; text-decoration: none;
+      color: rgba(250,240,230,.55);
+      padding: .35rem .7rem; border-radius: 4px;
+      border: 1px solid transparent;
+      cursor: pointer; background: transparent;
+      transition: color .2s, border-color .2s, background .2s;
+    }
+    .btn-ghost:hover { color: var(--wheat-gold); border-color: rgba(237,163,57,.3); background: rgba(237,163,57,.06); }
+    .btn-ghost:focus-visible { outline: 2px solid var(--wheat-gold); outline-offset: 3px; }
+
+    /* Account info banner */
+    .account-banner {
+      background: linear-gradient(135deg, rgba(74,51,34,.8) 0%, rgba(42,30,20,.8) 100%);
+      border-bottom: 1px solid rgba(237,163,57,.1);
+      padding: 1.5rem 2rem;
+      display: flex; align-items: center; gap: 1rem;
+    }
+    .account-avatar {
+      width: 48px; height: 48px; border-radius: 50%;
+      background: var(--burnt-orange);
+      display: flex; align-items: center; justify-content: center;
+      font-family: 'Playfair Display', serif;
+      font-size: 1.3rem; font-weight: 700; color: var(--farm-cream);
+      flex-shrink: 0;
+    }
+    .account-name { font-family: 'Playfair Display', serif; font-size: 1rem; font-weight: 600; }
+    .account-email { font-size: .78rem; color: rgba(250,240,230,.45); margin-top: .1rem; }
+
+    /* Tab bar */
+    .tab-bar {
+      background-color: var(--earth-brown);
+      border-bottom: 2px solid rgba(237,163,57,.15);
+      padding: 0 2rem;
+      display: flex; gap: 0;
+    }
+    .tab-btn {
+      font-family: 'DM Sans', sans-serif;
+      font-size: .8rem; font-weight: 600; letter-spacing: .1em;
+      text-transform: uppercase;
+      padding: .9rem 1.25rem;
+      border: none; background: transparent;
+      color: rgba(250,240,230,.45);
+      cursor: pointer; border-bottom: 2px solid transparent;
+      margin-bottom: -2px;
+      transition: color .2s, border-color .2s;
+      display: flex; align-items: center; gap: .5rem;
+    }
+    .tab-btn:hover { color: var(--farm-cream); }
+    .tab-btn.active { color: var(--wheat-gold); border-bottom-color: var(--wheat-gold); }
+    .tab-btn:focus-visible { outline: 2px solid var(--wheat-gold); outline-offset: -2px; }
+
+    /* Tab content panels */
+    .tab-panel { display: none; padding: 2rem; flex: 1; }
+    .tab-panel.active { display: block; }
+
+    /* ===== STRIPE CATALOGUE TAB ===== */
+    .catalogue-header {
+      display: flex; align-items: center; justify-content: space-between;
+      gap: 1rem; margin-bottom: 1.5rem; flex-wrap: wrap;
+    }
+    .section-heading {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.4rem; font-weight: 600; color: var(--farm-cream);
+      letter-spacing: -.02em;
+    }
+    .search-input {
+      padding: .55rem .9rem;
+      background: rgba(0,0,0,.25);
+      border: 1px solid rgba(237,163,57,.2);
+      border-radius: 5px; color: var(--farm-cream);
+      font-family: 'DM Sans', sans-serif; font-size: .88rem;
+      width: 240px; transition: border-color .2s;
+    }
+    .search-input:focus { outline: none; border-color: var(--wheat-gold); }
+    .search-input::placeholder { color: rgba(250,240,230,.25); }
+    .product-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+      gap: 1rem;
+    }
+    .product-card {
+      background: rgba(74,51,34,.6);
+      border: 1px solid rgba(237,163,57,.15);
+      border-radius: 7px;
+      padding: 1.1rem 1.25rem;
+      transition: border-color .2s, background .2s;
+    }
+    .product-card:hover { background: rgba(74,51,34,.9); border-color: rgba(237,163,57,.35); }
+    .product-name {
+      font-family: 'Playfair Display', serif;
+      font-size: 1rem; font-weight: 600; color: var(--farm-cream);
+      margin-bottom: .25rem;
+    }
+    .product-desc {
+      font-size: .78rem; color: rgba(250,240,230,.45);
+      line-height: 1.5; margin-bottom: .75rem;
+    }
+    .product-footer { display: flex; align-items: center; justify-content: space-between; }
+    .product-price {
+      font-size: .95rem; font-weight: 600; color: var(--wheat-gold);
+    }
+    .product-id {
+      font-size: .6rem; font-family: monospace;
+      color: rgba(250,240,230,.25);
+      background: rgba(0,0,0,.2); padding: .15rem .4rem; border-radius: 3px;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 90px;
+    }
+    .skeleton-card {
+      background: rgba(74,51,34,.4);
+      border: 1px solid rgba(237,163,57,.08);
+      border-radius: 7px; padding: 1.1rem 1.25rem; height: 110px;
+      animation: pulse 1.5s ease-in-out infinite;
+    }
+    @keyframes pulse { 0%,100% { opacity:.5 } 50% { opacity:1 } }
+
+    /* ===== MENU EDITOR TAB ===== */
+    .menu-editor-wrap {
+      max-width: 720px; margin: 0 auto;
+    }
+    .editor-header {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;
+    }
+    /* Menu card wrapper */
+    .menu-card-editor {
+      border-radius: 6px; overflow: hidden;
+      box-shadow: 0 4px 16px rgba(0,0,0,.4), 0 16px 48px rgba(0,0,0,.3);
+    }
+    .menu-card-header-img {
+      width: 100%; display: block; height: 220px;
+      object-fit: cover; object-position: top;
+      background-color: var(--farm-cream);
+    }
+    .menu-card-body {
+      background-color: var(--farm-cream);
+      background-image: repeating-linear-gradient(
+        transparent 0px, transparent 27px,
+        rgba(200,169,110,.18) 27px, rgba(200,169,110,.18) 28px
+      );
+      padding: 1.5rem 2.5rem 2rem;
+    }
+    @media (max-width: 560px) { .menu-card-body { padding: 1rem 1rem 1.5rem; } }
+
+    /* Section block */
+    .section-block { margin-bottom: 1.5rem; }
+    .section-title-row {
+      display: flex; align-items: center; gap: .5rem;
+      margin-bottom: .75rem; padding-bottom: .5rem;
+      border-bottom: 1px solid rgba(122,155,142,.25);
+    }
+    .section-title-input {
+      flex: 1;
+      font-family: 'DM Sans', sans-serif;
+      font-size: .72rem; font-weight: 600;
+      letter-spacing: .22em; text-transform: uppercase;
+      color: var(--sage-dark);
+      background: transparent; border: none;
+      border-bottom: 1px dashed rgba(78,110,100,.35);
+      padding: .15rem 0;
+      outline: none;
+      transition: border-color .2s;
+    }
+    .section-title-input:focus { border-bottom-color: var(--sage-dark); }
+    .section-title-input::placeholder { color: rgba(78,110,100,.35); }
+    .icon-btn {
+      background: transparent; border: none; cursor: pointer;
+      color: rgba(74,51,34,.35); padding: .2rem;
+      border-radius: 3px; display: flex; align-items: center;
+      transition: color .2s, background .2s;
+    }
+    .icon-btn:hover { color: var(--burnt-orange); background: rgba(200,90,58,.08); }
+    .icon-btn:focus-visible { outline: 2px solid var(--wheat-gold); outline-offset: 2px; }
+
+    /* Item row */
+    .item-row {
+      display: flex; align-items: center; gap: .5rem;
+      padding: .3rem 0;
+    }
+    .item-select {
+      flex: 1;
+      font-family: 'Playfair Display', serif; font-size: .95rem;
+      color: var(--earth-brown);
+      background: transparent; border: none;
+      border-bottom: 1px dashed rgba(74,51,34,.2);
+      padding: .2rem 0; cursor: pointer; outline: none;
+      transition: border-color .2s;
+    }
+    .item-select:focus { border-bottom-color: var(--earth-brown); }
+    .item-dots-visual {
+      flex: 0 0 auto; width: 40px;
+      border-bottom: 1.5px dotted rgba(74,51,34,.2);
+      margin-bottom: 3px;
+    }
+    .reorder-btn {
+      background: transparent; border: none; cursor: pointer;
+      color: rgba(74,51,34,.3); padding: .1rem;
+      transition: color .2s;
+    }
+    .reorder-btn:hover { color: var(--sage-dark); }
+
+    /* Add item / section links */
+    .add-item-link {
+      display: inline-flex; align-items: center; gap: .35rem;
+      font-size: .75rem; font-weight: 500; letter-spacing: .06em;
+      color: var(--sage-dark); cursor: pointer;
+      padding: .35rem 0;
+      background: transparent; border: none;
+      transition: color .2s;
+    }
+    .add-item-link:hover { color: var(--burnt-orange); }
+    .add-item-link:focus-visible { outline: 2px solid var(--wheat-gold); outline-offset: 3px; }
+    .add-section-btn {
+      display: flex; align-items: center; gap: .5rem;
+      font-family: 'DM Sans', sans-serif; font-size: .78rem;
+      font-weight: 600; letter-spacing: .1em; text-transform: uppercase;
+      color: var(--farm-cream); background: rgba(78,110,100,.35);
+      border: 1px dashed rgba(122,155,142,.4);
+      border-radius: 5px; padding: .7rem 1.2rem;
+      cursor: pointer; width: 100%; justify-content: center;
+      margin-top: 1rem;
+      transition: background .2s, border-color .2s;
+    }
+    .add-section-btn:hover { background: rgba(78,110,100,.55); border-color: var(--sage-dark); }
+    .add-section-btn:focus-visible { outline: 2px solid var(--wheat-gold); outline-offset: 3px; }
+
+    /* Publish button */
+    .publish-row {
+      display: flex; justify-content: flex-end;
+      padding: 1.5rem 0 0;
+    }
+    .btn-publish {
+      font-family: 'DM Sans', sans-serif;
+      font-size: .85rem; font-weight: 600; letter-spacing: .08em;
+      text-transform: uppercase;
+      background: var(--burnt-orange); color: var(--farm-cream);
+      border: none; border-radius: 6px;
+      padding: .75rem 2rem; cursor: pointer;
+      box-shadow: 0 2px 8px rgba(200,90,58,.4), 0 4px 20px rgba(200,90,58,.2);
+      transition: transform .15s, box-shadow .15s;
+      display: flex; align-items: center; gap: .5rem;
+    }
+    .btn-publish:hover { transform: translateY(-2px); box-shadow: 0 4px 16px rgba(200,90,58,.55), 0 8px 32px rgba(200,90,58,.3); }
+    .btn-publish:active { transform: translateY(0); }
+    .btn-publish:focus-visible { outline: 2px solid var(--wheat-gold); outline-offset: 3px; }
+    .btn-publish:disabled { opacity: .6; cursor: not-allowed; transform: none; }
+
+    /* Toast */
+    #toast {
+      position: fixed; bottom: 2rem; right: 2rem; z-index: 500;
+      background: var(--sage-dark); color: var(--farm-cream);
+      padding: .8rem 1.4rem; border-radius: 6px;
+      font-size: .85rem; font-weight: 500;
+      box-shadow: 0 4px 16px rgba(0,0,0,.4);
+      opacity: 0; transform: translateY(8px);
+      transition: opacity .25s, transform .25s;
+      pointer-events: none;
+    }
+    #toast.show { opacity: 1; transform: translateY(0); }
+    #toast.error { background: #6B2929; }
+  </style>
+</head>
+<body>
+
+  <!-- ===== LOGIN OVERLAY ===== -->
+  <div id="login-overlay">
+    <div class="login-card">
+      <img src="brand-assets/color-logo.png" alt="Bloomin' Acres" class="login-logo" />
+      <h1 class="login-title">Admin Login</h1>
+      <p class="login-sub">BLOOMIN' ACRES MANAGEMENT</p>
+      <div id="login-error" class="login-error"></div>
+      <label class="field-label" for="login-email">Email</label>
+      <input id="login-email" type="email" class="field-input" placeholder="you@example.com" autocomplete="email" />
+      <label class="field-label" for="login-password">Password</label>
+      <input id="login-password" type="password" class="field-input" placeholder="••••••••" autocomplete="current-password" />
+      <button id="login-btn" class="btn-login">Sign In</button>
+    </div>
+  </div>
+
+  <!-- ===== DASHBOARD ===== -->
+  <div id="dashboard">
+
+    <!-- Top bar -->
+    <header class="topbar">
+      <div class="topbar-left">
+        <img src="brand-assets/color-logo.png" alt="Bloomin' Acres" class="topbar-logo" />
+        <span class="topbar-badge">Admin</span>
+      </div>
+      <div class="topbar-right">
+        <span class="topbar-user" id="topbar-user-email"></span>
+        <a href="index.html" class="btn-ghost" target="_blank">View Site</a>
+        <button id="logout-btn" class="btn-ghost">Sign Out</button>
+      </div>
+    </header>
+
+    <!-- Account banner -->
+    <div class="account-banner">
+      <div class="account-avatar" id="account-avatar">B</div>
+      <div>
+        <div class="account-name">Bloomin' Acres</div>
+        <div class="account-email" id="account-email-display"></div>
+      </div>
+    </div>
+
+    <!-- Tab bar -->
+    <nav class="tab-bar" role="tablist">
+      <button class="tab-btn active" role="tab" aria-selected="true" data-tab="catalogue">
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
+          <rect x="1" y="1" width="5" height="5" rx="1" fill="currentColor" opacity=".7"/>
+          <rect x="8" y="1" width="5" height="5" rx="1" fill="currentColor" opacity=".7"/>
+          <rect x="1" y="8" width="5" height="5" rx="1" fill="currentColor" opacity=".7"/>
+          <rect x="8" y="8" width="5" height="5" rx="1" fill="currentColor" opacity=".7"/>
+        </svg>
+        Stripe Catalogue
+      </button>
+      <button class="tab-btn" role="tab" aria-selected="false" data-tab="menu">
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
+          <line x1="2" y1="4" x2="12" y2="4" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
+          <line x1="2" y1="7" x2="12" y2="7" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
+          <line x1="2" y1="10" x2="8" y2="10" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
+        </svg>
+        Menu Editor
+      </button>
+    </nav>
+
+    <!-- Tab: Stripe Catalogue -->
+    <div id="tab-catalogue" class="tab-panel active">
+      <div class="catalogue-header">
+        <h2 class="section-heading">Product Catalogue</h2>
+        <input type="search" class="search-input" id="product-search" placeholder="Search products…" aria-label="Search products" />
+      </div>
+      <div class="product-grid" id="product-grid">
+        <!-- Skeletons -->
+        <div class="skeleton-card"></div>
+        <div class="skeleton-card"></div>
+        <div class="skeleton-card"></div>
+        <div class="skeleton-card"></div>
+        <div class="skeleton-card"></div>
+        <div class="skeleton-card"></div>
+      </div>
+    </div>
+
+    <!-- Tab: Menu Editor -->
+    <div id="tab-menu" class="tab-panel">
+      <div class="menu-editor-wrap">
+        <div class="editor-header">
+          <h2 class="section-heading">Menu Editor</h2>
+          <a href="menu.html" target="_blank" class="btn-ghost" style="border:1px solid rgba(237,163,57,.2);">
+            Preview Public Menu ↗
+          </a>
+        </div>
+
+        <div class="menu-card-editor">
+          <img src="brand-assets/blank-menu-template.png" alt="" aria-hidden="true" class="menu-card-header-img" />
+          <div class="menu-card-body">
+            <div id="sections-container"></div>
+            <button class="add-section-btn" id="add-section-btn" type="button">
+              <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
+                <line x1="7" y1="2" x2="7" y2="12" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                <line x1="2" y1="7" x2="12" y2="7" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+              </svg>
+              Add Section
+            </button>
+          </div>
+        </div>
+
+        <div class="publish-row">
+          <button class="btn-publish" id="publish-btn" type="button">
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
+              <path d="M2 10l4-7 4 7" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+              <line x1="4.5" y1="7.5" x2="9.5" y2="7.5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
+            </svg>
+            Publish Menu
+          </button>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /dashboard -->
+
+  <div id="toast"></div>
+
+  <!-- Supabase CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+
+  <script>
+  (() => {
+    // ── State ────────────────────────────────────────────────────────────────
+    let sb = null;
+    let allProducts = [];   // Stripe products
+    let sections = [];      // { id?, title, items: [{ id?, stripe_product_id }] }
+
+    // ── Helpers ──────────────────────────────────────────────────────────────
+    function escHtml(s) {
+      return String(s)
+        .replace(/&/g,'&amp;').replace(/</g,'&lt;')
+        .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    }
+
+    function showToast(msg, isError = false) {
+      const t = document.getElementById('toast');
+      t.textContent = msg;
+      t.className = isError ? 'error show' : 'show';
+      clearTimeout(t._tid);
+      t._tid = setTimeout(() => { t.className = ''; }, 3200);
+    }
+
+    // ── Init ─────────────────────────────────────────────────────────────────
+    async function init() {
+      const r = await fetch('/api/config').catch(() => null);
+      if (!r || !r.ok) { alert('Cannot reach server. Is node serve.mjs running?'); return; }
+      const cfg = await r.json();
+      if (!cfg.supabaseUrl) { alert('.env is not configured — set SUPABASE_URL etc.'); return; }
+
+      sb = supabase.createClient(cfg.supabaseUrl, cfg.supabaseAnonKey);
+
+      // Check existing session
+      const { data: { session } } = await sb.auth.getSession();
+      if (session) {
+        enterDashboard(session.user);
+      } else {
+        showLogin();
+      }
+    }
+
+    // ── Login ─────────────────────────────────────────────────────────────────
+    function showLogin() {
+      document.getElementById('login-overlay').classList.remove('hidden');
+      document.getElementById('login-email').focus();
+    }
+
+    document.getElementById('login-btn').addEventListener('click', async () => {
+      const email = document.getElementById('login-email').value.trim();
+      const password = document.getElementById('login-password').value;
+      const errEl = document.getElementById('login-error');
+      const btn = document.getElementById('login-btn');
+      errEl.style.display = 'none';
+      btn.disabled = true;
+      btn.textContent = 'Signing in…';
+
+      const { data, error } = await sb.auth.signInWithPassword({ email, password });
+      btn.disabled = false;
+      btn.textContent = 'Sign In';
+
+      if (error) {
+        errEl.textContent = error.message;
+        errEl.style.display = 'block';
+        return;
+      }
+      document.getElementById('login-overlay').classList.add('hidden');
+      enterDashboard(data.user);
+    });
+
+    // Allow Enter key to submit login
+    ['login-email','login-password'].forEach(id => {
+      document.getElementById(id).addEventListener('keydown', e => {
+        if (e.key === 'Enter') document.getElementById('login-btn').click();
+      });
+    });
+
+    // ── Dashboard ─────────────────────────────────────────────────────────────
+    async function enterDashboard(user) {
+      document.getElementById('dashboard').classList.add('visible');
+      document.getElementById('topbar-user-email').textContent = user.email;
+      document.getElementById('account-email-display').textContent = user.email;
+      document.getElementById('account-avatar').textContent = (user.email || 'A')[0].toUpperCase();
+
+      // Load data in parallel
+      await Promise.all([loadProducts(), loadMenuFromSupabase()]);
+    }
+
+    // ── Logout ────────────────────────────────────────────────────────────────
+    document.getElementById('logout-btn').addEventListener('click', async () => {
+      await sb.auth.signOut();
+      document.getElementById('dashboard').classList.remove('visible');
+      document.getElementById('login-overlay').classList.remove('hidden');
+      document.getElementById('login-email').value = '';
+      document.getElementById('login-password').value = '';
+      document.getElementById('login-email').focus();
+    });
+
+    // ── Tabs ──────────────────────────────────────────────────────────────────
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.tab-btn').forEach(b => {
+          b.classList.remove('active'); b.setAttribute('aria-selected','false');
+        });
+        document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+        btn.classList.add('active'); btn.setAttribute('aria-selected','true');
+        document.getElementById('tab-' + btn.dataset.tab).classList.add('active');
+      });
+    });
+
+    // ── Stripe Catalogue ──────────────────────────────────────────────────────
+    async function loadProducts() {
+      const grid = document.getElementById('product-grid');
+      const r = await fetch('/api/stripe/products').catch(() => null);
+      if (!r || !r.ok) {
+        grid.innerHTML = '<p style="color:rgba(250,240,230,.45);font-size:.85rem;">Could not load Stripe products. Check STRIPE_SECRET_KEY in .env.</p>';
+        return;
+      }
+      const data = await r.json();
+      if (data.error) {
+        grid.innerHTML = `<p style="color:#f5a0a0;font-size:.85rem;">${escHtml(data.error)}</p>`;
+        return;
+      }
+      allProducts = data;
+      renderProductGrid(allProducts);
+    }
+
+    function renderProductGrid(products) {
+      const grid = document.getElementById('product-grid');
+      if (!products.length) {
+        grid.innerHTML = '<p style="color:rgba(250,240,230,.45);font-size:.85rem;">No active products found in your Stripe account.</p>';
+        return;
+      }
+      grid.innerHTML = products.map(p => `
+        <div class="product-card">
+          <div class="product-name">${escHtml(p.name)}</div>
+          ${p.description ? `<div class="product-desc">${escHtml(p.description)}</div>` : ''}
+          <div class="product-footer">
+            <span class="product-price">${escHtml(p.price_formatted || '—')}</span>
+            <span class="product-id" title="${escHtml(p.id)}">${escHtml(p.id)}</span>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    document.getElementById('product-search').addEventListener('input', e => {
+      const q = e.target.value.toLowerCase();
+      renderProductGrid(allProducts.filter(p =>
+        p.name.toLowerCase().includes(q) || (p.description || '').toLowerCase().includes(q)
+      ));
+    });
+
+    // ── Menu Editor ───────────────────────────────────────────────────────────
+    async function loadMenuFromSupabase() {
+      const { data: dbSections } = await sb
+        .from('menu_sections').select('id, title, sort_order').order('sort_order');
+      const { data: dbItems } = await sb
+        .from('menu_items').select('id, section_id, stripe_product_id, sort_order').order('sort_order');
+
+      const itemsMap = {};
+      (dbItems || []).forEach(i => {
+        if (!itemsMap[i.section_id]) itemsMap[i.section_id] = [];
+        itemsMap[i.section_id].push({ id: i.id, stripe_product_id: i.stripe_product_id });
+      });
+
+      sections = (dbSections || []).map(s => ({
+        id: s.id,
+        title: s.title,
+        items: (itemsMap[s.id] || []).map(i => ({ id: i.id, stripe_product_id: i.stripe_product_id })),
+      }));
+
+      renderMenuEditor();
+    }
+
+    function renderMenuEditor() {
+      const container = document.getElementById('sections-container');
+      container.innerHTML = '';
+      sections.forEach((sec, si) => renderSection(container, sec, si));
+    }
+
+    function renderSection(container, sec, si) {
+      const block = document.createElement('div');
+      block.className = 'section-block';
+      block.dataset.si = si;
+
+      // Title row
+      const titleRow = document.createElement('div');
+      titleRow.className = 'section-title-row';
+
+      const titleInput = document.createElement('input');
+      titleInput.type = 'text';
+      titleInput.className = 'section-title-input';
+      titleInput.value = sec.title;
+      titleInput.placeholder = 'Section title…';
+      titleInput.setAttribute('aria-label', 'Section title');
+      titleInput.addEventListener('input', e => { sections[si].title = e.target.value; });
+
+      const deleteBtn = document.createElement('button');
+      deleteBtn.className = 'icon-btn';
+      deleteBtn.type = 'button';
+      deleteBtn.title = 'Delete section';
+      deleteBtn.setAttribute('aria-label', 'Delete section');
+      deleteBtn.innerHTML = `<svg width="13" height="13" viewBox="0 0 13 13" fill="none" aria-hidden="true"><path d="M2 2l9 9M11 2l-9 9" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>`;
+      deleteBtn.addEventListener('click', () => {
+        sections.splice(si, 1);
+        renderMenuEditor();
+      });
+
+      titleRow.appendChild(titleInput);
+      titleRow.appendChild(deleteBtn);
+      block.appendChild(titleRow);
+
+      // Items
+      const itemsList = document.createElement('div');
+      itemsList.className = 'items-list';
+      sec.items.forEach((item, ii) => renderItem(itemsList, item, si, ii));
+      block.appendChild(itemsList);
+
+      // Add item button
+      const addItemBtn = document.createElement('button');
+      addItemBtn.className = 'add-item-link';
+      addItemBtn.type = 'button';
+      addItemBtn.innerHTML = `<svg width="11" height="11" viewBox="0 0 11 11" fill="none" aria-hidden="true"><line x1="5.5" y1="1" x2="5.5" y2="10" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><line x1="1" y1="5.5" x2="10" y2="5.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg> Add Item`;
+      addItemBtn.addEventListener('click', () => {
+        sections[si].items.push({ stripe_product_id: '' });
+        renderMenuEditor();
+        // Focus the new select
+        setTimeout(() => {
+          const selects = container.querySelectorAll(`.section-block[data-si="${si}"] .item-select`);
+          if (selects.length) selects[selects.length - 1].focus();
+        }, 50);
+      });
+      block.appendChild(addItemBtn);
+
+      container.appendChild(block);
+    }
+
+    function renderItem(list, item, si, ii) {
+      const row = document.createElement('div');
+      row.className = 'item-row';
+
+      // Up button
+      const upBtn = document.createElement('button');
+      upBtn.className = 'reorder-btn'; upBtn.type = 'button';
+      upBtn.title = 'Move up'; upBtn.setAttribute('aria-label', 'Move item up');
+      upBtn.innerHTML = `<svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M2 7l3-4 3 4" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+      upBtn.addEventListener('click', () => {
+        if (ii === 0) return;
+        const items = sections[si].items;
+        [items[ii-1], items[ii]] = [items[ii], items[ii-1]];
+        renderMenuEditor();
+      });
+
+      // Down button
+      const downBtn = document.createElement('button');
+      downBtn.className = 'reorder-btn'; downBtn.type = 'button';
+      downBtn.title = 'Move down'; downBtn.setAttribute('aria-label', 'Move item down');
+      downBtn.innerHTML = `<svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M2 3l3 4 3-4" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+      downBtn.addEventListener('click', () => {
+        const items = sections[si].items;
+        if (ii === items.length - 1) return;
+        [items[ii], items[ii+1]] = [items[ii+1], items[ii]];
+        renderMenuEditor();
+      });
+
+      // Product select
+      const select = document.createElement('select');
+      select.className = 'item-select';
+      select.setAttribute('aria-label', 'Choose product');
+
+      const blank = document.createElement('option');
+      blank.value = ''; blank.textContent = '— choose product —';
+      select.appendChild(blank);
+
+      allProducts.forEach(p => {
+        const opt = document.createElement('option');
+        opt.value = p.id;
+        opt.textContent = p.name + (p.price_formatted ? ` — ${p.price_formatted}` : '');
+        if (p.id === item.stripe_product_id) opt.selected = true;
+        select.appendChild(opt);
+      });
+      select.addEventListener('change', e => { sections[si].items[ii].stripe_product_id = e.target.value; });
+
+      // Dots visual
+      const dots = document.createElement('span');
+      dots.className = 'item-dots-visual';
+      dots.setAttribute('aria-hidden', 'true');
+
+      // Remove button
+      const removeBtn = document.createElement('button');
+      removeBtn.className = 'icon-btn'; removeBtn.type = 'button';
+      removeBtn.title = 'Remove item'; removeBtn.setAttribute('aria-label', 'Remove item');
+      removeBtn.innerHTML = `<svg width="11" height="11" viewBox="0 0 11 11" fill="none"><path d="M1.5 1.5l8 8M9.5 1.5l-8 8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>`;
+      removeBtn.addEventListener('click', () => {
+        sections[si].items.splice(ii, 1);
+        renderMenuEditor();
+      });
+
+      row.append(upBtn, downBtn, select, dots, removeBtn);
+      list.appendChild(row);
+    }
+
+    document.getElementById('add-section-btn').addEventListener('click', () => {
+      sections.push({ title: '', items: [] });
+      renderMenuEditor();
+      setTimeout(() => {
+        const inputs = document.querySelectorAll('.section-title-input');
+        if (inputs.length) inputs[inputs.length - 1].focus();
+      }, 50);
+    });
+
+    // ── Publish ───────────────────────────────────────────────────────────────
+    document.getElementById('publish-btn').addEventListener('click', async () => {
+      const btn = document.getElementById('publish-btn');
+      btn.disabled = true;
+      btn.innerHTML = `<svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true"><circle cx="7" cy="7" r="5" stroke="currentColor" stroke-width="1.6" stroke-dasharray="8 8"><animateTransform attributeName="transform" type="rotate" from="0 7 7" to="360 7 7" dur=".8s" repeatCount="indefinite"/></circle></svg> Publishing…`;
+
+      try {
+        // 1. Delete all existing sections (cascade deletes items)
+        const { error: delErr } = await sb
+          .from('menu_sections')
+          .delete()
+          .neq('id', '00000000-0000-0000-0000-000000000000'); // delete all
+        if (delErr) throw delErr;
+
+        // 2. Insert sections
+        for (let si = 0; si < sections.length; si++) {
+          const sec = sections[si];
+          if (!sec.title.trim()) continue;
+
+          const { data: newSec, error: secErr } = await sb
+            .from('menu_sections')
+            .insert({ title: sec.title.trim(), sort_order: si })
+            .select('id')
+            .single();
+          if (secErr) throw secErr;
+
+          // 3. Insert items for this section
+          const validItems = sec.items.filter(i => i.stripe_product_id);
+          if (validItems.length) {
+            const { error: itemErr } = await sb
+              .from('menu_items')
+              .insert(validItems.map((item, ii) => ({
+                section_id: newSec.id,
+                stripe_product_id: item.stripe_product_id,
+                sort_order: ii,
+              })));
+            if (itemErr) throw itemErr;
+          }
+        }
+
+        showToast('Menu published successfully!');
+        await loadMenuFromSupabase(); // refresh IDs
+      } catch (err) {
+        showToast('Publish failed: ' + err.message, true);
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = `<svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true"><path d="M2 10l4-7 4 7" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/><line x1="4.5" y1="7.5" x2="9.5" y2="7.5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg> Publish Menu`;
+      }
+    });
+
+    // ── Boot ──────────────────────────────────────────────────────────────────
+    init();
+  })();
+  </script>
+</body>
+</html>
