@@ -97,14 +97,20 @@
         0 2px 0 rgba(237,163,57,.12) inset;
     }
 
-    /* Template header */
-    .menu-header-img {
-      width: 100%;
-      display: block;
-      height: auto;
-      object-fit: contain;
-      object-position: top;
+    /* Template header — crops to logo area only, scales with card width */
+    .menu-header-wrap {
+      overflow: hidden;
+      position: relative;
+      padding-top: 39%; /* 39% of card width ≈ logo area height (896×1200 image, logo ~top 29%) */
+      height: 0;
       background-color: var(--farm-cream);
+    }
+    .menu-header-img {
+      position: absolute;
+      top: 0; left: 0;
+      width: 100%;
+      height: auto;
+      display: block;
     }
 
     /* Parchment body */
@@ -223,8 +229,10 @@
   <!-- Menu card -->
   <main class="page-wrap">
     <div class="menu-card">
-      <!-- Template header image (clipped to show logo area only) -->
-      <img src="brand-assets/blank-menu-template.png" alt="" aria-hidden="true" class="menu-header-img" />
+      <!-- Template header (crops to logo area, scales responsively) -->
+      <div class="menu-header-wrap">
+        <img src="brand-assets/blank-menu-template.png" alt="" aria-hidden="true" class="menu-header-img" />
+      </div>
 
       <!-- Parchment content -->
       <div class="menu-body" id="menu-content">
