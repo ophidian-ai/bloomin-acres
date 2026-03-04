@@ -1,0 +1,6 @@
+{
+  "rewrites": [
+    { "source": "/api/config", "destination": "/api/config.js" },
+    { "source": "/api/stripe/products", "destination": "/api/stripe/products.js" }
+  ]
+}
