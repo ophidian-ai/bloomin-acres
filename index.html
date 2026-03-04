@@ -189,6 +189,67 @@
     }
   </style>
   <style>
+    /* ── Hamburger button ───────────────────────────────── */
+    .nav-toggle {
+      position: fixed; top: 0; left: 0; z-index: 300;
+      padding: .9rem 1.25rem;
+      background: none; border: none; cursor: pointer;
+      display: flex; flex-direction: column; justify-content: center; gap: 5px;
+    }
+    .nav-toggle span {
+      display: block; width: 22px; height: 1.5px;
+      background: rgba(250,240,230,.6);
+      border-radius: 2px;
+      transition: transform 0.35s cubic-bezier(.22,1,.36,1), opacity 0.25s ease;
+    }
+    .nav-toggle:hover span { background: var(--wheat-gold); }
+    .nav-toggle:focus-visible { outline: 2px solid var(--wheat-gold); outline-offset: 4px; border-radius: 3px; }
+    .nav-toggle.open span:nth-child(1) { transform: translateY(6.5px) rotate(45deg); }
+    .nav-toggle.open span:nth-child(2) { opacity: 0; transform: scaleX(0); }
+    .nav-toggle.open span:nth-child(3) { transform: translateY(-6.5px) rotate(-45deg); }
+
+    /* ── Sidebar drawer ─────────────────────────────────── */
+    .nav-sidebar {
+      position: fixed; inset: 0 auto 0 0; z-index: 250;
+      width: min(280px, 80vw);
+      background: #1E1510;
+      border-right: 1px solid rgba(237,163,57,.12);
+      display: flex; flex-direction: column;
+      padding: 5rem 2rem 2.5rem;
+      transform: translateX(-100%);
+      transition: transform 0.45s cubic-bezier(.22,1,.36,1);
+      box-shadow: 4px 0 40px rgba(0,0,0,.45);
+    }
+    .nav-sidebar.open { transform: translateX(0); }
+
+    .nav-sidebar-logo {
+      width: 120px; margin-bottom: 2.5rem; opacity: .9;
+    }
+    .nav-sidebar nav { display: flex; flex-direction: column; gap: .25rem; }
+    .nav-sidebar-link {
+      font-family: var(--font-display); font-size: 1.1rem; font-weight: 600;
+      color: rgba(250,240,230,.65); text-decoration: none;
+      padding: .65rem .5rem;
+      border-bottom: 1px solid rgba(250,240,230,.06);
+      letter-spacing: -.01em;
+      transition: color 0.2s ease, padding-left 0.3s cubic-bezier(.22,1,.36,1);
+    }
+    .nav-sidebar-link:hover { color: var(--wheat-gold); padding-left: .9rem; }
+    .nav-sidebar-link:focus-visible { outline: 2px solid var(--wheat-gold); outline-offset: 3px; border-radius: 2px; }
+    .nav-sidebar-link.accent { color: var(--wheat-gold); }
+    .nav-sidebar-link.accent:hover { color: #f5bc5a; }
+
+    /* ── Overlay backdrop ───────────────────────────────── */
+    .nav-overlay {
+      position: fixed; inset: 0; z-index: 240;
+      background: rgba(0,0,0,.55);
+      opacity: 0; pointer-events: none;
+      transition: opacity 0.35s ease;
+      -webkit-backdrop-filter: blur(2px);
+      backdrop-filter: blur(2px);
+    }
+    .nav-overlay.open { opacity: 1; pointer-events: auto; }
+
     /* Fixed sign-in nav */
     .signin-nav {
       position: fixed; top: 0; right: 0; z-index: 200;
@@ -222,6 +283,57 @@
   </style>
 </head>
 <body>
+
+<!-- Hamburger toggle -->
+<button type="button" class="nav-toggle" id="nav-toggle" aria-label="Open navigation" aria-expanded="false" aria-controls="nav-sidebar">
+  <span></span><span></span><span></span>
+</button>
+
+<!-- Sidebar drawer -->
+<div class="nav-sidebar" id="nav-sidebar" role="dialog" aria-modal="true" aria-label="Site navigation">
+  <img src="brand-assets/color-logo.png" alt="Bloomin' Acres" class="nav-sidebar-logo" />
+  <nav>
+    <a href="#welcome"       class="nav-sidebar-link">Our Story</a>
+    <a href="#what-we-make"  class="nav-sidebar-link">What We Make</a>
+    <a href="menu.html"      class="nav-sidebar-link accent">Menu</a>
+    <a href="#visit"         class="nav-sidebar-link">Visit Us</a>
+  </nav>
+</div>
+
+<!-- Backdrop -->
+<div class="nav-overlay" id="nav-overlay" aria-hidden="true"></div>
+
+<script>
+  (() => {
+    const toggle  = document.getElementById('nav-toggle');
+    const sidebar = document.getElementById('nav-sidebar');
+    const overlay = document.getElementById('nav-overlay');
+
+    function openNav() {
+      sidebar.classList.add('open');
+      overlay.classList.add('open');
+      toggle.classList.add('open');
+      toggle.setAttribute('aria-expanded', 'true');
+    }
+    function closeNav() {
+      sidebar.classList.remove('open');
+      overlay.classList.remove('open');
+      toggle.classList.remove('open');
+      toggle.setAttribute('aria-expanded', 'false');
+    }
+
+    toggle.addEventListener('click', () => sidebar.classList.contains('open') ? closeNav() : openNav());
+    overlay.addEventListener('click', closeNav);
+
+    // Close on nav link click (hash links smooth-scroll, menu.html navigates)
+    sidebar.querySelectorAll('.nav-sidebar-link').forEach(link => {
+      link.addEventListener('click', closeNav);
+    });
+
+    // Close on Escape
+    document.addEventListener('keydown', e => { if (e.key === 'Escape') closeNav(); });
+  })();
+</script>
 
 <!-- Fixed sign-in link -->
 <nav class="signin-nav" aria-label="Account">
@@ -540,96 +652,21 @@
   background-image:
     radial-gradient(ellipse 60% 50% at 8%  8%,  rgba(60,95,55,.3)  0%, transparent 55%),
     radial-gradient(ellipse 50% 40% at 92% 92%, rgba(237,163,57,.12) 0%, transparent 55%);
-  padding: 4rem 1.5rem; position: relative;
+  padding: 4rem 1.5rem; text-align: center; position: relative;
 ">
-  <!-- Wheat stalk corners -->
-  <div aria-hidden="true" style="position:absolute;top:3rem;left:2.5rem;opacity:.18;transform:rotate(-8deg);">
-    <svg viewBox="0 0 30 95" width="28" height="90" fill="none">
-      <line x1="15" y1="92" x2="15" y2="10" stroke="#C8A96E" stroke-width="1.5"/>
-      <ellipse cx="9"  cy="72" rx="4" ry="8.5" fill="#C8A96E" transform="rotate(-25,9,72)"/>
-      <ellipse cx="21" cy="64" rx="4" ry="8.5" fill="#C8A96E" transform="rotate(25,21,64)"/>
-      <ellipse cx="9"  cy="52" rx="3.5" ry="7.5" fill="#C8A96E" transform="rotate(-20,9,52)"/>
-      <ellipse cx="21" cy="44" rx="3.5" ry="7.5" fill="#C8A96E" transform="rotate(20,21,44)"/>
-      <ellipse cx="15" cy="34" rx="3"   ry="6.5" fill="#C8A96E"/>
-    </svg>
-  </div>
-  <div aria-hidden="true" style="position:absolute;top:3rem;right:2.5rem;opacity:.18;transform:rotate(8deg) scaleX(-1);">
-    <svg viewBox="0 0 30 95" width="28" height="90" fill="none">
-      <line x1="15" y1="92" x2="15" y2="10" stroke="#C8A96E" stroke-width="1.5"/>
-      <ellipse cx="9"  cy="72" rx="4" ry="8.5" fill="#C8A96E" transform="rotate(-25,9,72)"/>
-      <ellipse cx="21" cy="64" rx="4" ry="8.5" fill="#C8A96E" transform="rotate(25,21,64)"/>
-      <ellipse cx="9"  cy="52" rx="3.5" ry="7.5" fill="#C8A96E" transform="rotate(-20,9,52)"/>
-      <ellipse cx="21" cy="44" rx="3.5" ry="7.5" fill="#C8A96E" transform="rotate(20,21,44)"/>
-      <ellipse cx="15" cy="34" rx="3"   ry="6.5" fill="#C8A96E"/>
-    </svg>
-  </div>
-
-  <div class="animate-fade-up" style="text-align:center;margin-bottom:2.75rem;">
+  <div class="animate-fade-up">
     <span class="overline" style="color:var(--sage-light);">What's in season</span>
-    <h2 style="font-size:clamp(2rem,4vw,3rem);color:var(--farm-cream);">At the Stand</h2>
+    <h2 style="font-size:clamp(2rem,4vw,3rem);color:var(--farm-cream);margin-bottom:1.5rem;">At the Stand</h2>
+    <p style="font-family:var(--font-body);color:rgba(250,240,230,.65);font-size:1rem;max-width:460px;margin:0 auto 2rem;line-height:1.7;">
+      Fresh-baked sourdough, seasonal produce, and pantry staples — see what's available this week.
+    </p>
+    <a href="menu.html" class="cta-btn">
+      View the Menu
+      <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
+        <path d="M3 7h8M7 3l4 4-4 4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    </a>
   </div>
-
-  <!-- Parchment menu card: template as header image, plain cream below -->
-  <div class="animate-fade-up" style="
-    max-width:620px; margin:0 auto;
-    border-radius:4px; overflow:hidden;
-    box-shadow:
-      0 2px 4px rgba(0,0,0,.18),
-      0 14px 44px rgba(0,0,0,.38),
-      0 44px 88px rgba(0,0,0,.22);
-    position:relative;
-  ">
-    <!-- Template header: clipped to show just the logo area -->
-    <div style="overflow:hidden; height:200px; background-color:var(--farm-cream);">
-      <img src="brand-assets/blank-menu-template.png"
-           alt="" aria-hidden="true"
-           style="width:100%;display:block;object-fit:cover;object-position:top;height:100%;" />
-    </div>
-
-    <!-- Menu content on plain parchment -->
-    <div style="
-      background-color:var(--farm-cream);
-      background-image: repeating-linear-gradient(
-        transparent 0px, transparent 27px, rgba(200,169,110,.18) 27px, rgba(200,169,110,.18) 28px
-      );
-      padding:1.25rem 3.5rem 2rem;
-      position:relative;
-    ">
-    <!-- Wheat divider -->
-    <div aria-hidden="true" style="display:flex;justify-content:center;margin-bottom:1.25rem;">
-      <svg viewBox="0 0 200 28" width="180" height="24">
-          <line x1="0"   y1="14" x2="78"  y2="14" stroke="#C8A96E" stroke-width=".8" opacity=".5"/>
-          <line x1="122" y1="14" x2="200" y2="14" stroke="#C8A96E" stroke-width=".8" opacity=".5"/>
-          <line x1="100" y1="26" x2="100" y2="4" stroke="#8B6914" stroke-width="1.2"/>
-          <ellipse cx="95"  cy="20" rx="3.5" ry="6" fill="#C8A96E" opacity=".8" transform="rotate(-20,95,20)"/>
-          <ellipse cx="105" cy="18" rx="3.5" ry="6" fill="#C8A96E" opacity=".8" transform="rotate(20,105,18)"/>
-          <ellipse cx="100" cy="10" rx="3"   ry="5" fill="#C8A96E" opacity=".85"/>
-        </svg>
-      </div>
-
-    <!-- Category headers + items helper style -->
-    <style>
-      .menu-cat-head {
-        font-family: var(--font-display); font-size: .7rem; letter-spacing: .22em;
-        text-transform: uppercase; color: var(--sage-dark); text-align: center;
-        border-top: 1px solid rgba(122,155,142,.3); border-bottom: 1px solid rgba(122,155,142,.3);
-        padding: .4rem 0; margin-bottom: .9rem;
-      }
-      .menu-row { display: flex; align-items: baseline; gap: .5rem; margin-bottom: .5rem; }
-      .menu-row:last-child { margin-bottom: 0; }
-      .menu-name { font-family: var(--font-display); font-size: .92rem; color: var(--earth-brown); white-space: nowrap; }
-      .menu-dot  { flex: 1; border-bottom: 1px dotted rgba(74,51,34,.22); margin-bottom: 3px; }
-      .menu-price { font-family: var(--font-display); font-size: .92rem; font-weight: 600; color: var(--burnt-orange); white-space: nowrap; }
-    </style>
-
-    <div id="menu-items-container">
-      <div id="menu-skeleton" style="text-align:center;padding:1.5rem 0;opacity:.4;">
-        <p style="font-family:var(--font-display);font-size:.85rem;color:var(--earth-brown);">Loading menu…</p>
-      </div>
-    </div>
-
-    </div><!-- end menu content -->
-  </div><!-- end card wrapper -->
 </section>
 
 
@@ -807,62 +844,6 @@
   document.querySelectorAll('.animate-fade-up').forEach(el => observer.observe(el));
 </script>
 
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
-<script>
-  (async () => {
-    const container = document.getElementById('menu-items-container');
-    const skeleton  = document.getElementById('menu-skeleton');
-
-    function escHtml(s) {
-      return String(s)
-        .replace(/&/g,'&amp;').replace(/</g,'&lt;')
-        .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-    }
-
-    // 1. Fetch Supabase config
-    let cfg;
-    try { cfg = await (await fetch('/api/config')).json(); } catch { skeleton.remove(); return; }
-    if (!cfg.supabaseUrl) { skeleton.remove(); return; }
-
-    // 2. Fetch Stripe products (non-fatal)
-    let productMap = {};
-    try {
-      const products = await (await fetch('/api/stripe/products')).json();
-      if (Array.isArray(products)) products.forEach(p => { productMap[p.id] = p; });
-    } catch {}
-
-    // 3. Fetch menu from Supabase
-    const sb = supabase.createClient(cfg.supabaseUrl, cfg.supabaseAnonKey);
-    const { data: sections } = await sb.from('menu_sections').select('id,title,sort_order').order('sort_order');
-    const { data: allItems } = await sb.from('menu_items').select('id,section_id,stripe_product_id,sort_order').order('sort_order');
-
-    skeleton.remove();
-    if (!sections || sections.length === 0) return;
-
-    // Group items by section
-    const bySection = {};
-    (allItems || []).forEach(item => {
-      if (!bySection[item.section_id]) bySection[item.section_id] = [];
-      bySection[item.section_id].push(item);
-    });
-
-    // 4. Render using existing CSS classes
-    sections.forEach(section => {
-      const items = bySection[section.id] || [];
-      const el = document.createElement('div');
-      el.style.marginBottom = '1.6rem';
-      let html = `<h4 class="menu-cat-head">${escHtml(section.title)}</h4>`;
-      items.forEach(item => {
-        const p = productMap[item.stripe_product_id];
-        const name  = p ? p.name : item.stripe_product_id;
-        const price = p?.price_formatted ?? '';
-        html += `<div class="menu-row"><span class="menu-name">${escHtml(name)}</span><span class="menu-dot"></span><span class="menu-price">${escHtml(price)}</span></div>`;
-      });
-      el.innerHTML = html;
-      container.appendChild(el);
-    });
-  })();
-</script>
 
 </body>
 </html>

@@ -564,11 +564,19 @@
 
       sb = supabase.createClient(cfg.supabaseUrl, cfg.supabaseAnonKey);
 
-      // Reactively handle session — covers initial restore, token refresh, and logout
+      // Initial check from localStorage — reliable and instant
+      const { data: { session } } = await sb.auth.getSession();
+      if (session) {
+        enterDashboard(session.user);
+      } else {
+        showLogin();
+      }
+
+      // Only react to explicit sign-in / sign-out events — ignore TOKEN_REFRESHED etc.
       sb.auth.onAuthStateChange((event, session) => {
-        if (session) {
+        if (event === 'SIGNED_IN' && session) {
           enterDashboard(session.user);
-        } else {
+        } else if (event === 'SIGNED_OUT') {
           showLogin();
         }
       });
