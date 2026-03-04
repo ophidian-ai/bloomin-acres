@@ -192,16 +192,20 @@
     /* ── Hamburger button ───────────────────────────────── */
     .nav-toggle {
       position: fixed; top: 0; left: 0; z-index: 300;
-      padding: .9rem 1.25rem;
-      background: none; border: none; cursor: pointer;
+      margin: .65rem .75rem;
+      padding: .55rem .75rem;
+      background: rgba(0,0,0,.28); border: 1px solid rgba(250,240,230,.2);
+      border-radius: 4px; cursor: pointer;
+      -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px);
       display: flex; flex-direction: column; justify-content: center; gap: 5px;
     }
     .nav-toggle span {
-      display: block; width: 22px; height: 1.5px;
-      background: rgba(250,240,230,.6);
+      display: block; width: 22px; height: 2px;
+      background: rgba(250,240,230,.9);
       border-radius: 2px;
       transition: transform 0.35s cubic-bezier(.22,1,.36,1), opacity 0.25s ease;
     }
+    .nav-toggle:hover { border-color: rgba(237,163,57,.45); background: rgba(0,0,0,.42); }
     .nav-toggle:hover span { background: var(--wheat-gold); }
     .nav-toggle:focus-visible { outline: 2px solid var(--wheat-gold); outline-offset: 4px; border-radius: 3px; }
     .nav-toggle.open span:nth-child(1) { transform: translateY(6.5px) rotate(45deg); }
@@ -393,16 +397,16 @@
   </div>
 
   <!-- Hero content -->
-  <div class="hero-in" style="text-align:center;padding:2rem;max-width:700px;position:relative;z-index:1;">
+  <div class="hero-in" style="text-align:center;padding:2rem;max-width:900px;position:relative;z-index:1;">
     <img
       src="brand-assets/color-logo.png"
       alt="Bloomin' Acres — Farmstand & Bakery"
       class="hero-in hero-d1"
-      style="width:min(400px,80vw);margin:0 auto 1.75rem;filter:drop-shadow(0 6px 16px rgba(0,0,0,.35));image-rendering:-webkit-optimize-contrast;"
+      style="width:min(580px,88vw);margin:0 auto 2rem;filter:drop-shadow(0 6px 16px rgba(0,0,0,.35));image-rendering:-webkit-optimize-contrast;"
     />
     <p class="hero-in hero-d2" style="
       font-family:var(--font-display); font-style:italic;
-      font-size:clamp(.85rem,2.4vw,1.15rem);
+      font-size:clamp(1rem,2.8vw,1.4rem);
       color:rgba(250,240,230,.95);
       letter-spacing:.22em; text-transform:uppercase;
       margin-bottom:3.5rem;
