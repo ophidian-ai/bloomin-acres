@@ -622,28 +622,10 @@
       .menu-price { font-family: var(--font-display); font-size: .92rem; font-weight: 600; color: var(--burnt-orange); white-space: nowrap; }
     </style>
 
-    <!-- Sourdough Artisan Loaves -->
-    <div style="margin-bottom:1.6rem;">
-      <h4 class="menu-cat-head">Sourdough Artisan Loaves</h4>
-      <div class="menu-row"><span class="menu-name">Classic</span><span class="menu-dot"></span><span class="menu-price">$8</span></div>
-      <div class="menu-row"><span class="menu-name">Jalapeño Cheddar</span><span class="menu-dot"></span><span class="menu-price">$12</span></div>
-      <div class="menu-row"><span class="menu-name">Seasonal Special</span><span class="menu-dot"></span><span class="menu-price">$14</span></div>
-    </div>
-
-    <!-- Sourdough Favorites -->
-    <div style="margin-bottom:1.6rem;">
-      <h4 class="menu-cat-head">Sourdough Favorites</h4>
-      <div class="menu-row"><span class="menu-name">English Muffins</span><span class="menu-dot"></span><span class="menu-price">$8</span></div>
-      <div class="menu-row"><span class="menu-name">Pancake Mix</span><span class="menu-dot"></span><span class="menu-price">$8</span></div>
-      <div class="menu-row"><span class="menu-name">Pita Pockets</span><span class="menu-dot"></span><span class="menu-price">$8</span></div>
-      <div class="menu-row"><span class="menu-name">Flight Box</span><span class="menu-dot"></span><span class="menu-price">$16</span></div>
-    </div>
-
-    <!-- Sweet & Pantry -->
-    <div>
-      <h4 class="menu-cat-head">Sweet &amp; Pantry</h4>
-      <div class="menu-row"><span class="menu-name">Gourmet Snickerdoodles</span><span class="menu-dot"></span><span class="menu-price">$10</span></div>
-      <div class="menu-row"><span class="menu-name">Organic Freeze-Dried Eggs</span><span class="menu-dot"></span><span class="menu-price">$8</span></div>
+    <div id="menu-items-container">
+      <div id="menu-skeleton" style="text-align:center;padding:1.5rem 0;opacity:.4;">
+        <p style="font-family:var(--font-display);font-size:.85rem;color:var(--earth-brown);">Loading menu…</p>
+      </div>
     </div>
 
     </div><!-- end menu content -->
@@ -823,6 +805,63 @@
     { threshold: 0.1 }
   );
   document.querySelectorAll('.animate-fade-up').forEach(el => observer.observe(el));
+</script>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script>
+  (async () => {
+    const container = document.getElementById('menu-items-container');
+    const skeleton  = document.getElementById('menu-skeleton');
+
+    function escHtml(s) {
+      return String(s)
+        .replace(/&/g,'&amp;').replace(/</g,'&lt;')
+        .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    }
+
+    // 1. Fetch Supabase config
+    let cfg;
+    try { cfg = await (await fetch('/api/config')).json(); } catch { skeleton.remove(); return; }
+    if (!cfg.supabaseUrl) { skeleton.remove(); return; }
+
+    // 2. Fetch Stripe products (non-fatal)
+    let productMap = {};
+    try {
+      const products = await (await fetch('/api/stripe/products')).json();
+      if (Array.isArray(products)) products.forEach(p => { productMap[p.id] = p; });
+    } catch {}
+
+    // 3. Fetch menu from Supabase
+    const sb = supabase.createClient(cfg.supabaseUrl, cfg.supabaseAnonKey);
+    const { data: sections } = await sb.from('menu_sections').select('id,title,sort_order').order('sort_order');
+    const { data: allItems } = await sb.from('menu_items').select('id,section_id,stripe_product_id,sort_order').order('sort_order');
+
+    skeleton.remove();
+    if (!sections || sections.length === 0) return;
+
+    // Group items by section
+    const bySection = {};
+    (allItems || []).forEach(item => {
+      if (!bySection[item.section_id]) bySection[item.section_id] = [];
+      bySection[item.section_id].push(item);
+    });
+
+    // 4. Render using existing CSS classes
+    sections.forEach(section => {
+      const items = bySection[section.id] || [];
+      const el = document.createElement('div');
+      el.style.marginBottom = '1.6rem';
+      let html = `<h4 class="menu-cat-head">${escHtml(section.title)}</h4>`;
+      items.forEach(item => {
+        const p = productMap[item.stripe_product_id];
+        const name  = p ? p.name : item.stripe_product_id;
+        const price = p?.price_formatted ?? '';
+        html += `<div class="menu-row"><span class="menu-name">${escHtml(name)}</span><span class="menu-dot"></span><span class="menu-price">${escHtml(price)}</span></div>`;
+      });
+      el.innerHTML = html;
+      container.appendChild(el);
+    });
+  })();
 </script>
 
 </body>
