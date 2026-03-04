@@ -402,24 +402,20 @@
       src="brand-assets/color-logo.png"
       alt="Bloomin' Acres — Farmstand & Bakery"
       class="hero-in hero-d1"
-      style="width:min(1160px,92vw);margin:0 auto 2rem;filter:drop-shadow(0 6px 16px rgba(0,0,0,.35));image-rendering:-webkit-optimize-contrast;"
+      style="width:min(1160px,92vw);max-height:72vh;object-fit:contain;margin:0 auto 1.5rem;filter:drop-shadow(0 6px 16px rgba(0,0,0,.35));image-rendering:-webkit-optimize-contrast;"
     />
-    <p class="hero-in hero-d2" style="
-      font-family:var(--font-display); font-style:italic;
-      font-size:clamp(1rem,2.8vw,1.4rem);
-      color:rgba(250,240,230,.95);
-      letter-spacing:.22em; text-transform:uppercase;
-      margin-bottom:3.5rem;
-    ">Homegrown &nbsp;·&nbsp; Homemade &nbsp;·&nbsp; Heartfelt</p>
-    <a href="#welcome" class="hero-in hero-d3 scroll-cta" aria-label="Scroll down">
-      <svg viewBox="0 0 24 24" width="30" height="30" fill="none"
-           stroke="rgba(250,240,230,.6)" stroke-width="1.5"
-           stroke-linecap="round" stroke-linejoin="round">
-        <line x1="12" y1="4" x2="12" y2="20"/>
-        <polyline points="18 14 12 20 6 14"/>
-      </svg>
-    </a>
   </div>
+
+  <!-- Arrow pinned to bottom of hero -->
+  <a href="#welcome" class="scroll-cta" aria-label="Scroll down"
+     style="position:absolute;bottom:2rem;left:50%;transform:translateX(-50%);z-index:1;">
+    <svg viewBox="0 0 24 24" width="30" height="30" fill="none"
+         stroke="rgba(250,240,230,.6)" stroke-width="1.5"
+         stroke-linecap="round" stroke-linejoin="round">
+      <line x1="12" y1="4" x2="12" y2="20"/>
+      <polyline points="18 14 12 20 6 14"/>
+    </svg>
+  </a>
 </section>
 
 
