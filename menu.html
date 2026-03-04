@@ -213,6 +213,32 @@
 </head>
 <body>
 
+  <!-- Admin preview bar — only visible when opened from admin (?from=admin) -->
+  <div id="preview-bar" style="
+    display:none; align-items:center; justify-content:space-between;
+    background:#2A1E14; color:rgba(250,240,230,.75);
+    padding:.6rem 1.5rem; font-family:'DM Sans',sans-serif;
+    font-size:.8rem; letter-spacing:.06em; position:sticky; top:0; z-index:200;
+    border-bottom:1px solid rgba(237,163,57,.2);
+  ">
+    <span style="color:rgba(237,163,57,.7); text-transform:uppercase; font-weight:600;">Preview Mode</span>
+    <a href="admin.html" style="
+      display:inline-flex; align-items:center; gap:.4rem;
+      color:rgba(250,240,230,.85); text-decoration:none; font-weight:500;
+      transition:color 0.2s ease;
+    " onmouseover="this.style.color='#EDA339'" onmouseout="this.style.color='rgba(250,240,230,.85)'">
+      <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
+        <path d="M9 2L4 7l5 5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      Back to Admin
+    </a>
+  </div>
+  <script>
+    if (new URLSearchParams(window.location.search).get('from') === 'admin') {
+      document.getElementById('preview-bar').style.display = 'flex';
+    }
+  </script>
+
   <!-- Nav -->
   <nav class="site-nav">
     <a href="index.html">

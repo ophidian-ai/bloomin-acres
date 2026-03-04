@@ -493,7 +493,7 @@
       <div class="menu-editor-wrap">
         <div class="editor-header">
           <h2 class="section-heading">Menu Editor</h2>
-          <a href="menu.html" target="_blank" class="btn-ghost" style="border:1px solid rgba(237,163,57,.2);">
+          <a href="menu.html?from=admin" target="_blank" class="btn-ghost" style="border:1px solid rgba(237,163,57,.2);">
             Preview Public Menu ↗
           </a>
         </div>
@@ -564,13 +564,14 @@
 
       sb = supabase.createClient(cfg.supabaseUrl, cfg.supabaseAnonKey);
 
-      // Check existing session
-      const { data: { session } } = await sb.auth.getSession();
-      if (session) {
-        enterDashboard(session.user);
-      } else {
-        showLogin();
-      }
+      // Reactively handle session — covers initial restore, token refresh, and logout
+      sb.auth.onAuthStateChange((event, session) => {
+        if (session) {
+          enterDashboard(session.user);
+        } else {
+          showLogin();
+        }
+      });
     }
 
     // ── Login ─────────────────────────────────────────────────────────────────
