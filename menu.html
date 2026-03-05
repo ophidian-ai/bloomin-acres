@@ -614,23 +614,25 @@
       const currentUser = session?.user ?? null;
 
       // Wire sidebar auth state
-      const signinLink   = document.getElementById('menu-sidebar-signin');
-      const acctItem     = document.getElementById('menu-sidebar-account-item');
-      const signoutBtn   = document.getElementById('menu-sidebar-signout');
+      const signinLink  = document.getElementById('menu-sidebar-signin');
+      const acctItem    = document.getElementById('menu-sidebar-account-item');
+      const signoutBtn  = document.getElementById('menu-sidebar-signout');
       if (currentUser) {
         const { data: adminRow } = await sb.from('admins').select('user_id').eq('user_id', currentUser.id).maybeSingle();
         signinLink.style.display = 'none';
+        acctItem.style.display   = 'none'; // keep hidden regardless
         if (adminRow) {
-          // Admin: show Dashboard link instead of My Account submenu
+          // Admin: insert Dashboard link in place of My Account
           const dashLink = document.createElement('a');
           dashLink.href = 'admin.html';
           dashLink.className = 'nav-sidebar-link';
           dashLink.textContent = 'Dashboard';
           acctItem.parentNode.insertBefore(dashLink, acctItem);
         } else {
-          acctItem.classList.remove('menu-sidebar-hidden');
+          // Regular user: show My Account submenu
+          acctItem.style.display = 'block';
         }
-        signoutBtn.classList.remove('menu-sidebar-hidden');
+        signoutBtn.style.display = 'block';
         signoutBtn.addEventListener('click', async () => {
           await sb.auth.signOut();
           window.location.href = 'index.html';
