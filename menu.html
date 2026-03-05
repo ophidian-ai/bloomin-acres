@@ -265,15 +265,25 @@
     .variation-dropdown.open { display: block; }
     .variation-dropdown-row {
       display: flex; justify-content: space-between; align-items: center;
-      padding: .3rem .75rem;
+      padding: .35rem .75rem;
       font-family: 'DM Sans', sans-serif;
       font-size: .75rem;
       color: var(--earth-brown);
       border-bottom: 1px solid rgba(74,51,34,.07);
+      background: none; border-left: none; border-right: none; border-top: none;
+      width: 100%; text-align: left; cursor: pointer;
+      transition: background .15s;
     }
     .variation-dropdown-row:last-child { border-bottom: none; }
+    .variation-dropdown-row:hover { background: rgba(74,51,34,.07); }
     .variation-dropdown-name { font-weight: 500; }
     .variation-dropdown-price { color: var(--earth-mid); }
+    .variation-dropdown-cart {
+      font-size: .68rem; font-weight: 600; letter-spacing: .06em;
+      text-transform: uppercase; color: var(--sage-dark);
+      opacity: 0; transition: opacity .15s;
+    }
+    .variation-dropdown-row:hover .variation-dropdown-cart { opacity: 1; }
 
     /* Account link in nav */
     .nav-account {
@@ -560,10 +570,13 @@
             <div class="variation-dropdown" id="var-dd-${escHtml(pid)}">
               ${variations.map(v => {
                 const total = (baseAmount || 0) + (v.price_delta || 0);
-                return `<div class="variation-dropdown-row">
+                return `<button class="variation-dropdown-row" data-vname="${escHtml(v.name)}" data-vdelta="${v.price_delta || 0}">
                   <span class="variation-dropdown-name">${escHtml(v.name)}</span>
-                  <span class="variation-dropdown-price">${fmtPrice(total)}</span>
-                </div>`;
+                  <span style="display:flex;align-items:center;gap:.5rem;">
+                    <span class="variation-dropdown-price">${fmtPrice(total)}</span>
+                    <span class="variation-dropdown-cart">+ Cart</span>
+                  </span>
+                </button>`;
               }).join('')}
             </div>` : '';
 
@@ -597,6 +610,34 @@
               const open = dd.classList.toggle('open');
               optBtn.classList.toggle('open', open);
               optBtn.innerHTML = `Options ${open ? '&#9652;' : '&#9662;'}`;
+            });
+
+            // Variation row → add to cart
+            row.querySelectorAll('.variation-dropdown-row').forEach(varBtn => {
+              varBtn.addEventListener('click', async () => {
+                if (!currentUser) { window.location.href = 'account.html'; return; }
+                const vName = varBtn.dataset.vname;
+                const vDelta = parseInt(varBtn.dataset.vdelta, 10) || 0;
+                const { data: existing } = await sb.from('user_cart')
+                  .select('id, quantity')
+                  .eq('user_id', currentUser.id)
+                  .eq('stripe_product_id', pid)
+                  .eq('variation_name', vName)
+                  .maybeSingle();
+                if (existing) {
+                  await sb.from('user_cart').update({ quantity: existing.quantity + 1 }).eq('id', existing.id);
+                } else {
+                  await sb.from('user_cart').insert({
+                    user_id: currentUser.id,
+                    stripe_product_id: pid,
+                    variation_name: vName,
+                    variation_delta: vDelta,
+                    quantity: 1,
+                  });
+                  userCartIds.add(pid);
+                }
+                showToast(`${name} (${vName}) added to cart`);
+              });
             });
           }
 
