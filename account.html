@@ -399,6 +399,12 @@
       padding: 1.25rem;
       box-shadow: var(--shadow-card);
     }
+    .fav-card.unavailable { opacity: .6; }
+    .fav-card-unavailable {
+      font-size: .75rem; font-weight: 600; letter-spacing: .07em;
+      text-transform: uppercase; color: rgba(139,58,58,.6);
+      padding: .4rem 0;
+    }
     .fav-card-name {
       font-weight: 600; font-size: .95rem;
       margin-bottom: .15rem;
@@ -689,6 +695,7 @@
   let products = {};   // stripe_product_id → { name, price_formatted, unit_amount }
   let cartItems = [];
   let favItems = [];
+  let menuProductIds = new Set(); // currently published menu items
 
   // ── Helpers ──────────────────────────────────────────────────────────────
   function showToast(msg, isError = false) {
@@ -791,7 +798,7 @@
     }
 
     await loadProducts();
-    await Promise.all([loadCart(), loadFavorites(), loadOrders()]);
+    await Promise.all([loadCart(), loadFavorites(), loadOrders(), loadMenuItems()]);
   }
 
   // ── Load Stripe products ──────────────────────────────────────────────────
@@ -800,6 +807,13 @@
     if (!r || !r.ok) return;
     const list = await r.json();
     list.forEach(p => { products[p.id] = p; });
+  }
+
+  // ── Menu items (for availability check) ──────────────────────────────────
+  async function loadMenuItems() {
+    const { data } = await sb.from('menu_items').select('stripe_product_id');
+    (data || []).forEach(r => menuProductIds.add(r.stripe_product_id));
+    renderFavorites(); // re-render once menu data is available
   }
 
   // ── Cart ──────────────────────────────────────────────────────────────────
@@ -917,12 +931,16 @@
         const priceDisplay = totalAmount !== null
           ? new Intl.NumberFormat('en-US', { style: 'currency', currency: p?.currency || 'usd' }).format(totalAmount / 100)
           : '—';
-        return `<div class="fav-card">
+        const onMenu = menuProductIds.size === 0 || menuProductIds.has(item.stripe_product_id);
+        return `<div class="fav-card${onMenu ? '' : ' unavailable'}">
           <div class="fav-card-name">${p?.name || item.stripe_product_id}</div>
           ${item.variation_name ? `<div class="fav-card-variation">${item.variation_name}</div>` : ''}
           <div class="fav-card-price">${priceDisplay}</div>
           <div class="fav-card-actions">
-            <button class="btn-cart-add" data-pid="${item.stripe_product_id}" data-vname="${item.variation_name || ''}" data-vdelta="${item.variation_delta || 0}">+ Cart</button>
+            ${onMenu
+              ? `<button class="btn-cart-add" data-pid="${item.stripe_product_id}" data-vname="${item.variation_name || ''}" data-vdelta="${item.variation_delta || 0}">+ Cart</button>`
+              : `<span class="fav-card-unavailable">Not on the Menu</span>`
+            }
             <button class="btn-unfav" data-fid="${item.id}" aria-label="Remove favorite">
               <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
             </button>
