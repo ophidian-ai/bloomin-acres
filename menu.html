@@ -97,47 +97,46 @@
         0 2px 0 rgba(237,163,57,.12) inset;
     }
 
-    /* Full template frame — image provides all the art */
-    .menu-frame {
-      position: relative;
-      line-height: 0;
-    }
-    .template-full-img {
-      width: 100%;
-      height: auto;
-      display: block;
+    /* 3-part template frame */
+    .template-header,
+    .template-footer { width: 100%; height: auto; display: block; }
+    .template-body {
+      background-image: url('brand-assets/menu-template-middle.png');
+      background-size: 100% auto;
+      background-repeat: repeat-y;
+      padding: 3% 13%;
     }
 
-    /* Content overlaid on the blank area of the template */
-    /* 896×1200 image: header ends ~29% down, footer starts ~8% up, wheat stalks ~9% in */
-    .menu-content-overlay {
-      position: absolute;
-      top: 29%;
-      bottom: 8%;
-      left: 9%;
-      right: 9%;
-      overflow-y: auto;
-      overflow-x: hidden;
-      scrollbar-width: none;
-      line-height: 1.5;
-    }
-    .menu-content-overlay::-webkit-scrollbar { display: none; }
-
-    /* Section divider — matches the "——— TITLE ———" style in the template */
+    /* Section divider with brushstroke images — auto-sizes to fill remaining width */
     .section-divider {
       display: flex;
       align-items: center;
-      gap: 0.45rem;
+      gap: 0.5rem;
       margin: 0.85rem 0 0.4rem;
     }
     .section-divider:first-child { margin-top: 0; }
-    .section-divider::before,
+    .section-divider::before {
+      content: '';
+      flex: 1;
+      min-width: 16px;
+      height: 7px;
+      background-image: url('brand-assets/brushstroke-left.png');
+      background-size: 100% 100%;
+      background-repeat: no-repeat;
+    }
     .section-divider::after {
       content: '';
       flex: 1;
-      height: 1px;
-      background: rgba(78,110,100,.45);
+      min-width: 16px;
+      height: 7px;
+      background-image: url('brand-assets/brushstroke-right.png');
+      background-size: 100% 100%;
+      background-repeat: no-repeat;
     }
+
+    /* Wheat separator (every 3rd section) */
+    .wheat-sep-wrap { text-align: center; padding: 0.6rem 0; }
+    .wheat-sep { height: 28px; width: auto; }
     .section-title {
       font-family: 'DM Sans', sans-serif;
       font-size: .6rem;
@@ -162,11 +161,6 @@
       font-family: 'Lora', Georgia, serif;
       font-size: .88rem;
       color: var(--earth-brown);
-    }
-    .section-orn {
-      width: 10px; height: 14px;
-      fill: rgba(78,110,100,.55);
-      flex-shrink: 0;
     }
     .item-dots {
       flex: 1;
@@ -335,11 +329,9 @@
   <!-- Menu card -->
   <main class="page-wrap">
     <div class="menu-card">
-      <!-- Full template image provides all the art: header, wheat borders, footer -->
-      <div class="menu-frame">
-        <img src="brand-assets/blank-menu-template.png" alt="Bloomin' Acres Menu" class="template-full-img" />
-        <!-- Dynamic content overlaid on the blank area of the template -->
-        <div class="menu-content-overlay" id="menu-content">
+      <img src="brand-assets/menu-template-header.png" class="template-header" alt="" aria-hidden="true" />
+      <div class="template-body">
+        <div id="menu-content">
           <div id="skeleton">
             <div class="skeleton-line" style="width:40%;margin-bottom:1rem;"></div>
             <div class="skeleton-line" style="width:90%;"></div>
@@ -351,6 +343,7 @@
           </div>
         </div>
       </div>
+      <img src="brand-assets/menu-template-footer.png" class="template-footer" alt="" aria-hidden="true" />
     </div>
   </main>
 
@@ -456,8 +449,7 @@
 
         const labelEl = document.createElement('div');
         labelEl.className = 'section-divider';
-        const orn = (flip) => `<svg class="section-orn" viewBox="0 0 10 14" xmlns="http://www.w3.org/2000/svg"${flip ? ' style="transform:scaleX(-1)"' : ''}><ellipse cx="5" cy="3.5" rx="2" ry="3"/><line x1="5" y1="6.5" x2="5" y2="13" stroke="rgba(78,110,100,.55)" stroke-width="1" fill="none"/><ellipse cx="2.8" cy="9.5" rx="1.5" ry="2.2" transform="rotate(-22 2.8 9.5)"/><ellipse cx="7.2" cy="9.5" rx="1.5" ry="2.2" transform="rotate(22 7.2 9.5)"/></svg>`;
-        labelEl.innerHTML = `${orn(false)}<span class="section-title">${escHtml(section.title)}</span>${orn(true)}`;
+        labelEl.innerHTML = `<span class="section-title">${escHtml(section.title)}</span>`;
         content.appendChild(labelEl);
 
         items.forEach(item => {
@@ -523,6 +515,14 @@
 
           content.appendChild(row);
         });
+
+        // Wheat separator after every 3rd section (not after the last)
+        if ((idx + 1) % 3 === 0 && idx < sections.length - 1) {
+          const sep = document.createElement('div');
+          sep.className = 'wheat-sep-wrap';
+          sep.innerHTML = '<img src="brand-assets/wheat-seperater.png" class="wheat-sep" alt="" />';
+          content.appendChild(sep);
+        }
 
       });
     })();
