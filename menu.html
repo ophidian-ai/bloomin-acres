@@ -597,8 +597,8 @@
                   <span class="variation-dropdown-name">${escHtml(v.name)}</span>
                   <div class="variation-dd-actions">
                     <span class="variation-dropdown-price">${fmtPrice(total)}</span>
-                    <button class="variation-dd-fav" data-vname="${escHtml(v.name)}" data-vdelta="${v.price_delta || 0}" aria-label="Save to favorites">&#9825;</button>
-                    <button class="variation-dd-cart" data-vname="${escHtml(v.name)}" data-vdelta="${v.price_delta || 0}">+ Cart</button>
+                    ${currentUser ? `<button class="variation-dd-fav" data-vname="${escHtml(v.name)}" data-vdelta="${v.price_delta || 0}" aria-label="Save to favorites">&#9825;</button>
+                    <button class="variation-dd-cart" data-vname="${escHtml(v.name)}" data-vdelta="${v.price_delta || 0}">+ Cart</button>` : ''}
                   </div>
                 </div>`;
               }).join('')}
@@ -614,14 +614,14 @@
             </div>
             <div class="menu-item-actions">
               <a class="btn-view" href="product.html?id=${encodeURIComponent(pid)}">View</a>
-              ${variations.length > 0
+              ${currentUser && variations.length > 0
                 ? `<button class="btn-options" data-pid="${escHtml(pid)}">Options &#9662;</button>`
                 : ''}
-              <button class="btn-fav${isFav ? ' active' : ''}" data-pid="${escHtml(pid)}" aria-label="Save to favorites">
+              ${currentUser ? `<button class="btn-fav${isFav ? ' active' : ''}" data-pid="${escHtml(pid)}" aria-label="Save to favorites">
                 <svg width="11" height="11" viewBox="0 0 24 24" fill="${isFav ? 'currentColor' : 'none'}" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
                 ${isFav ? 'Saved' : 'Save'}
               </button>
-              <button class="btn-add-cart" data-pid="${escHtml(pid)}">+ Cart</button>
+              <button class="btn-add-cart" data-pid="${escHtml(pid)}">+ Cart</button>` : ''}
             </div>
             ${variationDropdownHtml}
           `;
