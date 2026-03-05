@@ -510,14 +510,15 @@
       background: rgba(250,240,230,.47);
       border: 1px solid rgba(250,240,230,.56);
       border-radius: 5px;
-      color: var(--farm-cream);
+      color: #000;
       padding: .5rem .75rem;
       font-size: .9rem;
       font-family: inherit;
       width: 100%;
       box-sizing: border-box;
     }
-    .lp-text-input:focus { outline: none; border-color: rgba(237,163,57,.8); background: rgba(250,240,230,.5); }
+    .lp-text-input:focus { outline: none; border-color: rgba(237,163,57,.8); background: rgba(250,240,230,.5); color: #000; }
+    .lp-text-input::placeholder { color: rgba(0,0,0,.4); }
     .lp-textarea { min-height: 80px; resize: vertical; }
     .lp-save-row { display: flex; align-items: center; gap: .75rem; margin-top: .35rem; }
     .lp-cards-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; }
