@@ -696,6 +696,7 @@
   let cartItems = [];
   let favItems = [];
   let menuProductIds = new Set(); // currently published menu items
+  let isSigningUp = false;
 
   // ── Helpers ──────────────────────────────────────────────────────────────
   function showToast(msg, isError = false) {
@@ -757,8 +758,16 @@
     }
 
     sb.auth.onAuthStateChange((event, session) => {
-      if (event === 'SIGNED_IN' && session) enterDashboard(session.user, null);
-      else if (event === 'SIGNED_OUT') showAuthCard();
+      if (event === 'SIGNED_IN' && session) {
+        if (isSigningUp) {
+          isSigningUp = false;
+          window.location.href = 'account.html?tab=profile';
+        } else {
+          window.location.href = 'index.html';
+        }
+      } else if (event === 'SIGNED_OUT') {
+        showAuthCard();
+      }
     });
 
     setLoading(false);
@@ -1041,9 +1050,10 @@
     if (password !== confirm) { errEl.textContent = 'Passwords do not match'; errEl.style.display = 'block'; return; }
     if (password.length < 8) { errEl.textContent = 'Password must be at least 8 characters'; errEl.style.display = 'block'; return; }
     btn.disabled = true; btn.textContent = 'Creating account…';
+    isSigningUp = true;
     const { error } = await sb.auth.signUp({ email, password });
     btn.disabled = false; btn.textContent = 'Create Account';
-    if (error) { errEl.textContent = error.message; errEl.style.display = 'block'; }
+    if (error) { isSigningUp = false; errEl.textContent = error.message; errEl.style.display = 'block'; }
     else { showToast('Account created! Check your email to confirm.'); }
   });
 
