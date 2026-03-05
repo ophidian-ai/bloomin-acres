@@ -6,12 +6,7 @@
 /* ── Body / Page Base ───────────────────────────────────── */
 body {
   font-family: var(--font-body);
-  background-color: var(--earth-brown);
-  background-image: url('../brand-assets/farm-background.png');
-  background-size: cover;
-  background-position: center center;
-  background-attachment: fixed;
-  background-repeat: no-repeat;
+  background: var(--farm-cream);
   color: var(--earth-brown);
   line-height: 1.7;
   min-height: 100vh;
@@ -49,7 +44,12 @@ body::after {
 .club-hero {
   position: relative;
   min-height: 92vh;
-  background: var(--earth-brown);
+  background-color: var(--earth-brown);
+  background-image: url('../brand-assets/farm-background.png');
+  background-size: cover;
+  background-position: center center;
+  background-attachment: fixed;
+  background-repeat: no-repeat;
   display: flex;
   align-items: center;
   justify-content: center;
