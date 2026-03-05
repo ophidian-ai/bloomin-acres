@@ -70,34 +70,12 @@ body::after {
   max-width: 640px;
   z-index: 1;
 }
-.club-badge-pill {
-  display: inline-block;
-  padding: .35rem .9rem;
-  background: rgba(237,163,57,.15);
-  border: 1px solid rgba(237,163,57,.35);
-  border-radius: 999px;
-  font-size: .7rem;
-  font-weight: 700;
-  letter-spacing: .14em;
-  text-transform: uppercase;
-  color: var(--wheat-gold);
-  margin-bottom: 1.25rem;
-}
-.club-hero-heading {
-  font-family: var(--font-display);
-  font-size: clamp(3.25rem, 10vw, 6rem);
-  font-weight: 700;
-  color: var(--farm-cream);
-  letter-spacing: -0.03em;
-  line-height: 1.05;
-  margin-bottom: 1.25rem;
-}
-.club-hero-tagline {
-  font-size: 1.05rem;
-  color: rgba(250,240,230,.65);
-  font-style: italic;
-  margin-bottom: 2.25rem;
-  font-family: var(--font-display);
+.club-plaque-img {
+  width: min(480px, 82vw);
+  object-fit: contain;
+  margin: 0 auto 2rem;
+  filter: drop-shadow(0 8px 24px rgba(0,0,0,.5));
+  mix-blend-mode: multiply;
 }
 .club-hero-actions {
   display: flex;
