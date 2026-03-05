@@ -24,6 +24,7 @@ export default async function handler(req, res) {
         id: p.id,
         name: p.name,
         description: p.description || '',
+        images: p.images || [],
         unit_amount,
         currency,
         price_formatted: unit_amount != null

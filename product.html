@@ -429,7 +429,7 @@
       const name = stripeProduct ? stripeProduct.name : 'Product';
       const price = stripeProduct ? (stripeProduct.price_formatted || '') : '';
       const description = productDetails?.description || '';
-      const imageUrl = productDetails?.image_url || '';
+      const imageUrl = productDetails?.image_url || stripeProduct?.images?.[0] || '';
 
       card.innerHTML = `
         <div class="product-img-wrap">
