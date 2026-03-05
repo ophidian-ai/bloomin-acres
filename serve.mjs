@@ -72,7 +72,8 @@ const server = http.createServer(async (req, res) => {
   }
 
   // --- Static file handler ---
-  const urlPath = req.url === '/' ? '/index.html' : req.url;
+  const parsedUrl = new URL(req.url, `http://localhost:${PORT}`);
+  const urlPath = parsedUrl.pathname === '/' ? '/index.html' : parsedUrl.pathname;
   const filePath = path.join(__dirname, urlPath);
 
   fs.readFile(filePath, (err, data) => {

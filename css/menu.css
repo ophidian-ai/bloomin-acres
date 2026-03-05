@@ -90,6 +90,14 @@ body {
   transition: color 0.2s ease;
 }
 .preview-bar-back:hover { color: #EDA339; }
+.preview-bar-draft {
+  background: linear-gradient(135deg, #6B4C35, #4A3322);
+  border-bottom-color: rgba(200,90,58,.4);
+}
+.preview-bar-draft .preview-bar-label {
+  color: #C85A3A;
+  letter-spacing: .04em;
+}
 
 /* ── Schedule Banner ─────────────────────────────────────── */
 .schedule-banner {

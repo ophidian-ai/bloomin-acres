@@ -122,9 +122,14 @@
       <div class="menu-editor-wrap">
         <div class="editor-header">
           <h2 class="section-heading">Menu Editor</h2>
-          <a href="menu.html?from=admin" class="btn-ghost btn-ghost-bordered">
-            Preview Public Menu
-          </a>
+          <div style="display:flex;gap:.5rem;align-items:center;">
+            <button id="preview-draft-btn" class="btn-ghost btn-ghost-bordered" title="Preview your unsaved editor changes">
+              Preview Draft
+            </button>
+            <a href="menu.html?from=admin" class="btn-ghost btn-ghost-bordered">
+              Preview Public Menu
+            </a>
+          </div>
         </div>
 
         <!-- Schedule -->
@@ -758,6 +763,16 @@
         const inputs = document.querySelectorAll('.section-title-input');
         if (inputs.length) inputs[inputs.length - 1].focus();
       }, 50);
+    });
+
+    // ── Preview Draft ────────────────────────────────────────────────────────
+    document.getElementById('preview-draft-btn').addEventListener('click', () => {
+      const draft = sections.map(sec => ({
+        title: sec.title,
+        items: sec.items.filter(i => i.stripe_product_id).map(i => ({ stripe_product_id: i.stripe_product_id })),
+      }));
+      sessionStorage.setItem('menu_draft', JSON.stringify(draft));
+      window.open('menu.html?preview=draft', '_blank');
     });
 
     // ── Publish ───────────────────────────────────────────────────────────────

@@ -38,9 +38,9 @@
 </head>
 <body>
 
-  <!-- Admin preview bar — only visible when opened from admin (?from=admin) -->
+  <!-- Admin preview bar — only visible when opened from admin -->
   <div id="preview-bar" class="preview-bar">
-    <span class="preview-bar-label">Preview Mode</span>
+    <span class="preview-bar-label" id="preview-bar-label">Preview Mode</span>
     <a href="admin.html" class="preview-bar-back">
       <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
         <path d="M9 2L4 7l5 5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
@@ -49,8 +49,15 @@
     </a>
   </div>
   <script>
-    if (new URLSearchParams(window.location.search).get('from') === 'admin') {
-      document.getElementById('preview-bar').style.display = 'flex';
+    const _qp = new URLSearchParams(window.location.search);
+    const _isDraft = _qp.get('preview') === 'draft';
+    if (_qp.get('from') === 'admin' || _isDraft) {
+      const bar = document.getElementById('preview-bar');
+      bar.style.display = 'flex';
+      if (_isDraft) {
+        document.getElementById('preview-bar-label').textContent = 'Draft Preview — Unsaved Changes';
+        bar.classList.add('preview-bar-draft');
+      }
     }
   </script>
 
@@ -289,26 +296,44 @@
         document.getElementById('schedule-banner').style.display = 'block';
       }
 
-      // 4. Fetch menu from Supabase
-      const { data: sections, error: secErr } = await sb
-        .from('menu_sections').select('id, title, sort_order').order('sort_order');
+      // 4. Fetch menu — from sessionStorage draft or Supabase
+      let sections, itemsBySectionId = {};
 
-      if (secErr) { showError('Unable to load the menu right now.'); return; }
-      if (!sections || sections.length === 0) {
-        skeleton.remove();
-        content.insertAdjacentHTML('beforeend',
-          '<div class="load-error" style="padding:2rem 0;">The menu is coming soon — check back shortly!</div>');
-        return;
+      if (_isDraft) {
+        // Draft preview: load from sessionStorage (set by admin editor)
+        const raw = sessionStorage.getItem('menu_draft');
+        if (!raw) { showError('No draft data found. Open Preview Draft from the admin editor.'); return; }
+        const draft = JSON.parse(raw).filter(sec => sec.title.trim());
+        sections = draft.map((sec, i) => ({ id: `draft-${i}`, title: sec.title, sort_order: i }));
+        draft.forEach((sec, i) => {
+          itemsBySectionId[`draft-${i}`] = (sec.items || []).map((item, j) => ({
+            id: `draft-item-${i}-${j}`,
+            section_id: `draft-${i}`,
+            stripe_product_id: item.stripe_product_id,
+            sort_order: j,
+          }));
+        });
+      } else {
+        const { data: dbSections, error: secErr } = await sb
+          .from('menu_sections').select('id, title, sort_order').order('sort_order');
+
+        if (secErr) { showError('Unable to load the menu right now.'); return; }
+        if (!dbSections || dbSections.length === 0) {
+          skeleton.remove();
+          content.insertAdjacentHTML('beforeend',
+            '<div class="load-error" style="padding:2rem 0;">The menu is coming soon — check back shortly!</div>');
+          return;
+        }
+        sections = dbSections;
+
+        const { data: allItems } = await sb
+          .from('menu_items').select('id, section_id, stripe_product_id, sort_order').order('sort_order');
+
+        (allItems || []).forEach(item => {
+          if (!itemsBySectionId[item.section_id]) itemsBySectionId[item.section_id] = [];
+          itemsBySectionId[item.section_id].push(item);
+        });
       }
-
-      const { data: allItems } = await sb
-        .from('menu_items').select('id, section_id, stripe_product_id, sort_order').order('sort_order');
-
-      const itemsBySectionId = {};
-      (allItems || []).forEach(item => {
-        if (!itemsBySectionId[item.section_id]) itemsBySectionId[item.section_id] = [];
-        itemsBySectionId[item.section_id].push(item);
-      });
 
       // 5. Render
       skeleton.remove();
