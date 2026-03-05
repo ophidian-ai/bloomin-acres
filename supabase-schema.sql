@@ -210,3 +210,58 @@ create policy "Service insert orders"
 
 create policy "Service insert order items"
   on order_items for insert with check (true);
+
+-- ─── Bread Box Club ───────────────────────────────────────────────────────────
+
+-- Club memberships (one row per member, managed by webhook via service role)
+create table if not exists club_members (
+  user_id                uuid primary key references auth.users on delete cascade,
+  stripe_customer_id     text,
+  stripe_subscription_id text unique,
+  status                 text not null default 'active', -- 'active' | 'cancelled' | 'past_due'
+  started_at             timestamptz default now(),
+  cancelled_at           timestamptz
+);
+alter table club_members enable row level security;
+create policy "Users read own membership"
+  on club_members for select using (auth.uid() = user_id);
+-- Webhook (service role) manages all writes; no anon/user write policy needed.
+
+-- Referral codes (one per user, auto-generated on first Club tab visit)
+create table if not exists referral_codes (
+  user_id    uuid primary key references auth.users on delete cascade,
+  code       text unique not null,
+  created_at timestamptz default now()
+);
+alter table referral_codes enable row level security;
+create policy "Users manage own referral code"
+  on referral_codes for all using (auth.uid() = user_id);
+create policy "Public read referral codes"
+  on referral_codes for select using (true);
+
+-- Referral uses (one row per completed referral conversion)
+create table if not exists referral_uses (
+  id           uuid primary key default gen_random_uuid(),
+  referrer_id  uuid references auth.users on delete set null,
+  referred_id  uuid references auth.users on delete set null,
+  code         text not null,
+  type         text not null,    -- 'club' | 'regular'
+  discount_pct int  not null,    -- 10 for club, 5 for regular
+  used_at      timestamptz default now()
+);
+alter table referral_uses enable row level security;
+create policy "Users read own referral uses"
+  on referral_uses for select using (auth.uid() = referrer_id);
+create policy "Service insert referral uses"
+  on referral_uses for insert with check (true);
+
+-- Box selections (saved box contents per club member)
+create table if not exists box_selections (
+  user_id    uuid primary key references auth.users on delete cascade,
+  items      jsonb not null default '[]'::jsonb,
+  -- items: [{ stripe_product_id, quantity, variation_name?, variation_delta? }]
+  updated_at timestamptz default now()
+);
+alter table box_selections enable row level security;
+create policy "Users manage own box"
+  on box_selections for all using (auth.uid() = user_id);

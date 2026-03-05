@@ -112,6 +112,10 @@
     <button class="dash-tab" data-panel="favorites">Favorites</button>
     <button class="dash-tab" data-panel="orders">Orders</button>
     <button class="dash-tab" data-panel="profile">Profile</button>
+    <button class="dash-tab" data-panel="club">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>
+      Club
+    </button>
   </div>
 
   <div class="dash-content">
@@ -177,6 +181,90 @@
         <button class="btn-danger" id="signout-btn-2">Sign Out</button>
       </div>
     </div>
+
+    <!-- Club panel -->
+    <div class="dash-panel" id="panel-club">
+      <div class="club-loading-state" id="club-loading-state">
+        <div class="spinner"></div>
+      </div>
+
+      <!-- Not a member -->
+      <div id="club-non-member" style="display:none;">
+        <div class="empty-state">
+          <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>
+          <p>You're not a Bread Box Club member yet.</p>
+          <a href="club.html">Learn About the Club</a>
+        </div>
+        <div class="club-join-cta">
+          <button type="button" class="btn-primary btn-primary-auto" id="join-club-btn">Join the Club</button>
+        </div>
+      </div>
+
+      <!-- Active/past_due member -->
+      <div id="club-member-view" style="display:none;">
+
+        <!-- Membership status card -->
+        <div class="club-status-card">
+          <div class="club-status-left">
+            <span class="club-status-badge" id="club-status-badge">Active Member</span>
+            <span class="club-status-name">Bread Box Club</span>
+          </div>
+          <button type="button" class="btn-secondary" id="manage-billing-btn">Manage Billing</button>
+        </div>
+
+        <!-- Box builder -->
+        <div class="club-section-block">
+          <div class="club-section-header">
+            <h3>My Box</h3>
+            <button type="button" class="btn-secondary" id="add-to-box-btn">+ Add Items</button>
+          </div>
+          <div id="box-items-list"></div>
+          <div class="box-footer" id="box-footer" style="display:none;">
+            <div class="box-total-row">
+              <span class="box-total-amount" id="box-total-label">Total: $0.00</span>
+              <span class="box-min-hint" id="box-min-hint"></span>
+            </div>
+            <button type="button" class="btn-primary btn-primary-auto" id="order-box-btn">Order My Box →</button>
+          </div>
+        </div>
+
+        <!-- Product picker (hidden by default) -->
+        <div class="club-product-picker" id="club-product-picker" style="display:none;">
+          <div class="picker-header">
+            <h4>Add to Box</h4>
+            <button type="button" class="picker-close" id="picker-close-btn" aria-label="Close picker">✕</button>
+          </div>
+          <input type="search" class="picker-search" id="picker-search" placeholder="Search menu items…" />
+          <div class="picker-grid" id="picker-grid"></div>
+        </div>
+
+        <!-- Referral dashboard -->
+        <div class="club-section-block">
+          <h3>My Referrals</h3>
+          <div class="referral-code-card">
+            <div class="referral-code-label">Your share link</div>
+            <div class="referral-code-row">
+              <input type="text" class="referral-code-input" id="my-ref-code-input" readonly />
+              <button type="button" class="copy-ref-btn" id="copy-ref-btn">Copy</button>
+            </div>
+          </div>
+          <div class="referral-stats-row">
+            <div class="referral-stat">
+              <span class="referral-stat-num" id="ref-count">0</span>
+              <span class="referral-stat-label">Referrals</span>
+            </div>
+            <div class="referral-progress-wrap">
+              <div class="referral-progress-bar">
+                <div class="referral-progress-fill" id="ref-progress-fill"></div>
+              </div>
+              <span class="referral-next-label" id="ref-next-label"></span>
+            </div>
+          </div>
+          <div class="milestone-chips" id="milestone-chips"></div>
+        </div>
+
+      </div><!-- /#club-member-view -->
+    </div><!-- /#panel-club -->
 
   </div>
 </div>
@@ -305,6 +393,17 @@
 
     await loadProducts();
     await Promise.all([loadCart(), loadFavorites(), loadOrders(), loadMenuItems()]);
+
+    // Load club data if club tab requested or already active
+    if (targetTab === 'club') {
+      await loadClub();
+    }
+
+    // Lazy-load club on first tab click
+    let clubLoaded = targetTab === 'club';
+    document.querySelector('.dash-tab[data-panel="club"]')?.addEventListener('click', async () => {
+      if (!clubLoaded) { clubLoaded = true; await loadClub(); }
+    }, { once: true });
   }
 
   // ── Load Stripe products ──────────────────────────────────────────────────
@@ -602,6 +701,317 @@
     if (error) { errEl.textContent = error.message; errEl.style.display = 'block'; }
     else { document.getElementById('new-password').value = ''; document.getElementById('new-password-confirm').value = ''; showToast('Password updated'); }
   });
+
+  // ── Club ──────────────────────────────────────────────────────────────────
+  let clubMembership = null;
+  let boxSelections = [];
+  let myReferralCode = null;
+  let referralCount = 0;
+  const clubMinCents = 2500; // $25
+
+  async function loadClub() {
+    document.getElementById('club-loading-state').style.display = 'flex';
+    document.getElementById('club-non-member').style.display = 'none';
+    document.getElementById('club-member-view').style.display = 'none';
+
+    // Check admin status (admins always have club access)
+    const { data: adminRow } = await sb.from('admins').select('user_id').eq('user_id', currentUser.id).maybeSingle();
+
+    const [{ data: member }, { data: boxData }, { data: codeRow }] = await Promise.all([
+      sb.from('club_members').select('*').eq('user_id', currentUser.id).maybeSingle(),
+      sb.from('box_selections').select('items').eq('user_id', currentUser.id).maybeSingle(),
+      sb.from('referral_codes').select('code').eq('user_id', currentUser.id).maybeSingle(),
+    ]);
+
+    clubMembership = member;
+    boxSelections = boxData?.items || [];
+    myReferralCode = codeRow?.code || null;
+
+    const isMember = adminRow || (member && member.status !== 'cancelled');
+
+    document.getElementById('club-loading-state').style.display = 'none';
+
+    if (!isMember) {
+      document.getElementById('club-non-member').style.display = 'block';
+      document.getElementById('join-club-btn').addEventListener('click', startClubJoin);
+      return;
+    }
+
+    document.getElementById('club-member-view').style.display = 'block';
+
+    // Status badge
+    const badge = document.getElementById('club-status-badge');
+    if (adminRow && !member) {
+      badge.textContent = 'Admin Access';
+      badge.className = 'club-status-badge admin';
+    } else {
+      const statusMap = { active: 'Active Member', past_due: 'Payment Due', cancelled: 'Cancelled' };
+      badge.textContent = statusMap[member?.status] || member?.status || 'Active';
+      badge.className = `club-status-badge ${member?.status || 'active'}`;
+    }
+
+    // Manage billing
+    document.getElementById('manage-billing-btn').addEventListener('click', async () => {
+      const btn = document.getElementById('manage-billing-btn');
+      btn.disabled = true; btn.textContent = 'Loading…';
+      const r = await fetch('/api/stripe/portal', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ user_id: currentUser.id }),
+      }).catch(() => null);
+      btn.disabled = false; btn.textContent = 'Manage Billing';
+      if (!r || !r.ok) { showToast('Could not open billing portal', true); return; }
+      const { url, error } = await r.json();
+      if (error || !url) { showToast(error || 'Portal unavailable', true); return; }
+      window.location.href = url;
+    });
+
+    // Box builder
+    renderBoxBuilder();
+
+    // Add items button
+    document.getElementById('add-to-box-btn').addEventListener('click', () => {
+      const picker = document.getElementById('club-product-picker');
+      picker.style.display = picker.style.display === 'none' ? 'block' : 'none';
+      if (picker.style.display === 'block') renderProductPicker();
+    });
+    document.getElementById('picker-close-btn').addEventListener('click', () => {
+      document.getElementById('club-product-picker').style.display = 'none';
+    });
+    document.getElementById('picker-search').addEventListener('input', renderProductPicker);
+
+    // Order box button
+    document.getElementById('order-box-btn').addEventListener('click', orderMyBox);
+
+    // Ensure referral code exists (auto-create if needed)
+    if (!myReferralCode) {
+      await createReferralCode();
+    }
+    if (myReferralCode) {
+      const shareUrl = `${window.location.origin}/club.html?ref=${myReferralCode}`;
+      document.getElementById('my-ref-code-input').value = shareUrl;
+    }
+
+    // Load referral count
+    if (myReferralCode) {
+      const { count } = await sb.from('referral_uses')
+        .select('id', { count: 'exact', head: true })
+        .eq('code', myReferralCode);
+      referralCount = count || 0;
+    }
+    renderReferralDashboard();
+
+    document.getElementById('copy-ref-btn').addEventListener('click', () => {
+      const input = document.getElementById('my-ref-code-input');
+      navigator.clipboard.writeText(input.value).then(() => showToast('Link copied!')).catch(() => {
+        input.select(); document.execCommand('copy'); showToast('Link copied!');
+      });
+    });
+  }
+
+  async function createReferralCode() {
+    const { data: profile } = await sb.from('profiles').select('first_name').eq('user_id', currentUser.id).maybeSingle();
+    const prefix = ((profile?.first_name || 'USER').slice(0, 4).toUpperCase()).replace(/[^A-Z]/g, 'X').padEnd(4, 'X');
+    const suffix = Math.random().toString(36).slice(2, 6).toUpperCase();
+    const code = `${prefix}-${suffix}`;
+    const { data } = await sb.from('referral_codes').insert({ user_id: currentUser.id, code }).select('code').single();
+    myReferralCode = data?.code || null;
+  }
+
+  function renderBoxBuilder() {
+    const el = document.getElementById('box-items-list');
+    const footer = document.getElementById('box-footer');
+
+    if (!boxSelections.length) {
+      el.innerHTML = '<p class="box-empty-msg">Your box is empty. Click "+ Add Items" to get started.</p>';
+      footer.style.display = 'none';
+      return;
+    }
+
+    let total = 0;
+    el.innerHTML = boxSelections.map((item, idx) => {
+      const p = products[item.stripe_product_id];
+      const price = (p?.unit_amount ?? 0) + (item.variation_delta ?? 0);
+      total += price * item.quantity;
+      return `<div class="box-item-row">
+        <div class="box-item-name">${p?.name || item.stripe_product_id}${item.variation_name ? ` — ${item.variation_name}` : ''}</div>
+        <div class="box-item-controls">
+          <button type="button" class="qty-sm" data-idx="${idx}" data-action="dec">−</button>
+          <span class="qty-sm-num">${item.quantity}</span>
+          <button type="button" class="qty-sm" data-idx="${idx}" data-action="inc">+</button>
+        </div>
+        <div class="box-item-price">${fmt(price * item.quantity)}</div>
+        <button type="button" class="box-remove-btn" data-idx="${idx}" aria-label="Remove">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </div>`;
+    }).join('');
+
+    el.querySelectorAll('.qty-sm').forEach(btn => {
+      btn.addEventListener('click', () => updateBoxQty(parseInt(btn.dataset.idx), btn.dataset.action));
+    });
+    el.querySelectorAll('.box-remove-btn').forEach(btn => {
+      btn.addEventListener('click', () => removeBoxItem(parseInt(btn.dataset.idx)));
+    });
+
+    // Total / discount hint
+    footer.style.display = 'flex';
+    const totalLabel = document.getElementById('box-total-label');
+    const hint = document.getElementById('box-min-hint');
+    totalLabel.textContent = `Total: ${fmt(total)}`;
+    totalLabel.className = `box-total-amount${total >= clubMinCents ? ' qualified' : ''}`;
+    if (total > 0 && total < clubMinCents) {
+      hint.textContent = `Add ${fmt(clubMinCents - total)} more to unlock 5% member discount`;
+      hint.className = 'box-min-hint warning';
+    } else if (total >= clubMinCents) {
+      hint.textContent = '5% member discount will be applied at checkout';
+      hint.className = 'box-min-hint success';
+    } else {
+      hint.textContent = '';
+    }
+  }
+
+  async function saveBoxSelections() {
+    await sb.from('box_selections').upsert(
+      { user_id: currentUser.id, items: boxSelections, updated_at: new Date().toISOString() },
+      { onConflict: 'user_id' }
+    );
+  }
+
+  async function updateBoxQty(idx, action) {
+    const item = boxSelections[idx];
+    if (!item) return;
+    if (action === 'dec' && item.quantity <= 1) return removeBoxItem(idx);
+    if (action === 'inc') item.quantity++;
+    else item.quantity--;
+    await saveBoxSelections();
+    renderBoxBuilder();
+  }
+
+  async function removeBoxItem(idx) {
+    boxSelections.splice(idx, 1);
+    await saveBoxSelections();
+    renderBoxBuilder();
+    showToast('Removed from box');
+  }
+
+  function renderProductPicker() {
+    const grid = document.getElementById('picker-grid');
+    const q = document.getElementById('picker-search').value.trim().toLowerCase();
+    const menuItems = [...menuProductIds];
+    const filtered = Object.entries(products).filter(([id, p]) => {
+      if (menuItems.length && !menuProductIds.has(id)) return false;
+      if (q && !p.name.toLowerCase().includes(q)) return false;
+      return true;
+    });
+
+    if (!filtered.length) {
+      grid.innerHTML = '<p class="picker-empty">No menu items found.</p>';
+      return;
+    }
+
+    grid.innerHTML = filtered.map(([id, p]) => {
+      const inBox = boxSelections.find(i => i.stripe_product_id === id && !i.variation_name);
+      return `<button type="button" class="picker-item${inBox ? ' in-box' : ''}" data-pid="${id}">
+        <span class="picker-item-name">${p.name}</span>
+        <span class="picker-item-price">${fmt(p.unit_amount)}</span>
+        ${inBox ? '<span class="picker-in-box">In Box ✓</span>' : ''}
+      </button>`;
+    }).join('');
+
+    grid.querySelectorAll('.picker-item').forEach(btn => {
+      btn.addEventListener('click', () => addToBox(btn.dataset.pid));
+    });
+  }
+
+  async function addToBox(productId) {
+    const existing = boxSelections.find(i => i.stripe_product_id === productId && !i.variation_name);
+    if (existing) {
+      existing.quantity++;
+    } else {
+      boxSelections.push({ stripe_product_id: productId, quantity: 1, variation_name: '', variation_delta: 0 });
+    }
+    await saveBoxSelections();
+    renderBoxBuilder();
+    renderProductPicker();
+    showToast('Added to box');
+  }
+
+  async function orderMyBox() {
+    if (!boxSelections.length) { showToast('Your box is empty', true); return; }
+    const btn = document.getElementById('order-box-btn');
+    btn.disabled = true; btn.textContent = 'Loading…';
+
+    // Check total for discount hint
+    const total = boxSelections.reduce((sum, item) => {
+      const p = products[item.stripe_product_id];
+      return sum + ((p?.unit_amount ?? 0) + (item.variation_delta ?? 0)) * item.quantity;
+    }, 0);
+
+    if (total < clubMinCents) {
+      const remaining = fmt(clubMinCents - total);
+      showToast(`Add ${remaining} more to unlock 5% member discount`, false);
+    }
+
+    // Upsert all box items into user_cart
+    for (const item of boxSelections) {
+      await sb.from('user_cart').upsert({
+        user_id: currentUser.id,
+        stripe_product_id: item.stripe_product_id,
+        variation_name: item.variation_name || '',
+        variation_delta: item.variation_delta || 0,
+        quantity: item.quantity,
+        updated_at: new Date().toISOString(),
+      }, { onConflict: 'user_id,stripe_product_id,variation_name' });
+    }
+
+    // Reload cart and switch to cart tab
+    await loadCart();
+    btn.disabled = false; btn.textContent = 'Order My Box →';
+    document.querySelector('.dash-tab[data-panel="cart"]')?.click();
+    showToast('Box added to cart!');
+  }
+
+  function renderReferralDashboard() {
+    const milestones = [5, 15, 25];
+    const nextMilestone = milestones.find(m => m > referralCount) || null;
+    const prevMilestone = milestones.filter(m => m <= referralCount).pop() || 0;
+
+    document.getElementById('ref-count').textContent = referralCount;
+
+    const progress = nextMilestone
+      ? Math.min(100, ((referralCount - prevMilestone) / (nextMilestone - prevMilestone)) * 100)
+      : 100;
+    document.getElementById('ref-progress-fill').style.width = `${progress}%`;
+    document.getElementById('ref-next-label').textContent = nextMilestone
+      ? `${nextMilestone - referralCount} more to next milestone`
+      : 'All milestones reached!';
+
+    const chips = document.getElementById('milestone-chips');
+    chips.innerHTML = milestones.map(m => {
+      const done = referralCount >= m;
+      return `<div class="milestone-chip${done ? ' done' : ''}">
+        <span class="milestone-chip-num">${m === 25 ? '25+' : m}</span>
+        <span class="milestone-chip-status">${done ? '✓' : `${m - Math.min(referralCount, m)} to go`}</span>
+      </div>`;
+    }).join('');
+  }
+
+  async function startClubJoin() {
+    const btn = document.getElementById('join-club-btn');
+    btn.disabled = true; btn.textContent = 'Redirecting…';
+    const referralCode = sessionStorage.getItem('referral_code') || '';
+    const r = await fetch('/api/stripe/subscribe', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ user_id: currentUser.id, referral_code: referralCode }),
+    }).catch(() => null);
+    btn.disabled = false; btn.textContent = 'Join the Club';
+    if (!r || !r.ok) { showToast('Something went wrong', true); return; }
+    const { url, error } = await r.json();
+    if (error || !url) { showToast(error || 'Checkout failed', true); return; }
+    window.location.href = url;
+  }
 
   init();
 })();

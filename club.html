@@ -1,0 +1,514 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>The Bread Box Club — Bloomin' Acres</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400;1,600&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600&display=swap" rel="stylesheet" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            wheat: '#EDA339', sage: '#7A9B8E', 'sage-dark': '#4E6E64',
+            'sage-light': '#A8C4BB', rust: '#C85A3A', berry: '#8B3A3A',
+            earth: '#4A3322', 'earth-mid': '#6B4C35',
+            cream: '#FAF0E6', 'cream-dark': '#F0E4D0', 'cream-warm': '#EDD9B8',
+          },
+          fontFamily: {
+            display: ['"Playfair Display"', 'Georgia', 'serif'],
+            sans: ['"DM Sans"', 'system-ui', 'sans-serif'],
+          }
+        }
+      }
+    }
+  </script>
+  <link rel="stylesheet" href="css/global.css" />
+  <link rel="stylesheet" href="css/club.css" />
+</head>
+<body>
+
+<!-- Hamburger toggle -->
+<button type="button" class="nav-toggle" id="nav-toggle" aria-label="Open navigation" aria-expanded="false" aria-controls="nav-sidebar">
+  <span></span><span></span><span></span>
+</button>
+
+<!-- Sidebar drawer -->
+<div class="nav-sidebar" id="nav-sidebar" role="dialog" aria-modal="true" aria-label="Site navigation">
+  <img src="brand-assets/color-logo.png" alt="Bloomin' Acres" class="nav-sidebar-logo" />
+  <nav>
+    <a href="index.html"  class="nav-sidebar-link">Home</a>
+    <a href="menu.html"   class="nav-sidebar-link accent">Menu</a>
+    <a href="club.html"   class="nav-sidebar-link">The Club</a>
+    <!-- Sign In — shown when logged out -->
+    <a href="account.html" class="nav-sidebar-link" id="sidebar-signin-link">Sign In</a>
+    <!-- My Account submenu — shown when logged in -->
+    <div class="nav-account-item" id="sidebar-account-item" style="display:none;">
+      <button type="button" class="nav-account-toggle" id="sidebar-account-toggle" aria-haspopup="true" aria-expanded="false">
+        <span>My Account</span>
+        <svg class="chevron" viewBox="0 0 10 10" fill="none" aria-hidden="true">
+          <path d="M2 3.5l3 3 3-3" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </button>
+      <div class="nav-account-submenu" role="menu">
+        <a href="account.html?tab=club" role="menuitem">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>
+          My Club
+        </a>
+        <a href="account.html?tab=cart" role="menuitem">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
+          Cart
+        </a>
+        <a href="account.html?tab=orders" role="menuitem">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+          Orders
+        </a>
+        <a href="account.html?tab=profile" role="menuitem">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+          Profile
+        </a>
+      </div>
+    </div>
+    <!-- Sign Out — shown when logged in -->
+    <button type="button" class="nav-sidebar-link nav-signout-btn" id="sidebar-signout-btn" style="display:none;">Sign Out</button>
+  </nav>
+</div>
+
+<!-- Backdrop -->
+<div class="nav-overlay" id="nav-overlay" aria-hidden="true"></div>
+
+<!-- Referral welcome banner (shown when ?ref=CODE in URL) -->
+<div class="referral-banner" id="referral-banner" style="display:none;">
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" fill="currentColor" stroke="none"/></svg>
+  <span>A friend invited you! Join today and get <strong>10% off your first month</strong>.</span>
+</div>
+
+<!-- ═══ HERO ══════════════════════════════════════════════════════════ -->
+<section class="club-hero">
+  <div class="club-hero-overlay"></div>
+  <div class="club-hero-content">
+    <div class="club-badge-pill">Monthly Membership</div>
+    <h1 class="club-hero-heading">The Bread<br>Box Club</h1>
+    <p class="club-hero-tagline">Monthly membership. Handcrafted bundles. Built by you.</p>
+    <div class="club-hero-actions">
+      <button class="club-cta-btn" id="join-btn">Join the Club</button>
+      <a href="account.html?tab=club" class="club-secondary-link" id="member-link" style="display:none;">Go to My Club →</a>
+    </div>
+    <p class="club-hero-note" id="referral-code-note" style="display:none;"></p>
+  </div>
+  <!-- Decorative wheat stalks -->
+  <div class="club-hero-deco" aria-hidden="true">
+    <svg viewBox="0 0 80 320" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M40 320 C40 280 38 240 40 200 C42 160 40 100 40 60" stroke="rgba(237,163,57,.4)" stroke-width="2"/>
+      <ellipse cx="40" cy="60" rx="10" ry="18" fill="rgba(237,163,57,.35)" transform="rotate(-20 40 60)"/>
+      <ellipse cx="40" cy="60" rx="10" ry="18" fill="rgba(237,163,57,.35)" transform="rotate(20 40 60)"/>
+      <ellipse cx="30" cy="100" rx="9" ry="16" fill="rgba(237,163,57,.3)" transform="rotate(-35 30 100)"/>
+      <ellipse cx="50" cy="100" rx="9" ry="16" fill="rgba(237,163,57,.3)" transform="rotate(35 50 100)"/>
+      <ellipse cx="28" cy="145" rx="8" ry="14" fill="rgba(237,163,57,.25)" transform="rotate(-45 28 145)"/>
+      <ellipse cx="52" cy="145" rx="8" ry="14" fill="rgba(237,163,57,.25)" transform="rotate(45 52 145)"/>
+    </svg>
+  </div>
+</section>
+
+<!-- ═══ HOW IT WORKS ══════════════════════════════════════════════════ -->
+<section class="club-section-outer">
+  <div class="club-section-inner">
+    <div class="section-label">Simple as can be</div>
+    <h2 class="section-heading">How It Works</h2>
+    <div class="steps-grid">
+      <div class="step-card">
+        <div class="step-number">1</div>
+        <div class="step-icon">
+          <svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <circle cx="24" cy="24" r="22" fill="rgba(237,163,57,.12)" stroke="rgba(237,163,57,.4)" stroke-width="1.5"/>
+            <path d="M24 14 C24 14 16 18 16 26 C16 30.4 19.6 34 24 34 C28.4 34 32 30.4 32 26 C32 18 24 14 24 14Z" fill="rgba(237,163,57,.7)"/>
+            <path d="M24 20 L24 34" stroke="rgba(74,51,34,.6)" stroke-width="1.5" stroke-linecap="round"/>
+          </svg>
+        </div>
+        <h3 class="step-title">Join</h3>
+        <p class="step-desc">Start your monthly membership. Cancel any time — no commitments, no fine print.</p>
+      </div>
+      <div class="step-card">
+        <div class="step-number">2</div>
+        <div class="step-icon">
+          <svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <circle cx="24" cy="24" r="22" fill="rgba(122,155,142,.12)" stroke="rgba(122,155,142,.4)" stroke-width="1.5"/>
+            <rect x="14" y="20" width="20" height="14" rx="2" stroke="rgba(74,51,34,.6)" stroke-width="1.5" fill="rgba(122,155,142,.3)"/>
+            <path d="M19 20 V17 C19 14.8 21.2 13 24 13 C26.8 13 29 14.8 29 17 V20" stroke="rgba(74,51,34,.6)" stroke-width="1.5" stroke-linecap="round"/>
+            <circle cx="24" cy="27" r="2.5" fill="rgba(74,51,34,.5)"/>
+          </svg>
+        </div>
+        <h3 class="step-title">Build Your Box</h3>
+        <p class="step-desc">Each period, browse the live menu and handpick exactly what goes in your box.</p>
+      </div>
+      <div class="step-card">
+        <div class="step-number">3</div>
+        <div class="step-icon">
+          <svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <circle cx="24" cy="24" r="22" fill="rgba(200,90,58,.1)" stroke="rgba(200,90,58,.35)" stroke-width="1.5"/>
+            <path d="M14 28 L14 34 L34 34 L34 28" stroke="rgba(74,51,34,.6)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M12 22 L12 28 L36 28 L36 22 L30 16 L18 16 Z" fill="rgba(200,90,58,.25)" stroke="rgba(74,51,34,.6)" stroke-width="1.5" stroke-linejoin="round"/>
+            <line x1="24" y1="16" x2="24" y2="28" stroke="rgba(74,51,34,.4)" stroke-width="1.2" stroke-linecap="round"/>
+          </svg>
+        </div>
+        <h3 class="step-title">Pick Up</h3>
+        <p class="step-desc">Order at member pricing and collect your custom box at the farmstand when it's ready.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ BENEFITS ══════════════════════════════════════════════════════ -->
+<section class="club-benefits-outer">
+  <div class="club-section-inner">
+    <div class="section-label">Why join?</div>
+    <h2 class="section-heading light">Member Benefits</h2>
+    <div class="benefits-grid">
+      <div class="benefit-item">
+        <div class="benefit-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" width="28" height="28">
+            <path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z" fill="rgba(237,163,57,.25)" stroke="rgba(237,163,57,.9)"/>
+          </svg>
+        </div>
+        <div class="benefit-text">
+          <strong>Member Pricing</strong>
+          <span>5% off every box order when your total reaches $25.</span>
+        </div>
+      </div>
+      <div class="benefit-item">
+        <div class="benefit-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" width="28" height="28">
+            <path d="M20 7H4C2.9 7 2 7.9 2 9V19C2 20.1 2.9 21 4 21H20C21.1 21 22 20.1 22 19V9C22 7.9 21.1 7 20 7Z" stroke="rgba(237,163,57,.9)"/>
+            <path d="M16 3H8C6.9 3 6 3.9 6 5V7H18V5C18 3.9 17.1 3 16 3Z" stroke="rgba(237,163,57,.9)"/>
+            <line x1="12" y1="12" x2="12" y2="16" stroke="rgba(237,163,57,.9)" stroke-linecap="round"/>
+            <line x1="10" y1="14" x2="14" y2="14" stroke="rgba(237,163,57,.9)" stroke-linecap="round"/>
+          </svg>
+        </div>
+        <div class="benefit-text">
+          <strong>Build Your Own Box</strong>
+          <span>Save your custom selection and update it any time from your account.</span>
+        </div>
+      </div>
+      <div class="benefit-item">
+        <div class="benefit-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" width="28" height="28">
+            <circle cx="12" cy="12" r="10" stroke="rgba(237,163,57,.9)"/>
+            <polyline points="12 6 12 12 16 14" stroke="rgba(237,163,57,.9)" stroke-linecap="round"/>
+          </svg>
+        </div>
+        <div class="benefit-text">
+          <strong>Early Access</strong>
+          <span>Members get first look at seasonal and limited items before they sell out.</span>
+        </div>
+      </div>
+      <div class="benefit-item">
+        <div class="benefit-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" width="28" height="28">
+            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" stroke="rgba(237,163,57,.9)"/>
+            <circle cx="9" cy="7" r="4" stroke="rgba(237,163,57,.9)"/>
+            <path d="M23 21v-2a4 4 0 0 0-3-3.87" stroke="rgba(237,163,57,.9)" stroke-linecap="round"/>
+            <path d="M16 3.13a4 4 0 0 1 0 7.75" stroke="rgba(237,163,57,.9)" stroke-linecap="round"/>
+          </svg>
+        </div>
+        <div class="benefit-text">
+          <strong>Referral Rewards</strong>
+          <span>Share your code and earn rewards as your friends join the community.</span>
+        </div>
+      </div>
+    </div>
+    <div class="benefits-cta">
+      <button class="club-cta-btn" id="join-btn-2">Join the Club</button>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ REFERRAL PROGRAM ══════════════════════════════════════════════ -->
+<section class="club-section-outer referral-section">
+  <div class="club-section-inner">
+    <div class="section-label">Share the love</div>
+    <h2 class="section-heading">Earn Rewards</h2>
+    <p class="referral-intro">Every member gets a unique share link. When a friend joins using your code, you both get rewarded.</p>
+
+    <!-- Referral flow diagram -->
+    <div class="referral-flow">
+      <div class="flow-step">
+        <div class="flow-icon">
+          <svg viewBox="0 0 24 24" fill="none" width="22" height="22"><path d="M4 12v8a2 2 0 002 2h12a2 2 0 002-2v-8" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><polyline points="16 6 12 2 8 6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><line x1="12" y1="2" x2="12" y2="15" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+        </div>
+        <p>Share your link</p>
+      </div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-step">
+        <div class="flow-icon">
+          <svg viewBox="0 0 24 24" fill="none" width="22" height="22"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><circle cx="9" cy="7" r="4" stroke="currentColor" stroke-width="1.8"/><path d="M23 21v-2a4 4 0 00-3-3.87" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><path d="M16 3.13a4 4 0 010 7.75" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+        </div>
+        <p>Friend joins</p>
+      </div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-step">
+        <div class="flow-icon">
+          <svg viewBox="0 0 24 24" fill="none" width="22" height="22"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" fill="rgba(237,163,57,.4)" stroke="rgba(237,163,57,.9)" stroke-width="1.5"/></svg>
+        </div>
+        <p>Both get rewarded</p>
+      </div>
+    </div>
+
+    <!-- Milestone table -->
+    <div class="milestone-table">
+      <div class="milestone-header">Referral Milestones</div>
+      <div class="milestone-row">
+        <div class="milestone-count">5</div>
+        <div class="milestone-label">referrals</div>
+        <div class="milestone-reward" id="reward-5">Free loaf on your next pickup</div>
+      </div>
+      <div class="milestone-row">
+        <div class="milestone-count">15</div>
+        <div class="milestone-label">referrals</div>
+        <div class="milestone-reward" id="reward-15">One month free membership</div>
+      </div>
+      <div class="milestone-row highlight">
+        <div class="milestone-count">25+</div>
+        <div class="milestone-label">referrals</div>
+        <div class="milestone-reward" id="reward-25">Lifetime 20% member discount</div>
+      </div>
+    </div>
+
+    <!-- User's code if logged in -->
+    <div class="my-code-box" id="my-code-box" style="display:none;">
+      <p class="my-code-label">Your referral link</p>
+      <div class="my-code-row">
+        <input class="my-code-input" id="my-code-display" readonly value="" />
+        <button class="copy-btn" id="copy-link-btn">Copy</button>
+      </div>
+    </div>
+
+    <!-- CTA if not logged in / not a member -->
+    <div class="referral-cta" id="referral-cta">
+      <p>Become a member to get your unique referral link and start earning rewards.</p>
+      <button class="club-cta-btn" id="join-btn-3">Join to Get Your Code</button>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ FOOTER ════════════════════════════════════════════════════════ -->
+<footer class="club-footer">
+  <div class="club-footer-inner">
+    <img src="brand-assets/color-logo.png" alt="Bloomin' Acres" class="footer-logo-img" />
+    <p class="footer-tagline">Homeground &nbsp;·&nbsp; Homemade &nbsp;·&nbsp; Heartfelt</p>
+    <nav class="footer-nav" aria-label="Footer navigation">
+      <a href="index.html" class="footer-link">Home</a>
+      <a href="menu.html" class="footer-link">Menu</a>
+      <a href="club.html" class="footer-link">The Club</a>
+      <a href="account.html" class="footer-link">My Account</a>
+    </nav>
+    <p class="footer-copyright">&copy; 2026 Bloomin' Acres Farmstand &amp; Bakery. All rights reserved.</p>
+  </div>
+</footer>
+
+<div id="toast"></div>
+
+<!-- Nav sidebar JS -->
+<script>
+  (() => {
+    const toggle  = document.getElementById('nav-toggle');
+    const sidebar = document.getElementById('nav-sidebar');
+    const overlay = document.getElementById('nav-overlay');
+
+    function openNav() {
+      sidebar.classList.add('open');
+      overlay.classList.add('open');
+      toggle.classList.add('open');
+      toggle.setAttribute('aria-expanded', 'true');
+    }
+    function closeNav() {
+      sidebar.classList.remove('open');
+      overlay.classList.remove('open');
+      toggle.classList.remove('open');
+      toggle.setAttribute('aria-expanded', 'false');
+    }
+
+    toggle.addEventListener('click', () => sidebar.classList.contains('open') ? closeNav() : openNav());
+    overlay.addEventListener('click', closeNav);
+    sidebar.querySelectorAll('.nav-sidebar-link').forEach(link => {
+      link.addEventListener('click', closeNav);
+    });
+
+    const acctToggle = document.getElementById('sidebar-account-toggle');
+    const acctItem   = document.getElementById('sidebar-account-item');
+    acctToggle.addEventListener('click', () => {
+      const open = acctItem.classList.toggle('open');
+      acctToggle.setAttribute('aria-expanded', open);
+    });
+
+    document.addEventListener('keydown', e => { if (e.key === 'Escape') closeNav(); });
+  })();
+</script>
+
+<!-- Supabase + page logic -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script>
+(async () => {
+  // ── Toast ──────────────────────────────────────────────────────────────────
+  function showToast(msg, isError = false) {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.className = isError ? 'error show' : 'show';
+    clearTimeout(t._tid);
+    t._tid = setTimeout(() => { t.className = ''; }, 3000);
+  }
+
+  // ── Referral code from URL ─────────────────────────────────────────────────
+  const params = new URLSearchParams(window.location.search);
+  const urlRef = params.get('ref');
+  if (urlRef) {
+    sessionStorage.setItem('referral_code', urlRef.trim().toUpperCase());
+    document.getElementById('referral-banner').style.display = 'flex';
+  }
+
+  // ── Load config + auth ─────────────────────────────────────────────────────
+  const r = await fetch('/api/config').catch(() => null);
+  if (!r || !r.ok) return;
+  const cfg = await r.json();
+  if (!cfg.supabaseUrl) return;
+
+  const sb = supabase.createClient(cfg.supabaseUrl, cfg.supabaseAnonKey);
+  const { data: { session } } = await sb.auth.getSession();
+
+  const signinLink = document.getElementById('sidebar-signin-link');
+  const acctItem   = document.getElementById('sidebar-account-item');
+  const signoutBtn = document.getElementById('sidebar-signout-btn');
+
+  let currentUser = null;
+  let isMember = false;
+  let myReferralCode = null;
+
+  if (session) {
+    currentUser = session.user;
+    const { data: adminRow } = await sb.from('admins').select('user_id').eq('user_id', session.user.id).maybeSingle();
+    signinLink.style.display = 'none';
+    if (adminRow) {
+      const dashLink = document.createElement('a');
+      dashLink.href = 'admin.html';
+      dashLink.className = 'nav-sidebar-link';
+      dashLink.textContent = 'Dashboard';
+      acctItem.parentNode.insertBefore(dashLink, acctItem);
+    } else {
+      acctItem.style.display = 'block';
+    }
+    signoutBtn.style.display = 'block';
+    signoutBtn.addEventListener('click', async () => {
+      await sb.auth.signOut();
+      window.location.reload();
+    });
+
+    // Load membership status
+    const [{ data: member }, { data: codeRow }] = await Promise.all([
+      sb.from('club_members').select('status').eq('user_id', currentUser.id).maybeSingle(),
+      sb.from('referral_codes').select('code').eq('user_id', currentUser.id).maybeSingle(),
+    ]);
+
+    isMember = (member?.status === 'active') || (member?.status === 'past_due') || !!adminRow;
+    myReferralCode = codeRow?.code || null;
+
+    // If member, show "Go to My Club" instead of join
+    if (isMember) {
+      document.getElementById('join-btn').style.display = 'none';
+      document.getElementById('member-link').style.display = 'inline-flex';
+      document.getElementById('join-btn-2').style.display = 'none';
+      document.getElementById('join-btn-3').style.display = 'none';
+      document.getElementById('referral-cta').style.display = 'none';
+    }
+
+    // Show referral code if available
+    if (myReferralCode) {
+      const shareUrl = `${window.location.origin}/club.html?ref=${myReferralCode}`;
+      document.getElementById('my-code-display').value = shareUrl;
+      document.getElementById('my-code-box').style.display = 'block';
+      document.getElementById('referral-cta').style.display = 'none';
+    }
+
+    // Note on hero if ref code in session
+    const storedRef = sessionStorage.getItem('referral_code');
+    if (storedRef && !isMember) {
+      const note = document.getElementById('referral-code-note');
+      note.textContent = `Referral code "${storedRef}" will be applied at signup.`;
+      note.style.display = 'block';
+    }
+  }
+
+  // ── Load reward text from site_content ─────────────────────────────────────
+  const { data: rewards } = await sb.from('site_content')
+    .select('key, value')
+    .in('key', ['referral-reward-5', 'referral-reward-15', 'referral-reward-25']);
+  if (rewards) {
+    for (const row of rewards) {
+      const elId = row.key === 'referral-reward-5' ? 'reward-5'
+                 : row.key === 'referral-reward-15' ? 'reward-15'
+                 : 'reward-25';
+      const el = document.getElementById(elId);
+      if (el && row.value) el.textContent = row.value;
+    }
+  }
+
+  // ── Join CTA ───────────────────────────────────────────────────────────────
+  async function handleJoin() {
+    if (!currentUser) {
+      // Store intent and redirect to account for login
+      sessionStorage.setItem('club_join_intent', '1');
+      window.location.href = 'account.html?tab=club';
+      return;
+    }
+    if (isMember) {
+      window.location.href = 'account.html?tab=club';
+      return;
+    }
+    // Start Stripe subscription checkout
+    const btn = document.getElementById('join-btn') || document.getElementById('join-btn-2') || document.getElementById('join-btn-3');
+    const referralCode = sessionStorage.getItem('referral_code') || '';
+    const origText = btn?.textContent;
+    if (btn) { btn.disabled = true; btn.textContent = 'Redirecting…'; }
+
+    const res = await fetch('/api/stripe/subscribe', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ user_id: currentUser.id, referral_code: referralCode }),
+    }).catch(() => null);
+
+    if (!res || !res.ok) {
+      if (btn) { btn.disabled = false; btn.textContent = origText; }
+      showToast('Something went wrong. Please try again.', true);
+      return;
+    }
+    const { url, error } = await res.json();
+    if (error || !url) {
+      if (btn) { btn.disabled = false; btn.textContent = origText; }
+      showToast(error || 'Checkout failed', true);
+      return;
+    }
+    window.location.href = url;
+  }
+
+  ['join-btn', 'join-btn-2', 'join-btn-3'].forEach(id => {
+    document.getElementById(id)?.addEventListener('click', handleJoin);
+  });
+
+  // ── Copy link ──────────────────────────────────────────────────────────────
+  document.getElementById('copy-link-btn')?.addEventListener('click', () => {
+    const input = document.getElementById('my-code-display');
+    navigator.clipboard.writeText(input.value).then(() => {
+      showToast('Link copied!');
+    }).catch(() => {
+      input.select();
+      document.execCommand('copy');
+      showToast('Link copied!');
+    });
+  });
+
+})();
+</script>
+
+</body>
+</html>

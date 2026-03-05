@@ -545,3 +545,123 @@ body::after {
   grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
   gap: 1rem;
 }
+
+/* ── Club Admin Tab ─────────────────────────────────────── */
+.club-admin-block {
+  background: #fff;
+  border-radius: 14px;
+  padding: 1.5rem 1.75rem;
+  margin-bottom: 1.75rem;
+  box-shadow: var(--shadow-card);
+}
+.club-admin-block h3 {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--earth-brown);
+  margin-bottom: 1rem;
+}
+.club-admin-block-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1rem;
+}
+.club-admin-block-header h3 { margin-bottom: 0; }
+.club-member-count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 36px; height: 28px;
+  padding: 0 .75rem;
+  background: rgba(122,155,142,.15);
+  color: var(--sage-dark);
+  border-radius: 999px;
+  font-size: .75rem;
+  font-weight: 700;
+}
+.club-table-wrap {
+  overflow-x: auto;
+  border-radius: 10px;
+  border: 1px solid var(--cream-dark);
+}
+.club-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: .82rem;
+}
+.club-table th {
+  padding: .65rem 1rem;
+  background: var(--cream-dark);
+  font-size: .68rem;
+  font-weight: 700;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  color: rgba(74,51,34,.55);
+  text-align: left;
+  border-bottom: 1px solid var(--cream-warm);
+}
+.club-table td {
+  padding: .75rem 1rem;
+  border-bottom: 1px solid var(--cream-dark);
+  color: var(--earth-brown);
+  vertical-align: middle;
+}
+.club-table tr:last-child td { border-bottom: none; }
+.club-table tr:hover td { background: rgba(250,240,230,.5); }
+.club-table-loading, .club-table-empty {
+  text-align: center;
+  color: rgba(74,51,34,.4);
+  font-style: italic;
+  padding: 2rem !important;
+}
+.club-user-id {
+  font-family: monospace;
+  font-size: .75rem;
+  color: rgba(74,51,34,.45);
+}
+.club-status-pill {
+  display: inline-block;
+  padding: .2rem .65rem;
+  border-radius: 999px;
+  font-size: .68rem;
+  font-weight: 700;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+}
+.club-status-pill.status-active { background: rgba(122,155,142,.15); color: var(--sage-dark); }
+.club-status-pill.status-pastdue { background: rgba(237,163,57,.15); color: #b07b00; }
+.ref-code-pill {
+  display: inline-block;
+  padding: .15rem .55rem;
+  background: rgba(74,51,34,.06);
+  border-radius: 5px;
+  font-size: .75rem;
+  font-weight: 600;
+  letter-spacing: .08em;
+  color: var(--earth-mid);
+}
+.ref-count-cell {
+  font-family: var(--font-display);
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--wheat-gold);
+}
+.milestone-pill {
+  display: inline-block;
+  padding: .18rem .6rem;
+  background: rgba(237,163,57,.15);
+  border-radius: 999px;
+  font-size: .7rem;
+  font-weight: 700;
+  color: #b07b00;
+}
+
+/* Reward fields */
+.reward-fields { display: flex; flex-direction: column; gap: 1rem; }
+.reward-field { display: flex; flex-direction: column; gap: .35rem; }
+.reward-field-row {
+  display: flex;
+  gap: .75rem;
+  align-items: center;
+}
+.reward-field-row .lp-text-input { flex: 1; }

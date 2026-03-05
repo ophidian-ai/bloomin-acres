@@ -92,6 +92,12 @@
         </svg>
         Landing Page
       </button>
+      <button type="button" class="tab-btn" role="tab" aria-selected="false" data-tab="club">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+          <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/>
+        </svg>
+        Club
+      </button>
     </nav>
 
     <!-- Tab: Stripe Catalogue -->
@@ -367,6 +373,84 @@
 
     </div>
 
+    <!-- Tab: Club -->
+    <div id="tab-club" class="tab-panel">
+      <h2 class="section-heading">Bread Box Club</h2>
+
+      <!-- Active Members -->
+      <div class="club-admin-block">
+        <div class="club-admin-block-header">
+          <h3>Active Members</h3>
+          <span class="club-member-count" id="club-member-count">—</span>
+        </div>
+        <div class="club-table-wrap">
+          <table class="club-table" id="club-members-table">
+            <thead>
+              <tr>
+                <th>Name</th>
+                <th>Email</th>
+                <th>Joined</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody id="club-members-tbody">
+              <tr><td colspan="4" class="club-table-loading">Loading…</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Referral Activity -->
+      <div class="club-admin-block">
+        <h3>Referral Activity</h3>
+        <div class="club-table-wrap">
+          <table class="club-table" id="club-referral-table">
+            <thead>
+              <tr>
+                <th>Member</th>
+                <th>Code</th>
+                <th>Referrals</th>
+                <th>Milestone</th>
+              </tr>
+            </thead>
+            <tbody id="club-referral-tbody">
+              <tr><td colspan="4" class="club-table-loading">Loading…</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Reward Text Editor -->
+      <div class="club-admin-block">
+        <h3>Milestone Reward Text</h3>
+        <p class="tab-desc">These descriptions are shown to members on the Club page and in their account.</p>
+        <div class="reward-fields">
+          <div class="reward-field">
+            <label class="field-label">5 Referrals</label>
+            <div class="reward-field-row">
+              <input type="text" id="reward-text-5" class="lp-text-input" placeholder="Free loaf on your next pickup" />
+              <button type="button" class="btn-secondary" id="save-reward-5">Save</button>
+            </div>
+          </div>
+          <div class="reward-field">
+            <label class="field-label">15 Referrals</label>
+            <div class="reward-field-row">
+              <input type="text" id="reward-text-15" class="lp-text-input" placeholder="One month free membership" />
+              <button type="button" class="btn-secondary" id="save-reward-15">Save</button>
+            </div>
+          </div>
+          <div class="reward-field">
+            <label class="field-label">25+ Referrals</label>
+            <div class="reward-field-row">
+              <input type="text" id="reward-text-25" class="lp-text-input" placeholder="Lifetime 20% member discount" />
+              <button type="button" class="btn-secondary" id="save-reward-25">Save</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /tab-club -->
+
   </div><!-- /dashboard -->
 
   <div id="toast"></div>
@@ -448,6 +532,12 @@
       // Load data in parallel
       await loadProducts(); // must complete before menu editor renders (populates allProducts for dropdowns)
       await Promise.all([loadMenuFromSupabase(), loadMenuSchedule(), loadSavedMenus(), loadLandingContent()]);
+
+      // Lazy-load club tab on first click
+      let clubTabLoaded = false;
+      document.querySelector('[data-tab="club"]')?.addEventListener('click', async () => {
+        if (!clubTabLoaded) { clubTabLoaded = true; await loadClubTab(); }
+      }, { once: true });
     }
 
     // ── Logout ────────────────────────────────────────────────────────────────
@@ -936,6 +1026,142 @@
         btn.textContent = originalLabel;
       });
     });
+
+    // ── Club Admin ────────────────────────────────────────────────────────────
+    async function loadClubTab() {
+      await Promise.all([loadClubMembers(), loadClubReferrals(), loadRewardTexts()]);
+      setupRewardSaveButtons();
+    }
+
+    async function loadClubMembers() {
+      const tbody = document.getElementById('club-members-tbody');
+      const countEl = document.getElementById('club-member-count');
+
+      // Fetch club_members with status active or past_due
+      const { data: members, error } = await sb
+        .from('club_members')
+        .select('user_id, status, started_at')
+        .in('status', ['active', 'past_due'])
+        .order('started_at', { ascending: false });
+
+      if (error || !members) {
+        tbody.innerHTML = `<tr><td colspan="4" class="club-table-loading">Failed to load members</td></tr>`;
+        return;
+      }
+
+      countEl.textContent = members.length;
+
+      if (!members.length) {
+        tbody.innerHTML = `<tr><td colspan="4" class="club-table-empty">No active members yet</td></tr>`;
+        return;
+      }
+
+      // Fetch profiles + emails for these user_ids
+      const userIds = members.map(m => m.user_id);
+      const [{ data: profiles }, { data: authUsers }] = await Promise.all([
+        sb.from('profiles').select('user_id, first_name, last_name').in('user_id', userIds),
+        sb.from('admins').select('user_id'), // just to get admin list for display
+      ]);
+
+      const profileMap = {};
+      (profiles || []).forEach(p => { profileMap[p.user_id] = p; });
+
+      tbody.innerHTML = members.map(m => {
+        const p = profileMap[m.user_id];
+        const name = p ? [p.first_name, p.last_name].filter(Boolean).join(' ') || '—' : '—';
+        const joined = new Date(m.started_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+        const statusClass = m.status === 'active' ? 'status-active' : 'status-pastdue';
+        return `<tr>
+          <td>${escHtml(name)}</td>
+          <td class="club-user-id">${escHtml(m.user_id.slice(0,8))}…</td>
+          <td>${escHtml(joined)}</td>
+          <td><span class="club-status-pill ${statusClass}">${m.status === 'past_due' ? 'Past Due' : 'Active'}</span></td>
+        </tr>`;
+      }).join('');
+    }
+
+    async function loadClubReferrals() {
+      const tbody = document.getElementById('club-referral-tbody');
+
+      // Get all referral codes
+      const { data: codes, error } = await sb
+        .from('referral_codes')
+        .select('user_id, code, created_at');
+
+      if (error || !codes || !codes.length) {
+        tbody.innerHTML = `<tr><td colspan="4" class="club-table-empty">No referral activity yet</td></tr>`;
+        return;
+      }
+
+      // Get use counts per code
+      const { data: uses } = await sb
+        .from('referral_uses')
+        .select('code');
+
+      const useCounts = {};
+      (uses || []).forEach(u => { useCounts[u.code] = (useCounts[u.code] || 0) + 1; });
+
+      // Get profiles
+      const userIds = codes.map(c => c.user_id);
+      const { data: profiles } = await sb
+        .from('profiles')
+        .select('user_id, first_name, last_name')
+        .in('user_id', userIds);
+      const profileMap = {};
+      (profiles || []).forEach(p => { profileMap[p.user_id] = p; });
+
+      const milestones = [5, 15, 25];
+      const rows = codes
+        .map(c => ({ ...c, count: useCounts[c.code] || 0 }))
+        .sort((a, b) => b.count - a.count)
+        .filter(c => c.count > 0 || codes.length < 20);
+
+      if (!rows.length) {
+        tbody.innerHTML = `<tr><td colspan="4" class="club-table-empty">No referrals recorded yet</td></tr>`;
+        return;
+      }
+
+      tbody.innerHTML = rows.map(c => {
+        const p = profileMap[c.user_id];
+        const name = p ? [p.first_name, p.last_name].filter(Boolean).join(' ') || '—' : '—';
+        const reached = milestones.filter(m => c.count >= m).pop() || null;
+        const milestoneDisplay = reached ? `<span class="milestone-pill">${reached}+ ✓</span>` : '—';
+        return `<tr>
+          <td>${escHtml(name)}</td>
+          <td><code class="ref-code-pill">${escHtml(c.code)}</code></td>
+          <td class="ref-count-cell">${c.count}</td>
+          <td>${milestoneDisplay}</td>
+        </tr>`;
+      }).join('');
+    }
+
+    async function loadRewardTexts() {
+      const { data } = await sb.from('site_content')
+        .select('key, value')
+        .in('key', ['referral-reward-5', 'referral-reward-15', 'referral-reward-25']);
+      (data || []).forEach(row => {
+        const suffix = row.key.replace('referral-reward-', '');
+        const el = document.getElementById(`reward-text-${suffix}`);
+        if (el && row.value) el.value = row.value;
+      });
+    }
+
+    function setupRewardSaveButtons() {
+      [['save-reward-5', 'reward-text-5', 'referral-reward-5'],
+       ['save-reward-15', 'reward-text-15', 'referral-reward-15'],
+       ['save-reward-25', 'reward-text-25', 'referral-reward-25']].forEach(([btnId, inputId, key]) => {
+        document.getElementById(btnId)?.addEventListener('click', async () => {
+          const btn = document.getElementById(btnId);
+          const val = document.getElementById(inputId).value.trim();
+          btn.disabled = true; btn.textContent = 'Saving…';
+          const { error } = await sb.from('site_content')
+            .upsert({ key, value: val }, { onConflict: 'key' });
+          btn.disabled = false; btn.textContent = 'Save';
+          if (error) showToast('Save failed: ' + error.message, true);
+          else showToast('Reward text saved');
+        });
+      });
+    }
 
     // ── Boot ──────────────────────────────────────────────────────────────────
     init();
