@@ -49,9 +49,11 @@ create table if not exists user_cart (
   id uuid primary key default gen_random_uuid(),
   user_id uuid not null references auth.users(id) on delete cascade,
   stripe_product_id text not null,
+  variation_name text not null default '',
+  variation_delta integer not null default 0,
   quantity integer not null default 1,
   updated_at timestamptz default now(),
-  unique(user_id, stripe_product_id)
+  unique(user_id, stripe_product_id, variation_name)
 );
 
 create table if not exists orders (
@@ -101,6 +103,7 @@ create table if not exists product_details (
   stripe_product_id text primary key,
   description text,
   image_url text,
+  variations jsonb not null default '[]'::jsonb,
   updated_at timestamptz default now()
 );
 

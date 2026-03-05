@@ -291,6 +291,76 @@
     .btn-save:active { transform: scale(.98); }
     .btn-save:disabled { opacity: .55; cursor: default; }
 
+    /* Variation selector (customer) */
+    .variation-selector { margin-bottom: 1.25rem; }
+    .variation-selector-label {
+      font-size: .72rem; font-weight: 700; letter-spacing: .1em;
+      text-transform: uppercase; color: var(--earth-mid);
+      display: block; margin-bottom: .55rem;
+    }
+    .variation-options { display: flex; flex-wrap: wrap; gap: .5rem; }
+    .variation-option {
+      display: flex; align-items: center;
+      padding: .45rem .9rem;
+      border: 1.5px solid rgba(74,51,34,.2);
+      border-radius: 99px;
+      cursor: pointer;
+      font-family: 'DM Sans', sans-serif; font-size: .83rem;
+      color: var(--earth-brown);
+      transition: border-color .15s, background .15s;
+      -webkit-user-select: none;
+      user-select: none;
+    }
+    .variation-option input[type="radio"] { display: none; }
+    .variation-option:hover { border-color: var(--wheat-gold); }
+    .variation-option.selected {
+      border-color: var(--earth-brown);
+      background: rgba(74,51,34,.07);
+      font-weight: 600;
+    }
+
+    /* Variations editor (admin) */
+    .variation-row {
+      display: flex; align-items: center; gap: .5rem;
+      margin-bottom: .5rem;
+    }
+    .variation-name-input {
+      flex: 2; padding: .45rem .65rem;
+      border: 1.5px solid rgba(74,51,34,.18); border-radius: 4px;
+      background: var(--farm-cream); font-family: 'DM Sans', sans-serif;
+      font-size: .85rem; color: var(--earth-brown);
+    }
+    .variation-delta-wrap {
+      flex: 1; display: flex; align-items: center; gap: .25rem;
+    }
+    .variation-delta-prefix {
+      font-size: .85rem; color: var(--earth-mid); white-space: nowrap;
+    }
+    .variation-delta-input {
+      width: 70px; padding: .45rem .5rem;
+      border: 1.5px solid rgba(74,51,34,.18); border-radius: 4px;
+      background: var(--farm-cream); font-family: 'DM Sans', sans-serif;
+      font-size: .85rem; color: var(--earth-brown);
+    }
+    .variation-name-input:focus,
+    .variation-delta-input:focus { outline: none; border-color: var(--sage-dark); }
+    .btn-variation-remove {
+      background: transparent; border: none; cursor: pointer;
+      color: rgba(74,51,34,.35); font-size: 1.1rem; line-height: 1;
+      padding: .2rem .35rem; border-radius: 3px;
+      transition: color .15s, background .15s;
+    }
+    .btn-variation-remove:hover { color: var(--burnt-orange); background: rgba(200,90,58,.08); }
+    .btn-add-variation {
+      margin-top: .35rem;
+      background: transparent; border: 1.5px dashed rgba(74,51,34,.25);
+      border-radius: 4px; padding: .4rem .8rem;
+      font-family: 'DM Sans', sans-serif; font-size: .78rem; font-weight: 600;
+      color: var(--earth-mid); cursor: pointer; letter-spacing: .04em;
+      transition: border-color .15s, color .15s;
+    }
+    .btn-add-variation:hover { border-color: var(--sage-dark); color: var(--sage-dark); }
+
     /* Toast */
     #toast {
       position: fixed; bottom: 1.5rem; left: 50%; transform: translateX(-50%);
@@ -366,7 +436,7 @@
     let isAdmin = false;
     let productId = null;
     let stripeProduct = null;
-    let productDetails = null;  // { description, image_url }
+    let productDetails = null;  // { description, image_url, variations }
 
     function escHtml(s) {
       return String(s)
@@ -422,19 +492,66 @@
       renderProduct();
     }
 
+    function formatPrice(cents, currency) {
+      return new Intl.NumberFormat('en-US', { style: 'currency', currency: currency || 'usd' }).format(cents / 100);
+    }
+
+    function getSelectedVariation() {
+      const checked = document.querySelector('input[name="variation"]:checked');
+      if (!checked) return { name: '', delta: 0 };
+      return { name: checked.dataset.name, delta: parseInt(checked.value, 10) };
+    }
+
     function renderProduct() {
       const card = document.getElementById('product-card');
       const name = stripeProduct ? stripeProduct.name : 'Product';
+      const baseAmount = stripeProduct?.unit_amount ?? null;
+      const currency = stripeProduct?.currency || 'usd';
       const price = stripeProduct ? (stripeProduct.price_formatted || '') : '';
       const description = productDetails?.description || '';
       const imageUrl = productDetails?.image_url || stripeProduct?.images?.[0] || '';
+      const variations = productDetails?.variations || [];
+
+      const variationSelectorHtml = variations.length > 0 ? `
+        <div class="variation-selector">
+          <span class="variation-selector-label">Options</span>
+          <div class="variation-options" id="variation-options">
+            ${variations.map((v, i) => {
+              const totalCents = (baseAmount || 0) + (v.price_delta || 0);
+              const label = v.price_delta
+                ? `${escHtml(v.name)} &nbsp;·&nbsp; ${formatPrice(totalCents, currency)}`
+                : escHtml(v.name);
+              return `<label class="variation-option${i === 0 ? ' selected' : ''}">
+                <input type="radio" name="variation" value="${v.price_delta || 0}" data-name="${escHtml(v.name)}" ${i === 0 ? 'checked' : ''} />
+                ${label}
+              </label>`;
+            }).join('')}
+          </div>
+        </div>` : '';
+
+      const adminVariationsHtml = `
+        <div class="admin-field">
+          <label class="admin-label">Variations <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--earth-mid);font-size:.72rem;">(optional — e.g. sizes, flavors)</span></label>
+          <div id="variations-list">
+            ${(productDetails?.variations || []).map(v => `
+              <div class="variation-row">
+                <input type="text" class="variation-name-input" placeholder="Name (e.g. Large)" value="${escHtml(v.name)}" />
+                <div class="variation-delta-wrap">
+                  <span class="variation-delta-prefix">+$</span>
+                  <input type="number" class="variation-delta-input" step="0.01" min="0" placeholder="0.00" value="${((v.price_delta || 0) / 100).toFixed(2)}" />
+                </div>
+                <button type="button" class="btn-variation-remove" title="Remove">&times;</button>
+              </div>`).join('')}
+          </div>
+          <button type="button" class="btn-add-variation" id="btn-add-variation">+ Add Variation</button>
+        </div>`;
 
       card.innerHTML = `
         <div class="product-img-wrap">
           ${imageUrl
             ? `<img src="${escHtml(imageUrl)}" class="product-img" alt="${escHtml(name)}" />`
             : `<div class="product-img-placeholder">
-                <svg width="80" height="80" viewBox="0 0 24 24" fill="none" stroke="${'#4A3322'}" stroke-width="1">
+                <svg width="80" height="80" viewBox="0 0 24 24" fill="none" stroke="#4A3322" stroke-width="1">
                   <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
                   <polyline points="9 22 9 12 15 12 15 22"/>
                 </svg>
@@ -443,9 +560,10 @@
         </div>
         <div class="product-body">
           <h1 class="product-name">${escHtml(name)}</h1>
-          ${price ? `<div class="product-price">${escHtml(price)}</div>` : ''}
+          <div class="product-price" id="product-price-display">${escHtml(price)}</div>
           <div class="product-divider"></div>
           <p class="product-description" id="product-desc-display">${escHtml(description)}</p>
+          ${variationSelectorHtml}
           <div class="product-actions" id="product-actions">
             ${currentUser
               ? `<button class="btn-cart" id="btn-cart">
@@ -477,9 +595,18 @@
               <input type="file" class="admin-file-input" id="edit-image" accept="image/*" />
             </div>
           </div>
+          ${adminVariationsHtml}
           <button class="btn-save" id="btn-save">Save Changes</button>
         </div>` : ''}
       `;
+
+      // Variation pill selection
+      document.querySelectorAll('.variation-option').forEach(lbl => {
+        lbl.addEventListener('click', () => {
+          document.querySelectorAll('.variation-option').forEach(l => l.classList.remove('selected'));
+          lbl.classList.add('selected');
+        });
+      });
 
       // Wire up favorites
       if (currentUser && productId) {
@@ -524,21 +651,54 @@
       const btn = document.getElementById('btn-cart');
       if (!btn) return;
       btn.addEventListener('click', async () => {
+        const { name: varName, delta: varDelta } = getSelectedVariation();
         const { data: existing } = await sb.from('user_cart')
-          .select('id, quantity').eq('user_id', currentUser.id).eq('stripe_product_id', productId).maybeSingle();
+          .select('id, quantity')
+          .eq('user_id', currentUser.id)
+          .eq('stripe_product_id', productId)
+          .eq('variation_name', varName)
+          .maybeSingle();
         if (existing) {
           await sb.from('user_cart').update({ quantity: existing.quantity + 1 }).eq('id', existing.id);
         } else {
-          await sb.from('user_cart').insert({ user_id: currentUser.id, stripe_product_id: productId, quantity: 1 });
+          await sb.from('user_cart').insert({
+            user_id: currentUser.id,
+            stripe_product_id: productId,
+            variation_name: varName,
+            variation_delta: varDelta,
+            quantity: 1,
+          });
         }
-        showToast(`${stripeProduct?.name || 'Item'} added to cart`);
+        const label = varName ? `${stripeProduct?.name || 'Item'} (${varName})` : (stripeProduct?.name || 'Item');
+        showToast(`${label} added to cart`);
       });
+    }
+
+    function addVariationRow(name = '', delta = '') {
+      const row = document.createElement('div');
+      row.className = 'variation-row';
+      row.innerHTML = `
+        <input type="text" class="variation-name-input" placeholder="Name (e.g. Large)" value="${escHtml(name)}" />
+        <div class="variation-delta-wrap">
+          <span class="variation-delta-prefix">+$</span>
+          <input type="number" class="variation-delta-input" step="0.01" min="0" placeholder="0.00" value="${escHtml(String(delta))}" />
+        </div>
+        <button type="button" class="btn-variation-remove" title="Remove">&times;</button>`;
+      row.querySelector('.btn-variation-remove').addEventListener('click', () => row.remove());
+      document.getElementById('variations-list').appendChild(row);
     }
 
     function wireAdminSave() {
       const btn = document.getElementById('btn-save');
       const fileInput = document.getElementById('edit-image');
       const thumb = document.getElementById('admin-img-thumb');
+
+      // Wire existing remove buttons
+      document.querySelectorAll('.btn-variation-remove').forEach(b => {
+        b.addEventListener('click', () => b.closest('.variation-row').remove());
+      });
+
+      document.getElementById('btn-add-variation').addEventListener('click', () => addVariationRow());
 
       // Preview selected image
       fileInput.addEventListener('change', () => {
@@ -579,15 +739,24 @@
         }
 
         const description = document.getElementById('edit-description').value.trim();
+
+        // Collect variations
+        const variations = [];
+        document.querySelectorAll('#variations-list .variation-row').forEach(row => {
+          const name = row.querySelector('.variation-name-input').value.trim();
+          const deltaRaw = parseFloat(row.querySelector('.variation-delta-input').value) || 0;
+          if (name) variations.push({ name, price_delta: Math.round(deltaRaw * 100) });
+        });
+
         const { error } = await sb.from('product_details').upsert(
-          { stripe_product_id: productId, description, image_url: imageUrl, updated_at: new Date().toISOString() },
+          { stripe_product_id: productId, description, image_url: imageUrl, variations, updated_at: new Date().toISOString() },
           { onConflict: 'stripe_product_id' }
         );
 
         if (error) {
           showToast('Save failed: ' + error.message, true);
         } else {
-          productDetails = { description, image_url: imageUrl };
+          productDetails = { description, image_url: imageUrl, variations };
           showToast('Product updated');
           // Refresh the product image display
           const imgWrap = document.querySelector('.product-img-wrap');

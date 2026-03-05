@@ -24,11 +24,24 @@ export default async function handler(req, res) {
     );
 
     const lineItems = products.map((product, idx) => {
+      const item = items[idx];
       const price = product.default_price;
-      if (!price || !price.id) throw new Error(`No default price for product ${product.id}`);
+      if (!price) throw new Error(`No default price for product ${product.id}`);
+      const variationDelta = item.variation_delta || 0;
+      if (variationDelta) {
+        const varLabel = item.variation_name ? ` — ${item.variation_name}` : '';
+        return {
+          price_data: {
+            currency: price.currency || 'usd',
+            product_data: { name: `${product.name}${varLabel}` },
+            unit_amount: (price.unit_amount || 0) + variationDelta,
+          },
+          quantity: item.quantity || 1,
+        };
+      }
       return {
         price: price.id,
-        quantity: items[idx].quantity || 1,
+        quantity: item.quantity || 1,
       };
     });
 
