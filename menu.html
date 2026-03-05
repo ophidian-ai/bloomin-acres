@@ -689,7 +689,7 @@
           }
 
           // Favorite button
-          row.querySelector('.btn-fav').addEventListener('click', async (e) => {
+          row.querySelector('.btn-fav')?.addEventListener('click', async (e) => {
             if (!currentUser) { window.location.href = 'account.html'; return; }
             const btn = e.currentTarget;
             const isActive = btn.classList.contains('active');
@@ -710,7 +710,7 @@
           });
 
           // Add to cart button
-          row.querySelector('.btn-add-cart').addEventListener('click', async () => {
+          row.querySelector('.btn-add-cart')?.addEventListener('click', async () => {
             if (!currentUser) { window.location.href = 'account.html'; return; }
             if (userCartIds.has(pid)) {
               const { data: existing } = await sb.from('user_cart')
