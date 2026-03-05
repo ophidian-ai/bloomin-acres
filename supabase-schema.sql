@@ -96,6 +96,17 @@ create table if not exists saved_menus (
   created_at timestamptz default now()
 );
 
+-- ─── Site Content ────────────────────────────────────────────────────────────
+-- Generic key/value store for admin-editable site content (e.g. landing card images).
+-- Requires a public Supabase Storage bucket named "site-images".
+-- Create it in: Supabase dashboard → Storage → New bucket → Name: site-images → Public: ON
+
+create table if not exists site_content (
+  key   text primary key,
+  value text not null,
+  updated_at timestamptz default now()
+);
+
 -- ─── Product Details ─────────────────────────────────────────────────────────
 -- Stores admin-managed descriptions and images for each Stripe product.
 -- Requires a public Supabase Storage bucket named "product-images".
@@ -122,6 +133,7 @@ alter table order_items enable row level security;
 alter table product_details enable row level security;
 alter table menu_schedule enable row level security;
 alter table saved_menus enable row level security;
+alter table site_content enable row level security;
 
 -- Public: anyone can read the menu
 create policy "Public read sections"
@@ -182,6 +194,14 @@ create policy "Admin write menu_schedule"
 -- Saved menus: admin only
 create policy "Admin manage saved_menus"
   on saved_menus for all
+  using (exists (select 1 from admins where user_id = auth.uid()));
+
+-- Site content: public read, admin write
+create policy "Public read site_content"
+  on site_content for select using (true);
+
+create policy "Admin write site_content"
+  on site_content for all
   using (exists (select 1 from admins where user_id = auth.uid()));
 
 -- Service role (webhook) can insert orders

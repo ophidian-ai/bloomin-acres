@@ -446,6 +446,54 @@
     }
     #toast.show { opacity: 1; transform: translateY(0); }
     #toast.error { background: #6B2929; }
+
+    /* Landing Page tab */
+    .landing-card-upload {
+      background: rgba(250,240,230,.06);
+      border: 1px solid rgba(237,163,57,.15);
+      border-radius: 8px;
+      padding: 1.25rem 1.5rem;
+    }
+    .landing-card-label {
+      font-family: 'DM Sans', sans-serif;
+      font-size: .8rem; font-weight: 600;
+      letter-spacing: .1em; text-transform: uppercase;
+      color: var(--wheat-gold);
+      margin-bottom: .75rem;
+    }
+    .landing-card-preview-wrap {
+      width: 100%; max-width: 360px;
+      border-radius: 6px; overflow: hidden;
+      border: 1px solid rgba(237,163,57,.15);
+    }
+    .landing-card-preview {
+      width: 100%; height: 180px;
+      object-fit: cover; display: block;
+    }
+    .lc-row {
+      display: flex; align-items: center; gap: .75rem;
+      margin-top: .75rem;
+    }
+    .btn-upload-label {
+      font-family: 'DM Sans', sans-serif;
+      font-size: .78rem; font-weight: 600;
+      letter-spacing: .06em; text-transform: uppercase;
+      color: var(--farm-cream);
+      background: rgba(250,240,230,.12);
+      border: 1px solid rgba(250,240,230,.2);
+      border-radius: 5px;
+      padding: .45rem .9rem;
+      cursor: pointer;
+      transition: background .15s, border-color .15s;
+    }
+    .btn-upload-label:hover { background: rgba(250,240,230,.2); border-color: rgba(250,240,230,.35); }
+    .lc-file-input { display: none; }
+    .lc-filename {
+      font-size: .78rem;
+      color: rgba(250,240,230,.5);
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+      max-width: 160px;
+    }
   </style>
 </head>
 <body>
@@ -504,6 +552,13 @@
           <line x1="4.5" y1="10" x2="7.5" y2="10" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/>
         </svg>
         Saved Menus
+      </button>
+      <button type="button" class="tab-btn" role="tab" aria-selected="false" data-tab="landing">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+          <rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5" fill="currentColor" stroke="none"/>
+          <polyline points="21 15 16 10 5 21"/>
+        </svg>
+        Landing Page
       </button>
     </nav>
 
@@ -602,6 +657,63 @@
       </div>
     </div>
 
+    <!-- Tab: Landing Page -->
+    <div id="tab-landing" class="tab-panel">
+      <h2 class="section-heading">Landing Page</h2>
+      <p style="font-size:.85rem;color:rgba(250,240,230,.85);margin-top:.35rem;margin-bottom:1.75rem;text-shadow:0 1px 3px rgba(0,0,0,.8);">
+        Upload photos for the three feature cards on the home page.
+      </p>
+      <div style="display:flex;flex-direction:column;gap:1.5rem;">
+        <div class="landing-card-upload">
+          <div class="landing-card-label">Card 1 — Sourdough Loaves</div>
+          <div class="landing-card-preview-wrap">
+            <img class="landing-card-preview" id="lc-preview-1" src="https://placehold.co/600x400/C8A96E/4A3322?text=Sourdough+Loaves" alt="" />
+          </div>
+          <div class="lc-row">
+            <label class="btn-upload-label" for="lc-input-1">Choose Image</label>
+            <input type="file" id="lc-input-1" class="lc-file-input" accept="image/*" data-key="landing-card-1" data-preview="lc-preview-1" data-name="lc-name-1" />
+            <button type="button" class="btn-secondary lc-upload-btn" data-key="landing-card-1" data-input="lc-input-1" disabled>
+              <svg width="11" height="11" viewBox="0 0 14 14" fill="none" aria-hidden="true"><path d="M2 7l3.5 3.5L12 3" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              Save
+            </button>
+            <span class="lc-filename" id="lc-name-1"></span>
+          </div>
+        </div>
+
+        <div class="landing-card-upload">
+          <div class="landing-card-label">Card 2 — Fresh Produce</div>
+          <div class="landing-card-preview-wrap">
+            <img class="landing-card-preview" id="lc-preview-2" src="https://placehold.co/600x400/7A9B8E/FAF0E6?text=Fresh+Produce" alt="" />
+          </div>
+          <div class="lc-row">
+            <label class="btn-upload-label" for="lc-input-2">Choose Image</label>
+            <input type="file" id="lc-input-2" class="lc-file-input" accept="image/*" data-key="landing-card-2" data-preview="lc-preview-2" data-name="lc-name-2" />
+            <button type="button" class="btn-secondary lc-upload-btn" data-key="landing-card-2" data-input="lc-input-2" disabled>
+              <svg width="11" height="11" viewBox="0 0 14 14" fill="none" aria-hidden="true"><path d="M2 7l3.5 3.5L12 3" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              Save
+            </button>
+            <span class="lc-filename" id="lc-name-2"></span>
+          </div>
+        </div>
+
+        <div class="landing-card-upload">
+          <div class="landing-card-label">Card 3 — Seasonal Pastries</div>
+          <div class="landing-card-preview-wrap">
+            <img class="landing-card-preview" id="lc-preview-3" src="https://placehold.co/600x400/8B3A3A/FAF0E6?text=Seasonal+Pastries" alt="" />
+          </div>
+          <div class="lc-row">
+            <label class="btn-upload-label" for="lc-input-3">Choose Image</label>
+            <input type="file" id="lc-input-3" class="lc-file-input" accept="image/*" data-key="landing-card-3" data-preview="lc-preview-3" data-name="lc-name-3" />
+            <button type="button" class="btn-secondary lc-upload-btn" data-key="landing-card-3" data-input="lc-input-3" disabled>
+              <svg width="11" height="11" viewBox="0 0 14 14" fill="none" aria-hidden="true"><path d="M2 7l3.5 3.5L12 3" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              Save
+            </button>
+            <span class="lc-filename" id="lc-name-3"></span>
+          </div>
+        </div>
+      </div>
+    </div>
+
   </div><!-- /dashboard -->
 
   <div id="toast"></div>
@@ -681,7 +793,7 @@
       document.getElementById('account-avatar').textContent = (user.email || 'A')[0].toUpperCase();
 
       // Load data in parallel
-      await Promise.all([loadProducts(), loadMenuFromSupabase(), loadMenuSchedule(), loadSavedMenus()]);
+      await Promise.all([loadProducts(), loadMenuFromSupabase(), loadMenuSchedule(), loadSavedMenus(), loadLandingImages()]);
     }
 
     // ── Logout ────────────────────────────────────────────────────────────────
@@ -1056,6 +1168,71 @@
         await loadSavedMenus();
       }
       btn.disabled = false;
+    });
+
+    // ── Landing Page Images ───────────────────────────────────────────────────
+    async function loadLandingImages() {
+      const { data } = await sb
+        .from('site_content')
+        .select('key, value')
+        .in('key', ['landing-card-1', 'landing-card-2', 'landing-card-3']);
+      (data || []).forEach(row => {
+        const n = row.key.replace('landing-card-', '');
+        const preview = document.getElementById(`lc-preview-${n}`);
+        if (preview && row.value) preview.src = row.value;
+      });
+    }
+
+    document.querySelectorAll('.lc-file-input').forEach(input => {
+      input.addEventListener('change', () => {
+        const file = input.files[0];
+        if (!file) return;
+        const previewEl = document.getElementById(input.dataset.preview);
+        const nameEl   = document.getElementById(input.dataset.name);
+        const saveBtn  = input.closest('.lc-row').querySelector('.lc-upload-btn');
+        previewEl.src = URL.createObjectURL(file);
+        nameEl.textContent = file.name;
+        saveBtn.disabled = false;
+      });
+    });
+
+    document.querySelectorAll('.lc-upload-btn').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        const key      = btn.dataset.key;
+        const inputEl  = document.getElementById(btn.dataset.input);
+        const file     = inputEl.files[0];
+        if (!file) return;
+
+        btn.disabled = true;
+        btn.textContent = 'Saving…';
+
+        const ext  = file.name.split('.').pop();
+        const path = `${key}.${ext}`;
+        const { error: upErr } = await sb.storage
+          .from('site-images')
+          .upload(path, file, { upsert: true, contentType: file.type });
+
+        if (upErr) {
+          showToast('Upload failed: ' + upErr.message, true);
+          btn.disabled = false;
+          btn.innerHTML = '<svg width="11" height="11" viewBox="0 0 14 14" fill="none"><path d="M2 7l3.5 3.5L12 3" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg> Save';
+          return;
+        }
+
+        const { data: { publicUrl } } = sb.storage.from('site-images').getPublicUrl(path);
+
+        const { error: dbErr } = await sb.from('site_content')
+          .upsert({ key, value: publicUrl }, { onConflict: 'key' });
+
+        if (dbErr) {
+          showToast('Save failed: ' + dbErr.message, true);
+        } else {
+          showToast('Image saved');
+        }
+
+        btn.disabled = false;
+        btn.innerHTML = '<svg width="11" height="11" viewBox="0 0 14 14" fill="none"><path d="M2 7l3.5 3.5L12 3" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg> Save';
+      });
     });
 
     // ── Boot ──────────────────────────────────────────────────────────────────

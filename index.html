@@ -401,6 +401,17 @@
       window.location.reload();
     });
   }
+
+  // Load landing card images from site_content
+  const { data: cardContent } = await sb
+    .from('site_content')
+    .select('key, value')
+    .in('key', ['landing-card-1', 'landing-card-2', 'landing-card-3']);
+  (cardContent || []).forEach(row => {
+    const n = row.key.replace('landing-card-', '');
+    const img = document.getElementById(`landing-card-img-${n}`);
+    if (img && row.value) img.src = row.value;
+  });
 })();
 </script>
 
@@ -581,7 +592,7 @@
     <article class="product-card animate-fade-up">
       <div style="position:relative;overflow:hidden;">
         <img src="https://placehold.co/600x400/C8A96E/4A3322?text=Sourdough+Loaves"
-             alt="Artisan sourdough loaves" loading="lazy" class="card-img"/>
+             alt="Artisan sourdough loaves" loading="lazy" class="card-img" id="landing-card-img-1"/>
         <div style="position:absolute;inset:0;background:linear-gradient(to top,rgba(74,51,34,.65) 0%,transparent 52%);"></div>
         <div style="position:absolute;inset:0;background:rgba(200,90,58,.1);mix-blend-mode:multiply;"></div>
       </div>
@@ -597,7 +608,7 @@
     <article class="product-card animate-fade-up stagger-1">
       <div style="position:relative;overflow:hidden;">
         <img src="https://placehold.co/600x400/7A9B8E/FAF0E6?text=Fresh+Produce"
-             alt="Fresh seasonal produce" loading="lazy" class="card-img"/>
+             alt="Fresh seasonal produce" loading="lazy" class="card-img" id="landing-card-img-2"/>
         <div style="position:absolute;inset:0;background:linear-gradient(to top,rgba(74,51,34,.6) 0%,transparent 52%);"></div>
         <div style="position:absolute;inset:0;background:rgba(122,155,142,.18);mix-blend-mode:multiply;"></div>
       </div>
@@ -613,7 +624,7 @@
     <article class="product-card animate-fade-up stagger-2">
       <div style="position:relative;overflow:hidden;">
         <img src="https://placehold.co/600x400/8B3A3A/FAF0E6?text=Seasonal+Pastries"
-             alt="Seasonal pastries and baked goods" loading="lazy" class="card-img"/>
+             alt="Seasonal pastries and baked goods" loading="lazy" class="card-img" id="landing-card-img-3"/>
         <div style="position:absolute;inset:0;background:linear-gradient(to top,rgba(74,51,34,.65) 0%,transparent 52%);"></div>
         <div style="position:absolute;inset:0;background:rgba(139,58,58,.15);mix-blend-mode:multiply;"></div>
       </div>
