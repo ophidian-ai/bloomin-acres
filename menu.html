@@ -97,49 +97,57 @@
         0 2px 0 rgba(237,163,57,.12) inset;
     }
 
-    /* Template header — crops to logo area only, scales with card width */
-    .menu-header-wrap {
-      overflow: hidden;
+    /* Full template frame — image provides all the art */
+    .menu-frame {
       position: relative;
-      padding-top: 39%; /* 39% of card width ≈ logo area height (896×1200 image, logo ~top 29%) */
-      height: 0;
-      background-color: var(--farm-cream);
+      line-height: 0;
     }
-    .menu-header-img {
-      position: absolute;
-      top: 0; left: 0;
+    .template-full-img {
       width: 100%;
       height: auto;
       display: block;
     }
 
-    /* Parchment body */
-    .menu-body {
-      background-color: #E8D9B8;
-      background-image: repeating-linear-gradient(
-        transparent 0px, transparent 27px,
-        rgba(200,169,110,.18) 27px, rgba(200,169,110,.18) 28px
-      );
-      padding: 2rem 3rem 3.5rem;
+    /* Content overlaid on the blank area of the template */
+    /* 896×1200 image: header ends ~29% down, footer starts ~8% up, wheat stalks ~9% in */
+    .menu-content-overlay {
+      position: absolute;
+      top: 29%;
+      bottom: 8%;
+      left: 9%;
+      right: 9%;
+      overflow-y: auto;
+      overflow-x: hidden;
+      scrollbar-width: none;
+      line-height: 1.5;
     }
-    @media (max-width: 560px) {
-      .menu-body { padding: 1.5rem 1.25rem 2.5rem; }
-    }
+    .menu-content-overlay::-webkit-scrollbar { display: none; }
 
-    /* Section header */
-    .section-label {
+    /* Section divider — matches the "——— TITLE ———" style in the template */
+    .section-divider {
+      display: flex;
+      align-items: center;
+      gap: 0.45rem;
+      margin: 0.85rem 0 0.4rem;
+    }
+    .section-divider:first-child { margin-top: 0; }
+    .section-divider::before,
+    .section-divider::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: rgba(78,110,100,.45);
+    }
+    .section-title {
       font-family: 'DM Sans', sans-serif;
-      font-size: .7rem;
-      font-weight: 600;
+      font-size: .6rem;
+      font-weight: 700;
       letter-spacing: .22em;
       text-transform: uppercase;
-      color: var(--sage-dark);
-      margin-bottom: .75rem;
-      margin-top: 2rem;
-      padding-top: 1.5rem;
-      border-top: 1px solid rgba(122,155,142,.3);
+      color: var(--earth-brown);
+      white-space: nowrap;
+      flex-shrink: 0;
     }
-    .section-label:first-of-type { margin-top: 0; padding-top: 0; border-top: none; }
 
     /* Menu item row */
     .menu-item {
@@ -152,21 +160,20 @@
     }
     .item-name {
       font-family: 'Playfair Display', serif;
-      font-size: 1rem;
+      font-size: .88rem;
       color: var(--earth-brown);
-      white-space: nowrap;
     }
     .item-dots {
       flex: 1;
       border-bottom: 1.5px dotted rgba(74,51,34,.3);
-      margin-bottom: 4px;
-      min-width: 20px;
+      margin-bottom: 3px;
+      min-width: 12px;
     }
     .item-price {
       font-family: 'DM Sans', sans-serif;
-      font-size: .9rem;
+      font-size: .82rem;
       font-weight: 500;
-      color: var(--earth-mid);
+      color: var(--earth-brown);
       white-space: nowrap;
     }
 
@@ -254,13 +261,6 @@
       font-size: 1.1rem;
     }
 
-    /* Wheat divider */
-    .wheat-divider {
-      display: flex; align-items: center; gap: 1rem;
-      margin: 1.5rem 0 1rem;
-      color: var(--wheat-gold);
-    }
-    .wheat-divider hr { flex: 1; border: none; border-top: 1px solid rgba(237,163,57,.35); }
 
     /* Footer */
     .site-footer {
@@ -330,22 +330,20 @@
   <!-- Menu card -->
   <main class="page-wrap">
     <div class="menu-card">
-      <!-- Template header (crops to logo area, scales responsively) -->
-      <div class="menu-header-wrap">
-        <img src="brand-assets/blank-menu-template.png" alt="" aria-hidden="true" class="menu-header-img" />
-      </div>
-
-      <!-- Parchment content -->
-      <div class="menu-body" id="menu-content">
-        <!-- Skeleton shown while loading -->
-        <div id="skeleton">
-          <div class="skeleton-line" style="width:40%;margin-bottom:1.25rem;"></div>
-          <div class="skeleton-line" style="width:90%;"></div>
-          <div class="skeleton-line" style="width:85%;"></div>
-          <div class="skeleton-line" style="width:80%;margin-bottom:1.5rem;"></div>
-          <div class="skeleton-line" style="width:40%;margin-bottom:1.25rem;"></div>
-          <div class="skeleton-line" style="width:90%;"></div>
-          <div class="skeleton-line" style="width:75%;"></div>
+      <!-- Full template image provides all the art: header, wheat borders, footer -->
+      <div class="menu-frame">
+        <img src="brand-assets/blank-menu-template.png" alt="Bloomin' Acres Menu" class="template-full-img" />
+        <!-- Dynamic content overlaid on the blank area of the template -->
+        <div class="menu-content-overlay" id="menu-content">
+          <div id="skeleton">
+            <div class="skeleton-line" style="width:40%;margin-bottom:1rem;"></div>
+            <div class="skeleton-line" style="width:90%;"></div>
+            <div class="skeleton-line" style="width:85%;"></div>
+            <div class="skeleton-line" style="width:80%;margin-bottom:1.25rem;"></div>
+            <div class="skeleton-line" style="width:40%;margin-bottom:1rem;"></div>
+            <div class="skeleton-line" style="width:90%;"></div>
+            <div class="skeleton-line" style="width:75%;"></div>
+          </div>
         </div>
       </div>
     </div>
@@ -452,8 +450,8 @@
         const items = itemsBySectionId[section.id] || [];
 
         const labelEl = document.createElement('div');
-        labelEl.className = 'section-label';
-        labelEl.textContent = section.title;
+        labelEl.className = 'section-divider';
+        labelEl.innerHTML = `<span class="section-title">${escHtml(section.title)}</span>`;
         content.appendChild(labelEl);
 
         items.forEach(item => {
@@ -520,22 +518,6 @@
           content.appendChild(row);
         });
 
-        if (idx < sections.length - 1) {
-          const div = document.createElement('div');
-          div.className = 'wheat-divider';
-          div.setAttribute('aria-hidden', 'true');
-          div.innerHTML = `
-            <hr />
-            <svg width="22" height="22" viewBox="0 0 22 22" fill="none">
-              <ellipse cx="11" cy="6" rx="3" ry="4.5" fill="currentColor" opacity=".5"/>
-              <line x1="11" y1="10" x2="11" y2="20" stroke="currentColor" stroke-width="1.2"/>
-              <ellipse cx="7.5" cy="13" rx="2.2" ry="3.2" fill="currentColor" opacity=".35" transform="rotate(-25 7.5 13)"/>
-              <ellipse cx="14.5" cy="13" rx="2.2" ry="3.2" fill="currentColor" opacity=".35" transform="rotate(25 14.5 13)"/>
-            </svg>
-            <hr />
-          `;
-          content.appendChild(div);
-        }
       });
     })();
   </script>

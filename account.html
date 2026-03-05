@@ -588,7 +588,6 @@
         <div class="dash-avatar" id="dash-avatar">?</div>
         <div class="dash-user-info">
           <div class="greeting" id="dash-greeting">Welcome back</div>
-          <div class="email" id="dash-email">—</div>
         </div>
       </div>
     </div>
@@ -762,7 +761,6 @@
     currentUser = user;
     document.getElementById('auth-wrap').style.display = 'none';
     document.getElementById('dashboard').style.display = 'block';
-    document.getElementById('dash-email').textContent = user.email;
     document.getElementById('profile-email').textContent = user.email;
 
     // Populate profile fields from profiles table
@@ -774,7 +772,6 @@
     document.getElementById('profile-phone').value = profile?.phone || '';
 
     // Update greeting and avatar
-    const displayName = firstName || user.email;
     document.getElementById('dash-greeting').textContent = firstName ? `Welcome back, ${firstName}` : 'Welcome back';
     document.getElementById('dash-avatar').textContent = (firstName || user.email || 'U')[0].toUpperCase();
 
