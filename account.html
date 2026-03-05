@@ -1,0 +1,1009 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>My Account — Bloomin' Acres</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400;1,600&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600&display=swap" rel="stylesheet" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            wheat: '#EDA339', sage: '#7A9B8E', 'sage-dark': '#4E6E64',
+            'sage-light': '#A8C4BB', rust: '#C85A3A', berry: '#8B3A3A',
+            earth: '#4A3322', 'earth-mid': '#6B4C35',
+            cream: '#FAF0E6', 'cream-dark': '#F0E4D0', 'cream-warm': '#EDD9B8',
+          },
+          fontFamily: {
+            display: ['"Playfair Display"', 'Georgia', 'serif'],
+            sans: ['"DM Sans"', 'system-ui', 'sans-serif'],
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    :root {
+      --wheat-gold:   #EDA339;
+      --sage-green:   #7A9B8E;
+      --sage-dark:    #4E6E64;
+      --sage-light:   #A8C4BB;
+      --burnt-orange: #C85A3A;
+      --berry-red:    #8B3A3A;
+      --earth-brown:  #4A3322;
+      --earth-mid:    #6B4C35;
+      --farm-cream:   #FAF0E6;
+      --cream-dark:   #F0E4D0;
+      --cream-warm:   #EDD9B8;
+      --font-display: 'Playfair Display', Georgia, serif;
+      --font-body:    'DM Sans', system-ui, sans-serif;
+      --shadow-card:
+        0 2px 4px rgba(74,51,34,.06),
+        0 8px 24px rgba(74,51,34,.10),
+        0 20px 40px rgba(74,51,34,.08);
+      --shadow-btn:
+        0 2px 8px rgba(200,90,58,.25),
+        0 8px 24px rgba(200,90,58,.18);
+      --shadow-btn-hover:
+        0 4px 12px rgba(200,90,58,.35),
+        0 12px 32px rgba(200,90,58,.22);
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+    body {
+      font-family: var(--font-body);
+      background-color: var(--farm-cream);
+      color: var(--earth-brown);
+      line-height: 1.7;
+      min-height: 100vh;
+    }
+    h1, h2, h3 { font-family: var(--font-display); letter-spacing: -0.03em; line-height: 1.15; }
+    img { display: block; max-width: 100%; }
+    :focus-visible { outline: 2px solid var(--burnt-orange); outline-offset: 3px; border-radius: 2px; }
+
+    /* Grain */
+    body::after {
+      content: '';
+      position: fixed; inset: 0; z-index: 9999;
+      pointer-events: none; opacity: 0.04;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23n)'/%3E%3C/svg%3E");
+      background-size: 300px 300px;
+    }
+
+    /* ─── Top bar ─────────────────────────────────────────── */
+    .topbar {
+      background: var(--earth-brown);
+      padding: .75rem 1.5rem;
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .topbar-logo {
+      display: flex; align-items: center; gap: .75rem;
+      text-decoration: none;
+    }
+    .topbar-logo img { width: 40px; height: 40px; object-fit: contain; }
+    .topbar-logo span {
+      font-family: var(--font-display);
+      font-size: 1rem; font-weight: 600;
+      color: var(--farm-cream);
+      letter-spacing: -0.02em;
+    }
+    .topbar-back {
+      font-family: var(--font-body);
+      font-size: .72rem; font-weight: 600;
+      letter-spacing: .1em; text-transform: uppercase;
+      color: rgba(250,240,230,.5);
+      text-decoration: none;
+      transition: color .2s;
+    }
+    .topbar-back:hover { color: var(--wheat-gold); }
+
+    /* ─── Auth card ───────────────────────────────────────── */
+    .auth-wrap {
+      min-height: calc(100vh - 64px);
+      display: flex; align-items: center; justify-content: center;
+      padding: 2rem 1rem;
+    }
+    .auth-card {
+      background: #fff;
+      border-radius: 16px;
+      box-shadow: var(--shadow-card);
+      width: 100%; max-width: 420px;
+      overflow: hidden;
+    }
+    .auth-card-header {
+      background: var(--sage-dark);
+      padding: 2rem 2rem 1.5rem;
+      text-align: center;
+    }
+    .auth-card-header h1 {
+      color: var(--farm-cream);
+      font-size: 1.75rem;
+      margin-bottom: .25rem;
+    }
+    .auth-card-header p {
+      color: rgba(250,240,230,.65);
+      font-size: .85rem;
+    }
+    .auth-tabs {
+      display: flex;
+      border-bottom: 1px solid var(--cream-dark);
+    }
+    .auth-tab {
+      flex: 1; padding: .85rem;
+      background: none; border: none;
+      font-family: var(--font-body);
+      font-size: .8rem; font-weight: 600;
+      letter-spacing: .08em; text-transform: uppercase;
+      color: rgba(74,51,34,.45);
+      cursor: pointer;
+      border-bottom: 2px solid transparent;
+      margin-bottom: -1px;
+      transition: color .2s, border-color .2s;
+    }
+    .auth-tab.active {
+      color: var(--earth-brown);
+      border-bottom-color: var(--burnt-orange);
+    }
+    .auth-tab:hover:not(.active) { color: var(--earth-brown); }
+    .auth-panel { padding: 1.75rem 2rem 2rem; display: none; }
+    .auth-panel.active { display: block; }
+
+    /* ─── Form fields ─────────────────────────────────────── */
+    .field { margin-bottom: 1rem; }
+    .field label {
+      display: block;
+      font-size: .75rem; font-weight: 600;
+      letter-spacing: .08em; text-transform: uppercase;
+      color: rgba(74,51,34,.6);
+      margin-bottom: .35rem;
+    }
+    .field input {
+      width: 100%;
+      padding: .65rem .85rem;
+      border: 1.5px solid var(--cream-dark);
+      border-radius: 8px;
+      font-family: var(--font-body);
+      font-size: .9rem;
+      color: var(--earth-brown);
+      background: var(--farm-cream);
+      transition: border-color .2s;
+    }
+    .field input:focus {
+      outline: none;
+      border-color: var(--sage-green);
+    }
+    .field-error {
+      font-size: .78rem;
+      color: var(--burnt-orange);
+      margin-top: .3rem;
+      display: none;
+    }
+
+    /* ─── Buttons ─────────────────────────────────────────── */
+    .btn-primary {
+      width: 100%;
+      padding: .75rem 1.5rem;
+      background: var(--burnt-orange);
+      color: var(--farm-cream);
+      border: none; border-radius: 8px;
+      font-family: var(--font-body);
+      font-size: .82rem; font-weight: 600;
+      letter-spacing: .1em; text-transform: uppercase;
+      cursor: pointer;
+      box-shadow: var(--shadow-btn);
+      transition: opacity .2s, box-shadow .2s, transform .15s;
+    }
+    .btn-primary:hover {
+      opacity: .9;
+      box-shadow: var(--shadow-btn-hover);
+      transform: translateY(-1px);
+    }
+    .btn-primary:active { transform: translateY(0); }
+    .btn-primary:disabled { opacity: .55; cursor: not-allowed; transform: none; }
+
+    .btn-secondary {
+      padding: .55rem 1.1rem;
+      background: none;
+      border: 1.5px solid var(--cream-dark);
+      border-radius: 7px;
+      font-family: var(--font-body);
+      font-size: .78rem; font-weight: 600;
+      letter-spacing: .07em; text-transform: uppercase;
+      color: var(--earth-brown);
+      cursor: pointer;
+      transition: border-color .2s, background .2s;
+    }
+    .btn-secondary:hover { border-color: var(--wheat-gold); background: rgba(237,163,57,.06); }
+
+    .btn-danger {
+      padding: .55rem 1.1rem;
+      background: none;
+      border: 1.5px solid rgba(139,58,58,.25);
+      border-radius: 7px;
+      font-family: var(--font-body);
+      font-size: .78rem; font-weight: 600;
+      letter-spacing: .07em; text-transform: uppercase;
+      color: var(--berry-red);
+      cursor: pointer;
+      transition: border-color .2s, background .2s;
+    }
+    .btn-danger:hover { border-color: var(--berry-red); background: rgba(139,58,58,.06); }
+
+    /* ─── Dashboard ───────────────────────────────────────── */
+    #dashboard { display: none; }
+    #dashboard.visible { display: block; }
+
+    .dash-header {
+      background: var(--earth-brown);
+      padding: 2rem 1.5rem 1.75rem;
+    }
+    .dash-header-inner {
+      max-width: 900px; margin: 0 auto;
+      display: flex; align-items: center; justify-content: space-between; gap: 1rem;
+      flex-wrap: wrap;
+    }
+    .dash-avatar {
+      width: 48px; height: 48px; border-radius: 50%;
+      background: var(--sage-dark);
+      display: flex; align-items: center; justify-content: center;
+      font-family: var(--font-display);
+      font-size: 1.2rem; font-weight: 600;
+      color: var(--farm-cream);
+      flex-shrink: 0;
+    }
+    .dash-user-info { flex: 1; min-width: 0; }
+    .dash-user-info .greeting {
+      font-size: .72rem; font-weight: 600;
+      letter-spacing: .1em; text-transform: uppercase;
+      color: rgba(250,240,230,.5);
+    }
+    .dash-user-info .email {
+      font-family: var(--font-display);
+      font-size: 1.1rem;
+      color: var(--farm-cream);
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+
+    .dash-tabs-bar {
+      background: var(--earth-mid);
+      padding: 0 1.5rem;
+      display: flex; gap: 0;
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+    }
+    .dash-tabs-bar::-webkit-scrollbar { display: none; }
+    .dash-tab {
+      padding: .85rem 1.25rem;
+      background: none; border: none;
+      font-family: var(--font-body);
+      font-size: .75rem; font-weight: 600;
+      letter-spacing: .1em; text-transform: uppercase;
+      color: rgba(250,240,230,.45);
+      cursor: pointer; white-space: nowrap;
+      border-bottom: 2px solid transparent;
+      transition: color .2s, border-color .2s;
+      display: flex; align-items: center; gap: .4rem;
+    }
+    .dash-tab.active {
+      color: var(--wheat-gold);
+      border-bottom-color: var(--wheat-gold);
+    }
+    .dash-tab:hover:not(.active) { color: rgba(250,240,230,.8); }
+    .dash-tab .badge {
+      background: var(--burnt-orange);
+      color: #fff;
+      font-size: .65rem;
+      min-width: 18px; height: 18px;
+      border-radius: 9px;
+      display: inline-flex; align-items: center; justify-content: center;
+      padding: 0 5px;
+    }
+
+    .dash-content {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 2rem 1.5rem;
+    }
+    .dash-panel { display: none; }
+    .dash-panel.active { display: block; }
+
+    /* ─── Empty state ─────────────────────────────────────── */
+    .empty-state {
+      text-align: center;
+      padding: 3rem 1.5rem;
+      color: rgba(74,51,34,.45);
+    }
+    .empty-state svg { margin: 0 auto 1rem; opacity: .35; }
+    .empty-state p { font-size: .9rem; margin-bottom: 1.25rem; }
+    .empty-state a {
+      display: inline-block;
+      padding: .6rem 1.4rem;
+      background: var(--burnt-orange);
+      color: var(--farm-cream);
+      border-radius: 7px;
+      text-decoration: none;
+      font-size: .78rem; font-weight: 600;
+      letter-spacing: .1em; text-transform: uppercase;
+      transition: opacity .2s;
+    }
+    .empty-state a:hover { opacity: .85; }
+
+    /* ─── Cart items ──────────────────────────────────────── */
+    .cart-item {
+      display: flex; align-items: center; gap: 1rem;
+      padding: 1rem 0;
+      border-bottom: 1px solid var(--cream-dark);
+    }
+    .cart-item:last-of-type { border-bottom: none; }
+    .cart-item-name {
+      flex: 1;
+      font-weight: 500;
+      font-size: .95rem;
+    }
+    .cart-item-price {
+      font-size: .9rem;
+      color: rgba(74,51,34,.6);
+      min-width: 60px; text-align: right;
+    }
+    .qty-controls {
+      display: flex; align-items: center; gap: .5rem;
+    }
+    .qty-btn {
+      width: 28px; height: 28px; border-radius: 50%;
+      border: 1.5px solid var(--cream-dark);
+      background: none; cursor: pointer;
+      font-size: 1rem; line-height: 1;
+      display: flex; align-items: center; justify-content: center;
+      color: var(--earth-brown);
+      transition: border-color .2s, background .2s;
+    }
+    .qty-btn:hover { border-color: var(--wheat-gold); background: rgba(237,163,57,.08); }
+    .qty-num { min-width: 20px; text-align: center; font-weight: 600; font-size: .9rem; }
+    .remove-btn {
+      background: none; border: none; cursor: pointer;
+      color: rgba(139,58,58,.5);
+      padding: .25rem;
+      transition: color .2s;
+    }
+    .remove-btn:hover { color: var(--berry-red); }
+
+    .cart-footer {
+      padding: 1.25rem 0 0;
+      display: flex; align-items: center; justify-content: space-between;
+      flex-wrap: wrap; gap: 1rem;
+    }
+    .cart-total {
+      font-family: var(--font-display);
+      font-size: 1.3rem;
+    }
+    .cart-total span { color: rgba(74,51,34,.5); font-size: .85rem; font-family: var(--font-body); }
+
+    /* ─── Favorites ───────────────────────────────────────── */
+    .favorites-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 1rem;
+    }
+    .fav-card {
+      background: #fff;
+      border-radius: 12px;
+      padding: 1.25rem;
+      box-shadow: var(--shadow-card);
+    }
+    .fav-card-name {
+      font-weight: 600; font-size: .95rem;
+      margin-bottom: .25rem;
+    }
+    .fav-card-price {
+      font-size: .85rem;
+      color: rgba(74,51,34,.55);
+      margin-bottom: .85rem;
+    }
+    .fav-card-actions { display: flex; gap: .5rem; align-items: center; }
+    .btn-cart-add {
+      flex: 1;
+      padding: .5rem .75rem;
+      background: var(--sage-dark);
+      color: var(--farm-cream);
+      border: none; border-radius: 7px;
+      font-family: var(--font-body);
+      font-size: .73rem; font-weight: 600;
+      letter-spacing: .07em; text-transform: uppercase;
+      cursor: pointer;
+      transition: opacity .2s;
+    }
+    .btn-cart-add:hover { opacity: .85; }
+    .btn-unfav {
+      padding: .5rem;
+      background: none; border: 1.5px solid rgba(139,58,58,.2);
+      border-radius: 7px; cursor: pointer;
+      color: rgba(139,58,58,.5);
+      transition: border-color .2s, color .2s;
+    }
+    .btn-unfav:hover { border-color: var(--berry-red); color: var(--berry-red); }
+
+    /* ─── Orders ──────────────────────────────────────────── */
+    .order-card {
+      background: #fff;
+      border-radius: 12px;
+      box-shadow: var(--shadow-card);
+      margin-bottom: 1rem;
+      overflow: hidden;
+    }
+    .order-card-header {
+      padding: 1rem 1.25rem;
+      display: flex; align-items: center; justify-content: space-between;
+      flex-wrap: wrap; gap: .5rem;
+      border-bottom: 1px solid var(--cream-dark);
+    }
+    .order-id { font-size: .75rem; color: rgba(74,51,34,.45); font-family: monospace; }
+    .order-date { font-size: .8rem; color: rgba(74,51,34,.55); }
+    .order-total { font-weight: 600; font-size: .95rem; }
+    .order-status {
+      font-size: .68rem; font-weight: 700;
+      letter-spacing: .1em; text-transform: uppercase;
+      padding: .2rem .6rem; border-radius: 999px;
+    }
+    .order-status.paid { background: rgba(78,110,100,.12); color: var(--sage-dark); }
+    .order-status.pending { background: rgba(237,163,57,.15); color: #8a6000; }
+    .order-status.fulfilled { background: rgba(78,110,100,.2); color: var(--sage-dark); }
+    .order-status.cancelled { background: rgba(139,58,58,.12); color: var(--berry-red); }
+    .order-items-list { padding: .75rem 1.25rem; }
+    .order-item-row {
+      display: flex; justify-content: space-between;
+      font-size: .85rem; padding: .2rem 0;
+      color: rgba(74,51,34,.7);
+    }
+
+    /* ─── Profile ─────────────────────────────────────────── */
+    .profile-section {
+      background: #fff;
+      border-radius: 12px;
+      box-shadow: var(--shadow-card);
+      padding: 1.5rem;
+      margin-bottom: 1.25rem;
+    }
+    .profile-section h3 {
+      font-size: 1rem;
+      margin-bottom: 1rem;
+      padding-bottom: .6rem;
+      border-bottom: 1px solid var(--cream-dark);
+    }
+    .profile-row {
+      display: flex; align-items: center; justify-content: space-between;
+      flex-wrap: wrap; gap: .75rem;
+      padding: .5rem 0;
+    }
+    .profile-label {
+      font-size: .78rem; font-weight: 600;
+      letter-spacing: .07em; text-transform: uppercase;
+      color: rgba(74,51,34,.5);
+    }
+    .profile-value { font-size: .92rem; }
+
+    /* ─── Toast ───────────────────────────────────────────── */
+    #toast {
+      position: fixed; bottom: 1.5rem; left: 50%; transform: translateX(-50%) translateY(20px);
+      background: var(--earth-brown);
+      color: var(--farm-cream);
+      padding: .65rem 1.4rem; border-radius: 99px;
+      font-size: .82rem; font-weight: 500;
+      opacity: 0;
+      transition: opacity .25s, transform .25s cubic-bezier(.22,1,.36,1);
+      pointer-events: none; z-index: 10000;
+      white-space: nowrap;
+    }
+    #toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+    #toast.error { background: var(--berry-red); }
+
+    /* ─── Loading overlay ─────────────────────────────────── */
+    #loading {
+      position: fixed; inset: 0; background: var(--farm-cream);
+      display: flex; align-items: center; justify-content: center;
+      z-index: 1000;
+      transition: opacity .3s;
+    }
+    #loading.hidden { opacity: 0; pointer-events: none; }
+    .spinner {
+      width: 36px; height: 36px; border-radius: 50%;
+      border: 3px solid var(--cream-dark);
+      border-top-color: var(--sage-dark);
+      animation: spin .7s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+  </style>
+</head>
+<body>
+
+<!-- Loading overlay -->
+<div id="loading"><div class="spinner"></div></div>
+
+<!-- Top bar -->
+<header class="topbar">
+  <a href="index.html" class="topbar-logo">
+    <img src="brand-assets/color-logo.png" alt="Bloomin' Acres logo" />
+    <span>Bloomin' Acres</span>
+  </a>
+  <a href="index.html" class="topbar-back">← Back to site</a>
+</header>
+
+<!-- ─── Unauthenticated: auth card ──────────────────────────────────── -->
+<div id="auth-wrap" class="auth-wrap" style="display:none;">
+  <div class="auth-card">
+    <div class="auth-card-header">
+      <h1>My Account</h1>
+      <p>Sign in or create an account to save favorites and place orders</p>
+    </div>
+    <div class="auth-tabs">
+      <button class="auth-tab active" data-tab="signin">Sign In</button>
+      <button class="auth-tab" data-tab="signup">Create Account</button>
+    </div>
+
+    <!-- Sign In panel -->
+    <div class="auth-panel active" id="panel-signin">
+      <div class="field">
+        <label for="signin-email">Email</label>
+        <input type="email" id="signin-email" autocomplete="email" placeholder="you@example.com" />
+      </div>
+      <div class="field">
+        <label for="signin-password">Password</label>
+        <input type="password" id="signin-password" autocomplete="current-password" placeholder="••••••••" />
+        <div class="field-error" id="signin-error"></div>
+      </div>
+      <button class="btn-primary" id="signin-btn">Sign In</button>
+    </div>
+
+    <!-- Sign Up panel -->
+    <div class="auth-panel" id="panel-signup">
+      <div class="field">
+        <label for="signup-email">Email</label>
+        <input type="email" id="signup-email" autocomplete="email" placeholder="you@example.com" />
+      </div>
+      <div class="field">
+        <label for="signup-password">Password</label>
+        <input type="password" id="signup-password" autocomplete="new-password" placeholder="At least 8 characters" />
+      </div>
+      <div class="field">
+        <label for="signup-confirm">Confirm Password</label>
+        <input type="password" id="signup-confirm" autocomplete="new-password" placeholder="••••••••" />
+        <div class="field-error" id="signup-error"></div>
+      </div>
+      <button class="btn-primary" id="signup-btn">Create Account</button>
+      <p style="margin-top:1rem; font-size:.8rem; color:rgba(74,51,34,.5); text-align:center;">
+        By creating an account you agree to our terms of service.
+      </p>
+    </div>
+  </div>
+</div>
+
+<!-- ─── Authenticated: dashboard ──────────────────────────────────────── -->
+<div id="dashboard">
+  <div class="dash-header">
+    <div class="dash-header-inner">
+      <div style="display:flex; align-items:center; gap:.85rem;">
+        <div class="dash-avatar" id="dash-avatar">?</div>
+        <div class="dash-user-info">
+          <div class="greeting">Welcome back</div>
+          <div class="email" id="dash-email">—</div>
+        </div>
+      </div>
+      <button class="btn-secondary" id="signout-btn" style="color:rgba(250,240,230,.6); border-color:rgba(250,240,230,.2);">Sign Out</button>
+    </div>
+  </div>
+
+  <div class="dash-tabs-bar">
+    <button class="dash-tab active" data-panel="cart">
+      Cart <span class="badge" id="cart-badge" style="display:none;">0</span>
+    </button>
+    <button class="dash-tab" data-panel="favorites">Favorites</button>
+    <button class="dash-tab" data-panel="orders">Orders</button>
+    <button class="dash-tab" data-panel="profile">Profile</button>
+  </div>
+
+  <div class="dash-content">
+
+    <!-- Cart panel -->
+    <div class="dash-panel active" id="panel-cart">
+      <div id="cart-items"></div>
+    </div>
+
+    <!-- Favorites panel -->
+    <div class="dash-panel" id="panel-favorites">
+      <div id="favorites-items"></div>
+    </div>
+
+    <!-- Orders panel -->
+    <div class="dash-panel" id="panel-orders">
+      <div id="orders-list"></div>
+    </div>
+
+    <!-- Profile panel -->
+    <div class="dash-panel" id="panel-profile">
+      <div class="profile-section">
+        <h3>Account</h3>
+        <div class="profile-row">
+          <span class="profile-label">Email</span>
+          <span class="profile-value" id="profile-email">—</span>
+        </div>
+      </div>
+      <div class="profile-section">
+        <h3>Change Password</h3>
+        <div class="field">
+          <label for="new-password">New Password</label>
+          <input type="password" id="new-password" placeholder="At least 8 characters" />
+        </div>
+        <div class="field">
+          <label for="new-password-confirm">Confirm New Password</label>
+          <input type="password" id="new-password-confirm" placeholder="••••••••" />
+          <div class="field-error" id="pw-error"></div>
+        </div>
+        <button class="btn-primary" id="change-pw-btn" style="max-width:200px;">Update Password</button>
+      </div>
+      <div class="profile-section" style="border:1.5px solid rgba(139,58,58,.15);">
+        <h3 style="color:var(--berry-red);">Sign Out</h3>
+        <p style="font-size:.88rem; color:rgba(74,51,34,.6); margin-bottom:1rem;">You will be signed out of your account on this device.</p>
+        <button class="btn-danger" id="signout-btn-2">Sign Out</button>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<!-- Supabase -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script>
+(() => {
+  let sb = null;
+  let currentUser = null;
+  let products = {};   // stripe_product_id → { name, price_formatted, unit_amount }
+  let cartItems = [];
+  let favItems = [];
+
+  // ── Helpers ──────────────────────────────────────────────────────────────
+  function showToast(msg, isError = false) {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.className = isError ? 'error show' : 'show';
+    clearTimeout(t._tid);
+    t._tid = setTimeout(() => { t.className = ''; }, 3000);
+  }
+
+  function fmt(unit_amount, currency = 'usd') {
+    if (unit_amount == null) return '—';
+    return new Intl.NumberFormat('en-US', { style: 'currency', currency }).format(unit_amount / 100);
+  }
+
+  function setLoading(on) {
+    document.getElementById('loading').classList.toggle('hidden', !on);
+  }
+
+  // ── Tab switching ─────────────────────────────────────────────────────────
+  document.querySelectorAll('.auth-tab').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const tab = btn.dataset.tab;
+      document.querySelectorAll('.auth-tab').forEach(b => b.classList.remove('active'));
+      document.querySelectorAll('.auth-panel').forEach(p => p.classList.remove('active'));
+      btn.classList.add('active');
+      document.getElementById(`panel-${tab}`).classList.add('active');
+    });
+  });
+
+  document.querySelectorAll('.dash-tab').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const panel = btn.dataset.panel;
+      document.querySelectorAll('.dash-tab').forEach(b => b.classList.remove('active'));
+      document.querySelectorAll('.dash-panel').forEach(p => p.classList.remove('active'));
+      btn.classList.add('active');
+      document.getElementById(`panel-${panel}`).classList.add('active');
+    });
+  });
+
+  // ── Init ─────────────────────────────────────────────────────────────────
+  async function init() {
+    const r = await fetch('/api/config').catch(() => null);
+    if (!r || !r.ok) { setLoading(false); showToast('Cannot reach server', true); return; }
+    const cfg = await r.json();
+    if (!cfg.supabaseUrl) { setLoading(false); showToast('Server not configured', true); return; }
+
+    sb = supabase.createClient(cfg.supabaseUrl, cfg.supabaseAnonKey);
+
+    // Check for deep-link tab (e.g. ?tab=orders after Stripe redirect)
+    const params = new URLSearchParams(window.location.search);
+    const targetTab = params.get('tab');
+
+    const { data: { session } } = await sb.auth.getSession();
+    if (session) {
+      await enterDashboard(session.user, targetTab);
+    } else {
+      showAuthCard();
+    }
+
+    sb.auth.onAuthStateChange((event, session) => {
+      if (event === 'SIGNED_IN' && session) enterDashboard(session.user, null);
+      else if (event === 'SIGNED_OUT') showAuthCard();
+    });
+
+    setLoading(false);
+  }
+
+  function showAuthCard() {
+    document.getElementById('auth-wrap').style.display = 'flex';
+    document.getElementById('dashboard').style.display = 'none';
+  }
+
+  async function enterDashboard(user, targetTab) {
+    currentUser = user;
+    document.getElementById('auth-wrap').style.display = 'none';
+    document.getElementById('dashboard').style.display = 'block';
+    document.getElementById('dash-avatar').textContent = (user.email || 'U')[0].toUpperCase();
+    document.getElementById('dash-email').textContent = user.email;
+    document.getElementById('profile-email').textContent = user.email;
+
+    // Activate requested tab
+    if (targetTab) {
+      const tabBtn = document.querySelector(`.dash-tab[data-panel="${targetTab}"]`);
+      if (tabBtn) tabBtn.click();
+    }
+
+    await loadProducts();
+    await Promise.all([loadCart(), loadFavorites(), loadOrders()]);
+  }
+
+  // ── Load Stripe products ──────────────────────────────────────────────────
+  async function loadProducts() {
+    const r = await fetch('/api/stripe/products').catch(() => null);
+    if (!r || !r.ok) return;
+    const list = await r.json();
+    list.forEach(p => { products[p.id] = p; });
+  }
+
+  // ── Cart ──────────────────────────────────────────────────────────────────
+  async function loadCart() {
+    const { data, error } = await sb.from('user_cart').select('*').eq('user_id', currentUser.id);
+    if (error) return;
+    cartItems = data || [];
+    renderCart();
+  }
+
+  function renderCart() {
+    const el = document.getElementById('cart-items');
+    const badge = document.getElementById('cart-badge');
+    const count = cartItems.reduce((s, i) => s + i.quantity, 0);
+    badge.textContent = count;
+    badge.style.display = count ? 'inline-flex' : 'none';
+
+    if (!cartItems.length) {
+      el.innerHTML = `<div class="empty-state">
+        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
+        <p>Your cart is empty.</p>
+        <a href="menu.html">Browse the Menu</a>
+      </div>`;
+      return;
+    }
+
+    let total = 0;
+    const rows = cartItems.map(item => {
+      const p = products[item.stripe_product_id];
+      const name = p?.name || item.stripe_product_id;
+      const price = p?.unit_amount ?? 0;
+      total += price * item.quantity;
+      return `<div class="cart-item" data-id="${item.id}" data-pid="${item.stripe_product_id}">
+        <div class="cart-item-name">${name}</div>
+        <div class="qty-controls">
+          <button class="qty-btn" data-action="dec" data-id="${item.id}">−</button>
+          <span class="qty-num">${item.quantity}</span>
+          <button class="qty-btn" data-action="inc" data-id="${item.id}">+</button>
+        </div>
+        <div class="cart-item-price">${fmt(price * item.quantity)}</div>
+        <button class="remove-btn" data-id="${item.id}" aria-label="Remove">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </div>`;
+    }).join('');
+
+    el.innerHTML = rows + `<div class="cart-footer">
+      <div class="cart-total"><span>Total</span> ${fmt(total)}</div>
+      <button class="btn-primary" id="checkout-btn" style="width:auto;">Proceed to Checkout →</button>
+    </div>`;
+
+    // Qty controls
+    el.querySelectorAll('.qty-btn').forEach(btn => {
+      btn.addEventListener('click', () => updateQty(btn.dataset.id, btn.dataset.action));
+    });
+    el.querySelectorAll('.remove-btn').forEach(btn => {
+      btn.addEventListener('click', () => removeCartItem(btn.dataset.id));
+    });
+    document.getElementById('checkout-btn')?.addEventListener('click', startCheckout);
+  }
+
+  async function updateQty(id, action) {
+    const item = cartItems.find(i => i.id === id);
+    if (!item) return;
+    const newQty = action === 'inc' ? item.quantity + 1 : item.quantity - 1;
+    if (newQty < 1) return removeCartItem(id);
+    const { error } = await sb.from('user_cart').update({ quantity: newQty }).eq('id', id);
+    if (!error) { item.quantity = newQty; renderCart(); }
+  }
+
+  async function removeCartItem(id) {
+    const { error } = await sb.from('user_cart').delete().eq('id', id);
+    if (!error) { cartItems = cartItems.filter(i => i.id !== id); renderCart(); showToast('Removed from cart'); }
+  }
+
+  async function startCheckout() {
+    const btn = document.getElementById('checkout-btn');
+    btn.disabled = true; btn.textContent = 'Redirecting…';
+    const items = cartItems.map(i => ({ stripe_product_id: i.stripe_product_id, quantity: i.quantity }));
+    const r = await fetch('/api/stripe/checkout', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ items, user_id: currentUser.id }),
+    }).catch(() => null);
+    if (!r || !r.ok) { btn.disabled = false; btn.textContent = 'Proceed to Checkout →'; showToast('Checkout failed', true); return; }
+    const { url, error } = await r.json();
+    if (error || !url) { btn.disabled = false; btn.textContent = 'Proceed to Checkout →'; showToast(error || 'Checkout failed', true); return; }
+    window.location.href = url;
+  }
+
+  // ── Favorites ─────────────────────────────────────────────────────────────
+  async function loadFavorites() {
+    const { data, error } = await sb.from('user_favorites').select('*').eq('user_id', currentUser.id);
+    if (error) return;
+    favItems = data || [];
+    renderFavorites();
+  }
+
+  function renderFavorites() {
+    const el = document.getElementById('favorites-items');
+    if (!favItems.length) {
+      el.innerHTML = `<div class="empty-state">
+        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+        <p>No favorites saved yet.</p>
+        <a href="menu.html">Browse the Menu</a>
+      </div>`;
+      return;
+    }
+    el.innerHTML = `<div class="favorites-grid">${
+      favItems.map(item => {
+        const p = products[item.stripe_product_id];
+        return `<div class="fav-card">
+          <div class="fav-card-name">${p?.name || item.stripe_product_id}</div>
+          <div class="fav-card-price">${p?.price_formatted || '—'}</div>
+          <div class="fav-card-actions">
+            <button class="btn-cart-add" data-pid="${item.stripe_product_id}">+ Cart</button>
+            <button class="btn-unfav" data-fid="${item.id}" aria-label="Remove favorite">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+            </button>
+          </div>
+        </div>`;
+      }).join('')
+    }</div>`;
+
+    el.querySelectorAll('.btn-cart-add').forEach(btn => {
+      btn.addEventListener('click', () => addToCartFromFav(btn.dataset.pid));
+    });
+    el.querySelectorAll('.btn-unfav').forEach(btn => {
+      btn.addEventListener('click', () => removeFavorite(btn.dataset.fid));
+    });
+  }
+
+  async function addToCartFromFav(productId) {
+    const existing = cartItems.find(i => i.stripe_product_id === productId);
+    if (existing) {
+      await updateQty(existing.id, 'inc');
+    } else {
+      const { data, error } = await sb.from('user_cart')
+        .insert({ user_id: currentUser.id, stripe_product_id: productId, quantity: 1 })
+        .select().single();
+      if (!error && data) { cartItems.push(data); renderCart(); }
+    }
+    showToast('Added to cart');
+  }
+
+  async function removeFavorite(id) {
+    const { error } = await sb.from('user_favorites').delete().eq('id', id);
+    if (!error) { favItems = favItems.filter(i => i.id !== id); renderFavorites(); showToast('Removed from favorites'); }
+  }
+
+  // ── Orders ────────────────────────────────────────────────────────────────
+  async function loadOrders() {
+    const { data: orderList, error } = await sb
+      .from('orders').select('*, order_items(*)')
+      .eq('user_id', currentUser.id)
+      .order('created_at', { ascending: false });
+    if (error) return;
+    renderOrders(orderList || []);
+  }
+
+  function renderOrders(list) {
+    const el = document.getElementById('orders-list');
+    if (!list.length) {
+      el.innerHTML = `<div class="empty-state">
+        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+        <p>No orders yet.</p>
+        <a href="menu.html">Browse the Menu</a>
+      </div>`;
+      return;
+    }
+    el.innerHTML = list.map(order => {
+      const date = new Date(order.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+      const items = (order.order_items || []).map(i =>
+        `<div class="order-item-row"><span>${i.product_name || i.stripe_product_id} × ${i.quantity}</span><span>${fmt(i.unit_amount * i.quantity)}</span></div>`
+      ).join('');
+      return `<div class="order-card">
+        <div class="order-card-header">
+          <div>
+            <div class="order-date">${date}</div>
+            <div class="order-id">${order.id.slice(0,8)}…</div>
+          </div>
+          <span class="order-status ${order.status}">${order.status}</span>
+          <div class="order-total">${fmt(order.total_amount)}</div>
+        </div>
+        ${items ? `<div class="order-items-list">${items}</div>` : ''}
+      </div>`;
+    }).join('');
+  }
+
+  // ── Auth actions ──────────────────────────────────────────────────────────
+  document.getElementById('signin-btn').addEventListener('click', async () => {
+    const email = document.getElementById('signin-email').value.trim();
+    const password = document.getElementById('signin-password').value;
+    const errEl = document.getElementById('signin-error');
+    const btn = document.getElementById('signin-btn');
+    errEl.style.display = 'none';
+    btn.disabled = true; btn.textContent = 'Signing in…';
+    const { error } = await sb.auth.signInWithPassword({ email, password });
+    btn.disabled = false; btn.textContent = 'Sign In';
+    if (error) { errEl.textContent = error.message; errEl.style.display = 'block'; }
+  });
+
+  document.getElementById('signin-password').addEventListener('keydown', e => {
+    if (e.key === 'Enter') document.getElementById('signin-btn').click();
+  });
+
+  document.getElementById('signup-btn').addEventListener('click', async () => {
+    const email = document.getElementById('signup-email').value.trim();
+    const password = document.getElementById('signup-password').value;
+    const confirm = document.getElementById('signup-confirm').value;
+    const errEl = document.getElementById('signup-error');
+    const btn = document.getElementById('signup-btn');
+    errEl.style.display = 'none';
+    if (password !== confirm) { errEl.textContent = 'Passwords do not match'; errEl.style.display = 'block'; return; }
+    if (password.length < 8) { errEl.textContent = 'Password must be at least 8 characters'; errEl.style.display = 'block'; return; }
+    btn.disabled = true; btn.textContent = 'Creating account…';
+    const { error } = await sb.auth.signUp({ email, password });
+    btn.disabled = false; btn.textContent = 'Create Account';
+    if (error) { errEl.textContent = error.message; errEl.style.display = 'block'; }
+    else { showToast('Account created! Check your email to confirm.'); }
+  });
+
+  async function signOut() {
+    await sb.auth.signOut();
+  }
+  document.getElementById('signout-btn').addEventListener('click', signOut);
+  document.getElementById('signout-btn-2').addEventListener('click', signOut);
+
+  // Change password
+  document.getElementById('change-pw-btn').addEventListener('click', async () => {
+    const pw = document.getElementById('new-password').value;
+    const confirm = document.getElementById('new-password-confirm').value;
+    const errEl = document.getElementById('pw-error');
+    errEl.style.display = 'none';
+    if (pw !== confirm) { errEl.textContent = 'Passwords do not match'; errEl.style.display = 'block'; return; }
+    if (pw.length < 8) { errEl.textContent = 'Password must be at least 8 characters'; errEl.style.display = 'block'; return; }
+    const { error } = await sb.auth.updateUser({ password: pw });
+    if (error) { errEl.textContent = error.message; errEl.style.display = 'block'; }
+    else { document.getElementById('new-password').value = ''; document.getElementById('new-password-confirm').value = ''; showToast('Password updated'); }
+  });
+
+  init();
+})();
+</script>
+</body>
+</html>

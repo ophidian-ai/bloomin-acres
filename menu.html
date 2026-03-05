@@ -143,10 +143,12 @@
 
     /* Menu item row */
     .menu-item {
+      padding: .35rem 0;
+    }
+    .menu-item-row {
       display: flex;
       align-items: baseline;
       gap: .5rem;
-      padding: .35rem 0;
     }
     .item-name {
       font-family: 'Playfair Display', serif;
@@ -167,6 +169,69 @@
       color: var(--earth-mid);
       white-space: nowrap;
     }
+
+    /* Item action buttons */
+    .menu-item-actions {
+      display: flex; align-items: center; gap: .35rem;
+      margin-top: .2rem;
+      margin-left: .25rem;
+    }
+    .btn-fav {
+      background: none; border: 1px solid rgba(74,51,34,.18);
+      border-radius: 5px; cursor: pointer;
+      padding: .18rem .45rem;
+      color: rgba(74,51,34,.45);
+      font-size: .72rem;
+      display: flex; align-items: center; gap: .2rem;
+      transition: color .2s, border-color .2s, background .2s;
+    }
+    .btn-fav:hover, .btn-fav.active {
+      color: var(--berry-red);
+      border-color: rgba(139,58,58,.35);
+      background: rgba(139,58,58,.06);
+    }
+    .btn-fav.active svg { fill: var(--berry-red); }
+    .btn-add-cart {
+      background: none; border: 1px solid rgba(74,51,34,.18);
+      border-radius: 5px; cursor: pointer;
+      padding: .18rem .55rem;
+      font-family: 'DM Sans', sans-serif;
+      font-size: .7rem; font-weight: 600;
+      letter-spacing: .06em; text-transform: uppercase;
+      color: var(--sage-dark);
+      transition: color .2s, border-color .2s, background .2s;
+    }
+    .btn-add-cart:hover {
+      color: var(--earth-brown);
+      border-color: var(--sage-dark);
+      background: rgba(78,110,100,.08);
+    }
+
+    /* Account link in nav */
+    .nav-account {
+      font-family: 'DM Sans', sans-serif;
+      font-size: .78rem; font-weight: 500;
+      letter-spacing: .06em; text-transform: uppercase;
+      color: rgba(250,240,230,.55);
+      text-decoration: none;
+      display: flex; align-items: center; gap: .35rem;
+      transition: color .2s;
+    }
+    .nav-account:hover { color: var(--wheat-gold); }
+
+    /* Toast */
+    #menu-toast {
+      position: fixed; bottom: 1.5rem; left: 50%; transform: translateX(-50%) translateY(20px);
+      background: var(--earth-brown);
+      color: var(--farm-cream);
+      padding: .6rem 1.3rem; border-radius: 99px;
+      font-size: .8rem; font-weight: 500;
+      opacity: 0;
+      transition: opacity .25s, transform .25s;
+      pointer-events: none; z-index: 10000;
+      white-space: nowrap;
+    }
+    #menu-toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
 
     /* Loading skeleton */
     .skeleton-line {
@@ -244,13 +309,23 @@
     <a href="index.html">
       <img src="brand-assets/color-logo.png" alt="Bloomin' Acres" class="nav-logo" />
     </a>
-    <a href="index.html" class="nav-back">
-      <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
-        <path d="M9 2L4 7l5 5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
-      </svg>
-      Back to Home
-    </a>
+    <div style="display:flex; align-items:center; gap:1.25rem;">
+      <a href="account.html" class="nav-account" id="menu-account-link">
+        <svg width="13" height="13" viewBox="0 0 11 11" fill="none" aria-hidden="true">
+          <circle cx="5.5" cy="3.5" r="2.2" stroke="currentColor" stroke-width="1.3"/>
+          <path d="M1 10c0-2.485 2.015-4.5 4.5-4.5S10 7.515 10 10" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/>
+        </svg>
+        <span id="menu-account-label">Sign In</span>
+      </a>
+      <a href="index.html" class="nav-back">
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
+          <path d="M9 2L4 7l5 5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        Back to Home
+      </a>
+    </div>
   </nav>
+  <div id="menu-toast"></div>
 
   <!-- Menu card -->
   <main class="page-wrap">
@@ -284,6 +359,17 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 
   <script>
+    function escHtml(str) {
+      return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    }
+
+    function showToast(msg) {
+      const t = document.getElementById('menu-toast');
+      t.textContent = msg; t.className = 'show';
+      clearTimeout(t._tid);
+      t._tid = setTimeout(() => { t.className = ''; }, 2800);
+    }
+
     (async () => {
       const content = document.getElementById('menu-content');
       const skeleton = document.getElementById('skeleton');
@@ -293,7 +379,7 @@
         content.innerHTML = `<div class="load-error">${msg}</div>`;
       }
 
-      // 1. Fetch server config (Supabase keys)
+      // 1. Fetch server config
       let cfg;
       try {
         const r = await fetch('/api/config');
@@ -308,25 +394,39 @@
         return;
       }
 
-      // 2. Fetch Stripe products
+      const sb = supabase.createClient(cfg.supabaseUrl, cfg.supabaseAnonKey);
+
+      // 2. Check auth state (for favorite/cart buttons)
+      const { data: { session } } = await sb.auth.getSession();
+      const currentUser = session?.user ?? null;
+
+      if (currentUser) {
+        document.getElementById('menu-account-label').textContent = 'My Account';
+      }
+
+      // Load user's existing favorites and cart IDs (for active state)
+      let userFavIds = new Set();
+      let userCartIds = new Set();
+      if (currentUser) {
+        const [favRes, cartRes] = await Promise.all([
+          sb.from('user_favorites').select('stripe_product_id').eq('user_id', currentUser.id),
+          sb.from('user_cart').select('stripe_product_id').eq('user_id', currentUser.id),
+        ]);
+        (favRes.data || []).forEach(r => userFavIds.add(r.stripe_product_id));
+        (cartRes.data || []).forEach(r => userCartIds.add(r.stripe_product_id));
+      }
+
+      // 3. Fetch Stripe products
       let productMap = {};
       try {
         const r = await fetch('/api/stripe/products');
         const products = await r.json();
-        if (Array.isArray(products)) {
-          products.forEach(p => { productMap[p.id] = p; });
-        }
-      } catch {
-        // Non-fatal: menu will show product IDs if map is empty
-      }
+        if (Array.isArray(products)) products.forEach(p => { productMap[p.id] = p; });
+      } catch { /* non-fatal */ }
 
-      // 3. Fetch menu from Supabase
-      const sb = supabase.createClient(cfg.supabaseUrl, cfg.supabaseAnonKey);
-
+      // 4. Fetch menu from Supabase
       const { data: sections, error: secErr } = await sb
-        .from('menu_sections')
-        .select('id, title, sort_order')
-        .order('sort_order');
+        .from('menu_sections').select('id, title, sort_order').order('sort_order');
 
       if (secErr) { showError('Unable to load the menu right now.'); return; }
       if (!sections || sections.length === 0) {
@@ -336,11 +436,8 @@
         return;
       }
 
-      // Fetch all items at once
       const { data: allItems } = await sb
-        .from('menu_items')
-        .select('id, section_id, stripe_product_id, sort_order')
-        .order('sort_order');
+        .from('menu_items').select('id, section_id, stripe_product_id, sort_order').order('sort_order');
 
       const itemsBySectionId = {};
       (allItems || []).forEach(item => {
@@ -348,7 +445,7 @@
         itemsBySectionId[item.section_id].push(item);
       });
 
-      // 4. Render
+      // 5. Render
       skeleton.remove();
 
       sections.forEach((section, idx) => {
@@ -363,18 +460,66 @@
           const product = productMap[item.stripe_product_id];
           const name = product ? product.name : item.stripe_product_id;
           const price = product?.price_formatted ?? '';
+          const pid = item.stripe_product_id;
+          const isFav = userFavIds.has(pid);
 
           const row = document.createElement('div');
           row.className = 'menu-item';
           row.innerHTML = `
-            <span class="item-name">${escHtml(name)}</span>
-            <span class="item-dots" aria-hidden="true"></span>
-            <span class="item-price">${escHtml(price)}</span>
+            <div class="menu-item-row">
+              <span class="item-name">${escHtml(name)}</span>
+              <span class="item-dots" aria-hidden="true"></span>
+              <span class="item-price">${escHtml(price)}</span>
+            </div>
+            <div class="menu-item-actions">
+              <button class="btn-fav${isFav ? ' active' : ''}" data-pid="${escHtml(pid)}" aria-label="Save to favorites">
+                <svg width="11" height="11" viewBox="0 0 24 24" fill="${isFav ? 'currentColor' : 'none'}" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+                ${isFav ? 'Saved' : 'Save'}
+              </button>
+              <button class="btn-add-cart" data-pid="${escHtml(pid)}">+ Cart</button>
+            </div>
           `;
+
+          // Favorite button
+          row.querySelector('.btn-fav').addEventListener('click', async (e) => {
+            if (!currentUser) { window.location.href = 'account.html'; return; }
+            const btn = e.currentTarget;
+            const isActive = btn.classList.contains('active');
+            if (isActive) {
+              await sb.from('user_favorites').delete()
+                .eq('user_id', currentUser.id).eq('stripe_product_id', pid);
+              userFavIds.delete(pid);
+              btn.classList.remove('active');
+              btn.innerHTML = `<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg> Save`;
+              showToast('Removed from favorites');
+            } else {
+              await sb.from('user_favorites').upsert({ user_id: currentUser.id, stripe_product_id: pid });
+              userFavIds.add(pid);
+              btn.classList.add('active');
+              btn.innerHTML = `<svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg> Saved`;
+              showToast('Saved to favorites');
+            }
+          });
+
+          // Add to cart button
+          row.querySelector('.btn-add-cart').addEventListener('click', async () => {
+            if (!currentUser) { window.location.href = 'account.html'; return; }
+            if (userCartIds.has(pid)) {
+              const { data: existing } = await sb.from('user_cart')
+                .select('id, quantity').eq('user_id', currentUser.id).eq('stripe_product_id', pid).single();
+              if (existing) {
+                await sb.from('user_cart').update({ quantity: existing.quantity + 1 }).eq('id', existing.id);
+              }
+            } else {
+              await sb.from('user_cart').insert({ user_id: currentUser.id, stripe_product_id: pid, quantity: 1 });
+              userCartIds.add(pid);
+            }
+            showToast(`${name} added to cart`);
+          });
+
           content.appendChild(row);
         });
 
-        // Wheat divider between sections (except last)
         if (idx < sections.length - 1) {
           const div = document.createElement('div');
           div.className = 'wheat-divider';
@@ -393,14 +538,6 @@
         }
       });
     })();
-
-    function escHtml(str) {
-      return String(str)
-        .replace(/&/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;')
-        .replace(/"/g, '&quot;');
-    }
   </script>
 </body>
 </html>
