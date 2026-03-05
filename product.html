@@ -60,14 +60,14 @@
 
     /* Nav */
     .site-nav {
-      background-color: var(--earth-brown);
+      background-color: #7A5540;
       padding: 1rem 2rem;
       display: flex;
       align-items: center;
       justify-content: space-between;
-      border-bottom: 1px solid rgba(237,163,57,.15);
+      border-bottom: 1px solid rgba(237,163,57,.25);
     }
-    .nav-logo { height: 48px; object-fit: contain; }
+    .nav-logo { height: 96px; object-fit: contain; }
     .nav-link {
       font-family: 'DM Sans', sans-serif;
       font-size: .82rem;
@@ -82,6 +82,45 @@
     .nav-link:hover { color: var(--wheat-gold); }
     .nav-back:hover { transform: translateX(-3px); }
     .nav-right { display: flex; align-items: center; gap: 1.5rem; }
+
+    /* Account dropdown */
+    .nav-account-wrap { position: relative; }
+    .nav-account-btn {
+      font-family: 'DM Sans', sans-serif;
+      font-size: .82rem; font-weight: 500;
+      letter-spacing: .08em; text-transform: uppercase;
+      color: var(--cream-warm);
+      background: none; border: none; cursor: pointer;
+      display: flex; align-items: center; gap: .4rem;
+      padding: 0;
+      transition: color .2s;
+    }
+    .nav-account-btn:hover { color: var(--wheat-gold); }
+    .nav-account-btn .chevron { width: 10px; height: 10px; transition: transform .2s; }
+    .nav-account-wrap.open .chevron { transform: rotate(180deg); }
+    .nav-account-menu {
+      display: none;
+      position: absolute; top: calc(100% + .6rem); right: 0;
+      background: #3D2A1A;
+      border: 1px solid rgba(237,163,57,.2);
+      border-radius: 8px;
+      min-width: 170px;
+      box-shadow: 0 8px 24px rgba(0,0,0,.45);
+      overflow: hidden;
+      z-index: 9999;
+    }
+    .nav-account-wrap.open .nav-account-menu { display: block; }
+    .nav-account-menu a {
+      display: flex; align-items: center; gap: .55rem;
+      padding: .65rem 1rem;
+      font-family: 'DM Sans', sans-serif;
+      font-size: .78rem; font-weight: 500;
+      letter-spacing: .06em; text-transform: uppercase;
+      color: rgba(250,240,230,.75);
+      text-decoration: none;
+      transition: background .15s, color .15s;
+    }
+    .nav-account-menu a:hover { background: rgba(237,163,57,.1); color: var(--wheat-gold); }
 
     /* Page */
     .page-wrap {
@@ -397,10 +436,33 @@
       <img src="brand-assets/color-logo.png" class="nav-logo" alt="Bloomin' Acres" />
     </a>
     <div class="nav-right">
-      <a href="account.html" class="nav-link" id="nav-account">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-        My Account
-      </a>
+      <div class="nav-account-wrap" id="nav-account-wrap">
+        <button type="button" class="nav-account-btn" id="nav-account-btn" aria-haspopup="true" aria-expanded="false">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+          My Account
+          <svg class="chevron" viewBox="0 0 10 10" fill="none" aria-hidden="true">
+            <path d="M2 3.5l3 3 3-3" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </button>
+        <div class="nav-account-menu" role="menu">
+          <a href="account.html?tab=cart" role="menuitem">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
+            Cart
+          </a>
+          <a href="account.html?tab=favorites" role="menuitem">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+            Favorites
+          </a>
+          <a href="account.html?tab=orders" role="menuitem">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+            Orders
+          </a>
+          <a href="account.html?tab=profile" role="menuitem">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+            Profile
+          </a>
+        </div>
+      </div>
       <a href="menu.html" class="nav-link nav-back">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><polyline points="15 18 9 12 15 6"/></svg>
         Back to Menu
@@ -429,6 +491,22 @@
 
   <!-- Supabase CDN -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+  <script>
+  // Account dropdown toggle
+  (function() {
+    const wrap = document.getElementById('nav-account-wrap');
+    const btn  = document.getElementById('nav-account-btn');
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const open = wrap.classList.toggle('open');
+      btn.setAttribute('aria-expanded', open);
+    });
+    document.addEventListener('click', () => {
+      wrap.classList.remove('open');
+      btn.setAttribute('aria-expanded', 'false');
+    });
+  })();
+  </script>
   <script>
   (() => {
     let sb = null;

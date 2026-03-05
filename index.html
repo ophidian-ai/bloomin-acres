@@ -216,8 +216,8 @@
     .nav-sidebar {
       position: fixed; inset: 0 auto 0 0; z-index: 250;
       width: min(280px, 80vw);
-      background: #1E1510;
-      border-right: 1px solid rgba(237,163,57,.12);
+      background: #5C3D28;
+      border-right: 1px solid rgba(237,163,57,.2);
       display: flex; flex-direction: column;
       padding: 5rem 2rem 2.5rem;
       transform: translateX(-100%);
@@ -227,7 +227,7 @@
     .nav-sidebar.open { transform: translateX(0); }
 
     .nav-sidebar-logo {
-      width: 120px; margin-bottom: 2.5rem; opacity: .9;
+      width: 200px; margin: 0 auto 2.5rem; display: block; opacity: .95;
     }
     .nav-sidebar nav { display: flex; flex-direction: column; gap: .25rem; }
     .nav-sidebar-link {
@@ -242,6 +242,38 @@
     .nav-sidebar-link:focus-visible { outline: 2px solid var(--wheat-gold); outline-offset: 3px; border-radius: 2px; }
     .nav-sidebar-link.accent { color: var(--wheat-gold); }
     .nav-sidebar-link.accent:hover { color: #f5bc5a; }
+
+    /* My Account submenu in sidebar */
+    .nav-account-item { border-bottom: 1px solid rgba(250,240,230,.06); }
+    .nav-account-toggle {
+      width: 100%; background: none; border: none; cursor: pointer; padding: 0;
+      font-family: var(--font-display); font-size: 1.1rem; font-weight: 600;
+      color: rgba(250,240,230,.65); text-decoration: none;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: .65rem .5rem;
+      letter-spacing: -.01em;
+      transition: color 0.2s ease, padding-left 0.3s cubic-bezier(.22,1,.36,1);
+    }
+    .nav-account-toggle:hover { color: var(--wheat-gold); padding-left: .9rem; }
+    .nav-account-toggle .chevron { width: 14px; height: 14px; transition: transform .25s; flex-shrink: 0; }
+    .nav-account-item.open .nav-account-toggle .chevron { transform: rotate(180deg); }
+    .nav-account-submenu {
+      display: none;
+      flex-direction: column;
+      padding: .25rem 0 .5rem .5rem;
+    }
+    .nav-account-item.open .nav-account-submenu { display: flex; }
+    .nav-account-submenu a {
+      display: flex; align-items: center; gap: .55rem;
+      padding: .45rem .75rem;
+      font-family: var(--font-body); font-size: .78rem; font-weight: 500;
+      letter-spacing: .07em; text-transform: uppercase;
+      color: rgba(250,240,230,.5);
+      text-decoration: none;
+      border-radius: 4px;
+      transition: color .15s, background .15s;
+    }
+    .nav-account-submenu a:hover { color: var(--wheat-gold); background: rgba(237,163,57,.08); }
 
     /* ── Overlay backdrop ───────────────────────────────── */
     .nav-overlay {
@@ -301,6 +333,32 @@
     <a href="#what-we-make"  class="nav-sidebar-link">What We Make</a>
     <a href="menu.html"      class="nav-sidebar-link accent">Menu</a>
     <a href="#visit"         class="nav-sidebar-link">Visit Us</a>
+    <div class="nav-account-item" id="sidebar-account-item">
+      <button type="button" class="nav-account-toggle" id="sidebar-account-toggle" aria-haspopup="true" aria-expanded="false">
+        <span id="sidebar-account-label">My Account</span>
+        <svg class="chevron" viewBox="0 0 10 10" fill="none" aria-hidden="true">
+          <path d="M2 3.5l3 3 3-3" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </button>
+      <div class="nav-account-submenu" role="menu">
+        <a href="account.html?tab=cart" role="menuitem">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
+          Cart
+        </a>
+        <a href="account.html?tab=favorites" role="menuitem">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+          Favorites
+        </a>
+        <a href="account.html?tab=orders" role="menuitem">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+          Orders
+        </a>
+        <a href="account.html?tab=profile" role="menuitem">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+          Profile
+        </a>
+      </div>
+    </div>
   </nav>
 </div>
 
@@ -332,6 +390,14 @@
     // Close on nav link click (hash links smooth-scroll, menu.html navigates)
     sidebar.querySelectorAll('.nav-sidebar-link').forEach(link => {
       link.addEventListener('click', closeNav);
+    });
+
+    // My Account submenu toggle
+    const acctToggle = document.getElementById('sidebar-account-toggle');
+    const acctItem   = document.getElementById('sidebar-account-item');
+    acctToggle.addEventListener('click', () => {
+      const open = acctItem.classList.toggle('open');
+      acctToggle.setAttribute('aria-expanded', open);
     });
 
     // Close on Escape
