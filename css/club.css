@@ -70,8 +70,21 @@ body::after {
   max-width: 640px;
   z-index: 1;
 }
+.club-badge-pill {
+  display: inline-block;
+  padding: .35rem .9rem;
+  background: rgba(237,163,57,.15);
+  border: 1px solid rgba(237,163,57,.35);
+  border-radius: 999px;
+  font-size: .7rem;
+  font-weight: 700;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  color: var(--wheat-gold);
+  margin-bottom: 1.25rem;
+}
 .club-plaque-img {
-  width: min(480px, 82vw);
+  width: min(960px, 82vw);
   object-fit: contain;
   margin: 0 auto 2rem;
   filter: drop-shadow(0 8px 24px rgba(0,0,0,.5));
