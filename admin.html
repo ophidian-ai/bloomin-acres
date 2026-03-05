@@ -161,9 +161,13 @@
       border: 1px solid rgba(237,163,57,.15);
       border-radius: 7px;
       padding: 1.1rem 1.25rem;
-      transition: border-color .2s, background .2s;
+      transition: border-color .2s, background .2s, transform .15s;
+      cursor: pointer;
+      text-decoration: none;
+      display: block;
+      color: inherit;
     }
-    .product-card:hover { background: rgba(74,51,34,.9); border-color: rgba(237,163,57,.35); }
+    .product-card:hover { background: rgba(74,51,34,.9); border-color: rgba(237,163,57,.35); transform: translateY(-1px); }
     .product-name {
       font-family: 'Playfair Display', serif;
       font-size: 1rem; font-weight: 600; color: var(--farm-cream);
@@ -573,14 +577,15 @@
         return;
       }
       grid.innerHTML = products.map(p => `
-        <div class="product-card">
+        <a class="product-card" href="product.html?id=${encodeURIComponent(p.id)}">
           <div class="product-name">${escHtml(p.name)}</div>
           ${p.description ? `<div class="product-desc">${escHtml(p.description)}</div>` : ''}
           <div class="product-footer">
             <span class="product-price">${escHtml(p.price_formatted || '—')}</span>
             <span class="product-id" title="${escHtml(p.id)}">${escHtml(p.id)}</span>
           </div>
-        </div>
+          <div style="margin-top:.6rem;font-size:.72rem;color:rgba(237,163,57,.55);letter-spacing:.08em;text-transform:uppercase;">Click to edit →</div>
+        </a>
       `).join('');
     }
 

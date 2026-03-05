@@ -1,0 +1,607 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Product — Bloomin' Acres Farmstand & Bakery</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,500;1,400&family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400;1,600&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            'wheat-gold': '#EDA339',
+            'sage-green': '#7A9B8E',
+            'sage-dark': '#4E6E64',
+            'sage-light': '#A8C4BB',
+            'burnt-orange': '#C85A3A',
+            'earth-brown': '#4A3322',
+            'earth-mid': '#6B4C35',
+            'farm-cream': '#FAF0E6',
+            'cream-dark': '#F0E4D0',
+            'cream-warm': '#EDD9B8',
+          },
+          fontFamily: {
+            playfair: ['"Playfair Display"', 'Georgia', 'serif'],
+            sans: ['"DM Sans"', 'sans-serif'],
+          }
+        }
+      }
+    };
+  </script>
+  <style>
+    :root {
+      --wheat-gold: #EDA339; --sage-green: #7A9B8E; --sage-dark: #4E6E64;
+      --sage-light: #A8C4BB; --earth-brown: #4A3322; --earth-mid: #6B4C35;
+      --farm-cream: #FAF0E6; --cream-dark: #F0E4D0; --cream-warm: #EDD9B8;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'DM Sans', sans-serif;
+      background-color: var(--earth-brown);
+      color: var(--earth-brown);
+      line-height: 1.7;
+      min-height: 100vh;
+    }
+    body::after {
+      content: '';
+      position: fixed; inset: 0; z-index: 9999; pointer-events: none;
+      opacity: 0.04;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23n)' opacity='1'/%3E%3C/svg%3E");
+    }
+
+    /* Nav */
+    .site-nav {
+      background-color: var(--earth-brown);
+      padding: 1rem 2rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid rgba(237,163,57,.15);
+    }
+    .nav-logo { height: 48px; object-fit: contain; }
+    .nav-link {
+      font-family: 'DM Sans', sans-serif;
+      font-size: .82rem;
+      font-weight: 500;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+      color: var(--cream-warm);
+      text-decoration: none;
+      display: flex; align-items: center; gap: .4rem;
+      transition: color .2s, transform .2s;
+    }
+    .nav-link:hover { color: var(--wheat-gold); }
+    .nav-back:hover { transform: translateX(-3px); }
+    .nav-right { display: flex; align-items: center; gap: 1.5rem; }
+
+    /* Page */
+    .page-wrap {
+      max-width: 680px;
+      margin: 3rem auto 4rem;
+      padding: 0 1.5rem;
+    }
+
+    /* Product card */
+    .product-card {
+      background: var(--farm-cream);
+      border-radius: 8px;
+      overflow: hidden;
+      box-shadow:
+        0 2px 4px rgba(74,51,34,.2),
+        0 8px 24px rgba(74,51,34,.3),
+        0 20px 60px rgba(74,51,34,.2);
+    }
+
+    /* Product image */
+    .product-img-wrap {
+      width: 100%;
+      aspect-ratio: 4 / 3;
+      background: var(--cream-warm);
+      overflow: hidden;
+      position: relative;
+    }
+    .product-img {
+      width: 100%; height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+    .product-img-placeholder {
+      width: 100%; height: 100%;
+      display: flex; align-items: center; justify-content: center;
+      background: linear-gradient(135deg, var(--cream-warm) 0%, var(--cream-dark) 100%);
+    }
+    .product-img-placeholder svg { opacity: 0.25; }
+
+    /* Product body */
+    .product-body {
+      padding: 2rem 2.25rem 2.25rem;
+    }
+    .product-name {
+      font-family: 'Playfair Display', Georgia, serif;
+      font-size: 1.65rem;
+      font-weight: 700;
+      line-height: 1.25;
+      color: var(--earth-brown);
+      margin-bottom: .35rem;
+    }
+    .product-price {
+      font-family: 'DM Sans', sans-serif;
+      font-size: 1rem;
+      font-weight: 600;
+      color: var(--wheat-gold);
+      letter-spacing: .03em;
+      margin-bottom: 1rem;
+    }
+    .product-divider {
+      width: 40px; height: 2px;
+      background: var(--wheat-gold);
+      opacity: .5;
+      margin-bottom: 1rem;
+    }
+    .product-description {
+      font-family: 'DM Sans', sans-serif;
+      font-size: .9rem;
+      line-height: 1.75;
+      color: var(--earth-mid);
+      margin-bottom: 1.75rem;
+    }
+    .product-description:empty { display: none; }
+
+    /* Action buttons */
+    .product-actions {
+      display: flex;
+      gap: .75rem;
+      flex-wrap: wrap;
+    }
+    .btn-cart {
+      flex: 1;
+      min-width: 120px;
+      padding: .65rem 1.25rem;
+      background: var(--earth-brown);
+      color: var(--farm-cream);
+      border: none;
+      border-radius: 5px;
+      font-family: 'DM Sans', sans-serif;
+      font-size: .83rem;
+      font-weight: 600;
+      letter-spacing: .06em;
+      text-transform: uppercase;
+      cursor: pointer;
+      transition: background .2s, transform .1s;
+      display: flex; align-items: center; justify-content: center; gap: .4rem;
+    }
+    .btn-cart:hover { background: var(--earth-mid); }
+    .btn-cart:active { transform: scale(.98); }
+    .btn-fav {
+      padding: .65rem 1.1rem;
+      background: transparent;
+      color: var(--earth-brown);
+      border: 1.5px solid rgba(74,51,34,.2);
+      border-radius: 5px;
+      font-family: 'DM Sans', sans-serif;
+      font-size: .83rem;
+      font-weight: 500;
+      letter-spacing: .05em;
+      cursor: pointer;
+      transition: border-color .2s, color .2s, background .2s;
+      display: flex; align-items: center; gap: .4rem;
+    }
+    .btn-fav:hover { border-color: var(--wheat-gold); color: var(--earth-mid); }
+    .btn-fav.active { border-color: var(--wheat-gold); color: var(--wheat-gold); background: rgba(237,163,57,.07); }
+
+    /* Admin edit panel */
+    .admin-edit-panel {
+      display: none;
+      background: var(--cream-dark);
+      border-top: 1px solid rgba(74,51,34,.12);
+      padding: 1.5rem 2.25rem 2rem;
+    }
+    .admin-edit-panel.visible { display: block; }
+    .admin-panel-heading {
+      font-family: 'DM Sans', sans-serif;
+      font-size: .72rem;
+      font-weight: 700;
+      letter-spacing: .14em;
+      text-transform: uppercase;
+      color: var(--sage-dark);
+      margin-bottom: 1.1rem;
+      display: flex; align-items: center; gap: .5rem;
+    }
+    .admin-field { margin-bottom: 1.1rem; }
+    .admin-label {
+      display: block;
+      font-size: .75rem;
+      font-weight: 600;
+      letter-spacing: .07em;
+      text-transform: uppercase;
+      color: var(--earth-mid);
+      margin-bottom: .4rem;
+    }
+    .admin-textarea {
+      width: 100%;
+      min-height: 90px;
+      padding: .65rem .8rem;
+      border: 1.5px solid rgba(74,51,34,.18);
+      border-radius: 5px;
+      background: var(--farm-cream);
+      font-family: 'DM Sans', sans-serif;
+      font-size: .88rem;
+      line-height: 1.6;
+      color: var(--earth-brown);
+      resize: vertical;
+      transition: border-color .2s;
+    }
+    .admin-textarea:focus { outline: none; border-color: var(--sage-dark); }
+    .admin-file-wrap {
+      display: flex; align-items: center; gap: .75rem; flex-wrap: wrap;
+    }
+    .admin-img-thumb {
+      width: 56px; height: 56px;
+      object-fit: cover;
+      border-radius: 4px;
+      border: 1px solid rgba(74,51,34,.15);
+      display: none;
+    }
+    .admin-img-thumb.visible { display: block; }
+    .admin-file-input {
+      font-family: 'DM Sans', sans-serif;
+      font-size: .82rem;
+      color: var(--earth-mid);
+      flex: 1;
+    }
+    .admin-file-input::file-selector-button {
+      padding: .4rem .85rem;
+      background: transparent;
+      border: 1.5px solid rgba(74,51,34,.25);
+      border-radius: 4px;
+      font-family: 'DM Sans', sans-serif;
+      font-size: .78rem;
+      font-weight: 600;
+      color: var(--earth-brown);
+      cursor: pointer;
+      margin-right: .6rem;
+      transition: background .2s, border-color .2s;
+    }
+    .admin-file-input::file-selector-button:hover {
+      background: rgba(74,51,34,.07);
+      border-color: var(--sage-dark);
+    }
+    .btn-save {
+      padding: .6rem 1.5rem;
+      background: var(--sage-dark);
+      color: white;
+      border: none;
+      border-radius: 5px;
+      font-family: 'DM Sans', sans-serif;
+      font-size: .82rem;
+      font-weight: 600;
+      letter-spacing: .06em;
+      text-transform: uppercase;
+      cursor: pointer;
+      transition: background .2s, transform .1s;
+    }
+    .btn-save:hover { background: var(--sage-green); }
+    .btn-save:active { transform: scale(.98); }
+    .btn-save:disabled { opacity: .55; cursor: default; }
+
+    /* Toast */
+    #toast {
+      position: fixed; bottom: 1.5rem; left: 50%; transform: translateX(-50%);
+      background: var(--earth-brown); color: var(--farm-cream);
+      padding: .6rem 1.4rem; border-radius: 99px;
+      font-family: 'DM Sans', sans-serif; font-size: .82rem; font-weight: 500;
+      box-shadow: 0 4px 20px rgba(0,0,0,.25);
+      opacity: 0; pointer-events: none;
+      transition: opacity .25s;
+      z-index: 1000;
+    }
+    #toast.show { opacity: 1; }
+    #toast.error { background: #8B3A3A; }
+
+    /* Skeleton */
+    .skeleton { background: rgba(74,51,34,.08); border-radius: 4px; }
+    .skeleton-img { width: 100%; aspect-ratio: 4/3; }
+    .skeleton-line { height: 1em; margin-bottom: .5rem; }
+
+    /* Footer */
+    .site-footer {
+      text-align: center;
+      padding: 2rem;
+      font-size: .78rem;
+      color: rgba(250,240,230,.3);
+      font-family: 'DM Sans', sans-serif;
+      letter-spacing: .04em;
+    }
+  </style>
+</head>
+<body>
+  <nav class="site-nav">
+    <a href="index.html">
+      <img src="brand-assets/color-logo.png" class="nav-logo" alt="Bloomin' Acres" />
+    </a>
+    <div class="nav-right">
+      <a href="account.html" class="nav-link" id="nav-account">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+        My Account
+      </a>
+      <a href="menu.html" class="nav-link nav-back">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><polyline points="15 18 9 12 15 6"/></svg>
+        Back to Menu
+      </a>
+    </div>
+  </nav>
+
+  <div id="toast"></div>
+
+  <main class="page-wrap">
+    <div class="product-card" id="product-card">
+      <!-- Skeleton while loading -->
+      <div class="product-img-wrap skeleton skeleton-img" id="img-skeleton"></div>
+      <div class="product-body">
+        <div class="skeleton skeleton-line" style="width:55%;height:1.6rem;margin-bottom:.5rem;" id="name-skeleton"></div>
+        <div class="skeleton skeleton-line" style="width:25%;height:.9rem;margin-bottom:1.5rem;" id="price-skeleton"></div>
+        <div class="skeleton skeleton-line" style="width:100%;margin-bottom:.4rem;" id="desc-skeleton-1"></div>
+        <div class="skeleton skeleton-line" style="width:85%;" id="desc-skeleton-2"></div>
+      </div>
+    </div>
+  </main>
+
+  <footer class="site-footer">
+    <p>&copy; 2025 Bloomin' Acres Farmstand &amp; Bakery &mdash; Hope, IN</p>
+  </footer>
+
+  <!-- Supabase CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+  <script>
+  (() => {
+    let sb = null;
+    let currentUser = null;
+    let isAdmin = false;
+    let productId = null;
+    let stripeProduct = null;
+    let productDetails = null;  // { description, image_url }
+
+    function escHtml(s) {
+      return String(s)
+        .replace(/&/g,'&amp;').replace(/</g,'&lt;')
+        .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    }
+
+    function showToast(msg, isError = false) {
+      const t = document.getElementById('toast');
+      t.textContent = msg;
+      t.className = isError ? 'error show' : 'show';
+      clearTimeout(t._tid);
+      t._tid = setTimeout(() => { t.className = ''; }, 3200);
+    }
+
+    async function init() {
+      // Get product ID from URL
+      const params = new URLSearchParams(window.location.search);
+      productId = params.get('id');
+      if (!productId) {
+        document.getElementById('product-card').innerHTML =
+          '<div class="product-body"><p style="color:var(--earth-mid)">No product specified.</p></div>';
+        return;
+      }
+
+      const r = await fetch('/api/config').catch(() => null);
+      if (!r || !r.ok) return;
+      const cfg = await r.json();
+      if (!cfg.supabaseUrl) return;
+
+      sb = supabase.createClient(cfg.supabaseUrl, cfg.supabaseAnonKey);
+
+      // Load auth state
+      const { data: { session } } = await sb.auth.getSession();
+      if (session) {
+        currentUser = session.user;
+        const { data: adminRow } = await sb.from('admins').select('user_id').eq('user_id', currentUser.id).maybeSingle();
+        isAdmin = !!adminRow;
+      }
+
+      // Load Stripe products + product details in parallel
+      const [stripeRes, detailsRes] = await Promise.all([
+        fetch('/api/stripe/products').catch(() => null),
+        sb.from('product_details').select('*').eq('stripe_product_id', productId).maybeSingle(),
+      ]);
+
+      if (stripeRes && stripeRes.ok) {
+        const products = await stripeRes.json();
+        stripeProduct = Array.isArray(products) ? products.find(p => p.id === productId) : null;
+      }
+      productDetails = detailsRes.data || null;
+
+      renderProduct();
+    }
+
+    function renderProduct() {
+      const card = document.getElementById('product-card');
+      const name = stripeProduct ? stripeProduct.name : 'Product';
+      const price = stripeProduct ? (stripeProduct.price_formatted || '') : '';
+      const description = productDetails?.description || '';
+      const imageUrl = productDetails?.image_url || '';
+
+      card.innerHTML = `
+        <div class="product-img-wrap">
+          ${imageUrl
+            ? `<img src="${escHtml(imageUrl)}" class="product-img" alt="${escHtml(name)}" />`
+            : `<div class="product-img-placeholder">
+                <svg width="80" height="80" viewBox="0 0 24 24" fill="none" stroke="${'#4A3322'}" stroke-width="1">
+                  <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+                  <polyline points="9 22 9 12 15 12 15 22"/>
+                </svg>
+              </div>`
+          }
+        </div>
+        <div class="product-body">
+          <h1 class="product-name">${escHtml(name)}</h1>
+          ${price ? `<div class="product-price">${escHtml(price)}</div>` : ''}
+          <div class="product-divider"></div>
+          <p class="product-description" id="product-desc-display">${escHtml(description)}</p>
+          <div class="product-actions" id="product-actions">
+            ${currentUser
+              ? `<button class="btn-cart" id="btn-cart">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
+                  Add to Cart
+                </button>
+                <button class="btn-fav" id="btn-fav">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+                  Save
+                </button>`
+              : `<a href="account.html" class="btn-cart" style="text-decoration:none;">Sign In to Order</a>`
+            }
+          </div>
+        </div>
+        ${isAdmin ? `
+        <div class="admin-edit-panel visible" id="admin-panel">
+          <div class="admin-panel-heading">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+            Admin — Edit Product Details
+          </div>
+          <div class="admin-field">
+            <label class="admin-label" for="edit-description">Description</label>
+            <textarea class="admin-textarea" id="edit-description" placeholder="Describe this product — ingredients, how it's made, serving suggestions…">${escHtml(description)}</textarea>
+          </div>
+          <div class="admin-field">
+            <label class="admin-label">Product Image</label>
+            <div class="admin-file-wrap">
+              <img src="${escHtml(imageUrl)}" class="admin-img-thumb${imageUrl ? ' visible' : ''}" id="admin-img-thumb" alt="" />
+              <input type="file" class="admin-file-input" id="edit-image" accept="image/*" />
+            </div>
+          </div>
+          <button class="btn-save" id="btn-save">Save Changes</button>
+        </div>` : ''}
+      `;
+
+      // Wire up favorites
+      if (currentUser && productId) {
+        wireFavorite();
+        wireCart();
+      }
+
+      // Wire up admin save
+      if (isAdmin) {
+        wireAdminSave();
+      }
+    }
+
+    async function wireFavorite() {
+      const btn = document.getElementById('btn-fav');
+      if (!btn) return;
+      const { data } = await sb.from('user_favorites')
+        .select('id').eq('user_id', currentUser.id).eq('stripe_product_id', productId).maybeSingle();
+      let isFav = !!data;
+      updateFavBtn(btn, isFav);
+
+      btn.addEventListener('click', async () => {
+        if (isFav) {
+          await sb.from('user_favorites').delete()
+            .eq('user_id', currentUser.id).eq('stripe_product_id', productId);
+          isFav = false;
+        } else {
+          await sb.from('user_favorites').upsert({ user_id: currentUser.id, stripe_product_id: productId });
+          isFav = true;
+        }
+        updateFavBtn(btn, isFav);
+        showToast(isFav ? 'Saved to favorites' : 'Removed from favorites');
+      });
+    }
+
+    function updateFavBtn(btn, isFav) {
+      btn.className = 'btn-fav' + (isFav ? ' active' : '');
+      btn.innerHTML = `<svg width="12" height="12" viewBox="0 0 24 24" fill="${isFav ? 'currentColor' : 'none'}" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg> ${isFav ? 'Saved' : 'Save'}`;
+    }
+
+    async function wireCart() {
+      const btn = document.getElementById('btn-cart');
+      if (!btn) return;
+      btn.addEventListener('click', async () => {
+        const { data: existing } = await sb.from('user_cart')
+          .select('id, quantity').eq('user_id', currentUser.id).eq('stripe_product_id', productId).maybeSingle();
+        if (existing) {
+          await sb.from('user_cart').update({ quantity: existing.quantity + 1 }).eq('id', existing.id);
+        } else {
+          await sb.from('user_cart').insert({ user_id: currentUser.id, stripe_product_id: productId, quantity: 1 });
+        }
+        showToast(`${stripeProduct?.name || 'Item'} added to cart`);
+      });
+    }
+
+    function wireAdminSave() {
+      const btn = document.getElementById('btn-save');
+      const fileInput = document.getElementById('edit-image');
+      const thumb = document.getElementById('admin-img-thumb');
+
+      // Preview selected image
+      fileInput.addEventListener('change', () => {
+        const file = fileInput.files[0];
+        if (file) {
+          const url = URL.createObjectURL(file);
+          thumb.src = url;
+          thumb.classList.add('visible');
+        }
+      });
+
+      btn.addEventListener('click', async () => {
+        btn.disabled = true;
+        btn.textContent = 'Saving…';
+
+        let imageUrl = productDetails?.image_url || '';
+        const file = fileInput.files[0];
+
+        if (file) {
+          // Upload to Supabase Storage
+          const ext = file.name.split('.').pop();
+          const path = `${productId}.${ext}`;
+          const { error: uploadError } = await sb.storage
+            .from('product-images')
+            .upload(path, file, { upsert: true, contentType: file.type });
+
+          if (uploadError) {
+            showToast('Image upload failed: ' + uploadError.message, true);
+            btn.disabled = false;
+            btn.textContent = 'Save Changes';
+            return;
+          }
+
+          const { data: { publicUrl } } = sb.storage
+            .from('product-images')
+            .getPublicUrl(path);
+          imageUrl = publicUrl;
+        }
+
+        const description = document.getElementById('edit-description').value.trim();
+        const { error } = await sb.from('product_details').upsert(
+          { stripe_product_id: productId, description, image_url: imageUrl, updated_at: new Date().toISOString() },
+          { onConflict: 'stripe_product_id' }
+        );
+
+        if (error) {
+          showToast('Save failed: ' + error.message, true);
+        } else {
+          productDetails = { description, image_url: imageUrl };
+          showToast('Product updated');
+          // Refresh the product image display
+          const imgWrap = document.querySelector('.product-img-wrap');
+          if (imgWrap && imageUrl) {
+            imgWrap.innerHTML = `<img src="${escHtml(imageUrl)}" class="product-img" alt="${escHtml(stripeProduct?.name || '')}" />`;
+          }
+          const descDisplay = document.getElementById('product-desc-display');
+          if (descDisplay) descDisplay.textContent = description;
+        }
+
+        btn.disabled = false;
+        btn.textContent = 'Save Changes';
+      });
+    }
+
+    init();
+  })();
+  </script>
+</body>
+</html>

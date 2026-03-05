@@ -72,6 +72,18 @@ create table if not exists order_items (
   unit_amount integer
 );
 
+-- ─── Product Details ─────────────────────────────────────────────────────────
+-- Stores admin-managed descriptions and images for each Stripe product.
+-- Requires a public Supabase Storage bucket named "product-images".
+-- Create it in: Supabase dashboard → Storage → New bucket → Name: product-images → Public: ON
+
+create table if not exists product_details (
+  stripe_product_id text primary key,
+  description text,
+  image_url text,
+  updated_at timestamptz default now()
+);
+
 -- ─── Row Level Security ──────────────────────────────────────────────────────
 
 alter table menu_sections enable row level security;
@@ -82,6 +94,7 @@ alter table user_favorites enable row level security;
 alter table user_cart enable row level security;
 alter table orders enable row level security;
 alter table order_items enable row level security;
+alter table product_details enable row level security;
 
 -- Public: anyone can read the menu
 create policy "Public read sections"
@@ -122,6 +135,14 @@ create policy "Users read own orders"
 create policy "Users read own order items"
   on order_items for select
   using (exists (select 1 from orders where id = order_id and user_id = auth.uid()));
+
+-- Product details: public read, admin write
+create policy "Public read product_details"
+  on product_details for select using (true);
+
+create policy "Admin write product_details"
+  on product_details for all
+  using (exists (select 1 from admins where user_id = auth.uid()));
 
 -- Service role (webhook) can insert orders
 create policy "Service insert orders"

@@ -161,7 +161,10 @@
       font-family: 'Lora', Georgia, serif;
       font-size: .88rem;
       color: var(--earth-brown);
+      text-decoration: none;
+      transition: color .15s;
     }
+    .item-name:hover { color: var(--earth-mid); text-decoration: underline; text-underline-offset: 2px; }
     .item-dots {
       flex: 1;
       border-bottom: 1.5px dotted rgba(74,51,34,.3);
@@ -463,7 +466,7 @@
           row.className = 'menu-item';
           row.innerHTML = `
             <div class="menu-item-row">
-              <span class="item-name">${escHtml(name)}</span>
+              <a class="item-name" href="product.html?id=${encodeURIComponent(pid)}">${escHtml(name)}</a>
               <span class="item-dots" aria-hidden="true"></span>
               <span class="item-price">${escHtml(price)}</span>
             </div>
