@@ -401,7 +401,11 @@
     }
     .fav-card-name {
       font-weight: 600; font-size: .95rem;
-      margin-bottom: .25rem;
+      margin-bottom: .15rem;
+    }
+    .fav-card-variation {
+      font-size: .78rem; color: rgba(74,51,34,.5);
+      margin-bottom: .15rem; font-style: italic;
     }
     .fav-card-price {
       font-size: .85rem;
@@ -907,11 +911,18 @@
     el.innerHTML = `<div class="favorites-grid">${
       favItems.map(item => {
         const p = products[item.stripe_product_id];
+        // Dynamic price: current Stripe base + stored variation delta
+        const baseAmount = p?.unit_amount ?? null;
+        const totalAmount = baseAmount !== null ? baseAmount + (item.variation_delta || 0) : null;
+        const priceDisplay = totalAmount !== null
+          ? new Intl.NumberFormat('en-US', { style: 'currency', currency: p?.currency || 'usd' }).format(totalAmount / 100)
+          : '—';
         return `<div class="fav-card">
           <div class="fav-card-name">${p?.name || item.stripe_product_id}</div>
-          <div class="fav-card-price">${p?.price_formatted || '—'}</div>
+          ${item.variation_name ? `<div class="fav-card-variation">${item.variation_name}</div>` : ''}
+          <div class="fav-card-price">${priceDisplay}</div>
           <div class="fav-card-actions">
-            <button class="btn-cart-add" data-pid="${item.stripe_product_id}">+ Cart</button>
+            <button class="btn-cart-add" data-pid="${item.stripe_product_id}" data-vname="${item.variation_name || ''}" data-vdelta="${item.variation_delta || 0}">+ Cart</button>
             <button class="btn-unfav" data-fid="${item.id}" aria-label="Remove favorite">
               <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
             </button>
@@ -921,20 +932,20 @@
     }</div>`;
 
     el.querySelectorAll('.btn-cart-add').forEach(btn => {
-      btn.addEventListener('click', () => addToCartFromFav(btn.dataset.pid));
+      btn.addEventListener('click', () => addToCartFromFav(btn.dataset.pid, btn.dataset.vname, parseInt(btn.dataset.vdelta, 10) || 0));
     });
     el.querySelectorAll('.btn-unfav').forEach(btn => {
       btn.addEventListener('click', () => removeFavorite(btn.dataset.fid));
     });
   }
 
-  async function addToCartFromFav(productId) {
-    const existing = cartItems.find(i => i.stripe_product_id === productId);
+  async function addToCartFromFav(productId, variationName = '', variationDelta = 0) {
+    const existing = cartItems.find(i => i.stripe_product_id === productId && (i.variation_name || '') === variationName);
     if (existing) {
       await updateQty(existing.id, 'inc');
     } else {
       const { data, error } = await sb.from('user_cart')
-        .insert({ user_id: currentUser.id, stripe_product_id: productId, quantity: 1 })
+        .insert({ user_id: currentUser.id, stripe_product_id: productId, variation_name: variationName, variation_delta: variationDelta, quantity: 1 })
         .select().single();
       if (!error && data) { cartItems.push(data); renderCart(); }
     }

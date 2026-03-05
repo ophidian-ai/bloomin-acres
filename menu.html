@@ -270,20 +270,31 @@
       font-size: .75rem;
       color: var(--earth-brown);
       border-bottom: 1px solid rgba(74,51,34,.07);
-      background: none; border-left: none; border-right: none; border-top: none;
-      width: 100%; text-align: left; cursor: pointer;
       transition: background .15s;
     }
     .variation-dropdown-row:last-child { border-bottom: none; }
     .variation-dropdown-row:hover { background: rgba(74,51,34,.07); }
     .variation-dropdown-name { font-weight: 500; }
-    .variation-dropdown-price { color: var(--earth-mid); }
-    .variation-dropdown-cart {
-      font-size: .68rem; font-weight: 600; letter-spacing: .06em;
-      text-transform: uppercase; color: var(--sage-dark);
-      opacity: 0; transition: opacity .15s;
+    .variation-dropdown-price { color: var(--earth-mid); margin-right: .4rem; }
+    .variation-dd-actions { display: flex; align-items: center; gap: .3rem; }
+    .variation-dd-cart {
+      background: none; border: 1px solid rgba(74,51,34,.18); border-radius: 4px;
+      padding: .15rem .45rem; cursor: pointer;
+      font-family: 'DM Sans', sans-serif; font-size: .68rem; font-weight: 600;
+      letter-spacing: .06em; text-transform: uppercase; color: var(--sage-dark);
+      transition: background .15s, border-color .15s;
     }
-    .variation-dropdown-row:hover .variation-dropdown-cart { opacity: 1; }
+    .variation-dd-cart:hover { background: rgba(78,110,100,.1); border-color: var(--sage-dark); }
+    .variation-dd-fav {
+      background: none; border: 1px solid rgba(74,51,34,.18); border-radius: 4px;
+      padding: .15rem .4rem; cursor: pointer; color: rgba(74,51,34,.45);
+      font-size: .82rem; line-height: 1;
+      transition: color .15s, border-color .15s, background .15s;
+    }
+    .variation-dd-fav:hover, .variation-dd-fav.active {
+      color: var(--berry-red); border-color: rgba(139,58,58,.35);
+      background: rgba(139,58,58,.06);
+    }
 
     /* Account link in nav */
     .nav-account {
@@ -480,14 +491,17 @@
       }
 
       // Load user's existing favorites and cart IDs (for active state)
-      let userFavIds = new Set();
+      let userFavIds = new Set();   // keys: "pid" (base) or "pid:varName" (variation)
       let userCartIds = new Set();
       if (currentUser) {
         const [favRes, cartRes] = await Promise.all([
-          sb.from('user_favorites').select('stripe_product_id').eq('user_id', currentUser.id),
+          sb.from('user_favorites').select('stripe_product_id, variation_name').eq('user_id', currentUser.id),
           sb.from('user_cart').select('stripe_product_id').eq('user_id', currentUser.id),
         ]);
-        (favRes.data || []).forEach(r => userFavIds.add(r.stripe_product_id));
+        (favRes.data || []).forEach(r => {
+          const key = r.variation_name ? `${r.stripe_product_id}:${r.variation_name}` : r.stripe_product_id;
+          userFavIds.add(key);
+        });
         (cartRes.data || []).forEach(r => userCartIds.add(r.stripe_product_id));
       }
 
@@ -570,13 +584,14 @@
             <div class="variation-dropdown" id="var-dd-${escHtml(pid)}">
               ${variations.map(v => {
                 const total = (baseAmount || 0) + (v.price_delta || 0);
-                return `<button class="variation-dropdown-row" data-vname="${escHtml(v.name)}" data-vdelta="${v.price_delta || 0}">
+                return `<div class="variation-dropdown-row">
                   <span class="variation-dropdown-name">${escHtml(v.name)}</span>
-                  <span style="display:flex;align-items:center;gap:.5rem;">
+                  <div class="variation-dd-actions">
                     <span class="variation-dropdown-price">${fmtPrice(total)}</span>
-                    <span class="variation-dropdown-cart">+ Cart</span>
-                  </span>
-                </button>`;
+                    <button class="variation-dd-fav" data-vname="${escHtml(v.name)}" data-vdelta="${v.price_delta || 0}" aria-label="Save to favorites">&#9825;</button>
+                    <button class="variation-dd-cart" data-vname="${escHtml(v.name)}" data-vdelta="${v.price_delta || 0}">+ Cart</button>
+                  </div>
+                </div>`;
               }).join('')}
             </div>` : '';
 
@@ -612,12 +627,12 @@
               optBtn.innerHTML = `Options ${open ? '&#9652;' : '&#9662;'}`;
             });
 
-            // Variation row → add to cart
-            row.querySelectorAll('.variation-dropdown-row').forEach(varBtn => {
-              varBtn.addEventListener('click', async () => {
+            // Variation row — cart buttons
+            row.querySelectorAll('.variation-dd-cart').forEach(cartBtn => {
+              cartBtn.addEventListener('click', async () => {
                 if (!currentUser) { window.location.href = 'account.html'; return; }
-                const vName = varBtn.dataset.vname;
-                const vDelta = parseInt(varBtn.dataset.vdelta, 10) || 0;
+                const vName = cartBtn.dataset.vname;
+                const vDelta = parseInt(cartBtn.dataset.vdelta, 10) || 0;
                 const { data: existing } = await sb.from('user_cart')
                   .select('id, quantity')
                   .eq('user_id', currentUser.id)
@@ -628,15 +643,38 @@
                   await sb.from('user_cart').update({ quantity: existing.quantity + 1 }).eq('id', existing.id);
                 } else {
                   await sb.from('user_cart').insert({
-                    user_id: currentUser.id,
-                    stripe_product_id: pid,
-                    variation_name: vName,
-                    variation_delta: vDelta,
-                    quantity: 1,
+                    user_id: currentUser.id, stripe_product_id: pid,
+                    variation_name: vName, variation_delta: vDelta, quantity: 1,
                   });
                   userCartIds.add(pid);
                 }
                 showToast(`${name} (${vName}) added to cart`);
+              });
+            });
+
+            // Variation row — fav buttons
+            row.querySelectorAll('.variation-dd-fav').forEach(favBtn => {
+              const vName = favBtn.dataset.vname;
+              const vDelta = parseInt(favBtn.dataset.vdelta, 10) || 0;
+              const favKey = `${pid}:${vName}`;
+              if (userFavIds.has(favKey)) { favBtn.classList.add('active'); favBtn.innerHTML = '&#9829;'; }
+              favBtn.addEventListener('click', async () => {
+                if (!currentUser) { window.location.href = 'account.html'; return; }
+                if (favBtn.classList.contains('active')) {
+                  await sb.from('user_favorites').delete()
+                    .eq('user_id', currentUser.id).eq('stripe_product_id', pid).eq('variation_name', vName);
+                  userFavIds.delete(favKey);
+                  favBtn.classList.remove('active'); favBtn.innerHTML = '&#9825;';
+                  showToast('Removed from favorites');
+                } else {
+                  await sb.from('user_favorites').upsert({
+                    user_id: currentUser.id, stripe_product_id: pid,
+                    variation_name: vName, variation_delta: vDelta,
+                  }, { onConflict: 'user_id,stripe_product_id,variation_name' });
+                  userFavIds.add(favKey);
+                  favBtn.classList.add('active'); favBtn.innerHTML = '&#9829;';
+                  showToast('Saved to favorites');
+                }
               });
             });
           }

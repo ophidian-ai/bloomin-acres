@@ -41,8 +41,10 @@ create table if not exists user_favorites (
   id uuid primary key default gen_random_uuid(),
   user_id uuid not null references auth.users(id) on delete cascade,
   stripe_product_id text not null,
+  variation_name text not null default '',
+  variation_delta integer not null default 0,
   created_at timestamptz default now(),
-  unique(user_id, stripe_product_id)
+  unique(user_id, stripe_product_id, variation_name)
 );
 
 create table if not exists user_cart (
