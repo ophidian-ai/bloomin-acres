@@ -587,7 +587,7 @@
       <div style="display:flex; align-items:center; gap:.85rem;">
         <div class="dash-avatar" id="dash-avatar">?</div>
         <div class="dash-user-info">
-          <div class="greeting">Welcome back</div>
+          <div class="greeting" id="dash-greeting">Welcome back</div>
           <div class="email" id="dash-email">—</div>
         </div>
       </div>
@@ -623,6 +623,24 @@
 
     <!-- Profile panel -->
     <div class="dash-panel" id="panel-profile">
+      <div class="profile-section">
+        <h3>Personal Information</h3>
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem; margin-bottom:1rem;">
+          <div class="field">
+            <label for="profile-first-name">First Name</label>
+            <input type="text" id="profile-first-name" placeholder="Jane" autocomplete="given-name" />
+          </div>
+          <div class="field">
+            <label for="profile-last-name">Last Name</label>
+            <input type="text" id="profile-last-name" placeholder="Smith" autocomplete="family-name" />
+          </div>
+        </div>
+        <div class="field" style="margin-bottom:1rem;">
+          <label for="profile-phone">Phone Number</label>
+          <input type="tel" id="profile-phone" placeholder="(555) 000-0000" autocomplete="tel" />
+        </div>
+        <button class="btn-primary" id="save-profile-btn" style="max-width:180px;">Save Changes</button>
+      </div>
       <div class="profile-section">
         <h3>Account</h3>
         <div class="profile-row">
@@ -745,9 +763,21 @@
     currentUser = user;
     document.getElementById('auth-wrap').style.display = 'none';
     document.getElementById('dashboard').style.display = 'block';
-    document.getElementById('dash-avatar').textContent = (user.email || 'U')[0].toUpperCase();
     document.getElementById('dash-email').textContent = user.email;
     document.getElementById('profile-email').textContent = user.email;
+
+    // Populate profile fields from metadata
+    const meta = user.user_metadata || {};
+    const firstName = meta.first_name || '';
+    const lastName = meta.last_name || '';
+    document.getElementById('profile-first-name').value = firstName;
+    document.getElementById('profile-last-name').value = lastName;
+    document.getElementById('profile-phone').value = meta.phone || '';
+
+    // Update greeting and avatar
+    const displayName = firstName || user.email;
+    document.getElementById('dash-greeting').textContent = firstName ? `Welcome back, ${firstName}` : 'Welcome back';
+    document.getElementById('dash-avatar').textContent = (firstName || user.email || 'U')[0].toUpperCase();
 
     // Activate requested tab
     if (targetTab) {
@@ -992,6 +1022,24 @@
   }
   document.getElementById('signout-btn').addEventListener('click', signOut);
   document.getElementById('signout-btn-2').addEventListener('click', signOut);
+
+  // Save profile
+  document.getElementById('save-profile-btn').addEventListener('click', async () => {
+    const firstName = document.getElementById('profile-first-name').value.trim();
+    const lastName = document.getElementById('profile-last-name').value.trim();
+    const phone = document.getElementById('profile-phone').value.trim();
+    const btn = document.getElementById('save-profile-btn');
+    btn.disabled = true;
+    btn.textContent = 'Saving…';
+    const { data, error } = await sb.auth.updateUser({ data: { first_name: firstName, last_name: lastName, phone } });
+    btn.disabled = false;
+    btn.textContent = 'Save Changes';
+    if (error) { showToast(error.message, true); return; }
+    // Update greeting and avatar live
+    document.getElementById('dash-greeting').textContent = firstName ? `Welcome back, ${firstName}` : 'Welcome back';
+    document.getElementById('dash-avatar').textContent = (firstName || currentUser.email || 'U')[0].toUpperCase();
+    showToast('Profile saved');
+  });
 
   // Change password
   document.getElementById('change-pw-btn').addEventListener('click', async () => {
