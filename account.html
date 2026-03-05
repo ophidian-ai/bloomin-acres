@@ -591,7 +591,6 @@
           <div class="email" id="dash-email">—</div>
         </div>
       </div>
-      <button class="btn-secondary" id="signout-btn" style="color:rgba(250,240,230,.6); border-color:rgba(250,240,230,.2);">Sign Out</button>
     </div>
   </div>
 
@@ -766,13 +765,13 @@
     document.getElementById('dash-email').textContent = user.email;
     document.getElementById('profile-email').textContent = user.email;
 
-    // Populate profile fields from metadata
-    const meta = user.user_metadata || {};
-    const firstName = meta.first_name || '';
-    const lastName = meta.last_name || '';
+    // Populate profile fields from profiles table
+    const { data: profile } = await sb.from('profiles').select('*').eq('user_id', user.id).maybeSingle();
+    const firstName = profile?.first_name || '';
+    const lastName = profile?.last_name || '';
     document.getElementById('profile-first-name').value = firstName;
     document.getElementById('profile-last-name').value = lastName;
-    document.getElementById('profile-phone').value = meta.phone || '';
+    document.getElementById('profile-phone').value = profile?.phone || '';
 
     // Update greeting and avatar
     const displayName = firstName || user.email;
@@ -1020,8 +1019,17 @@
   async function signOut() {
     await sb.auth.signOut();
   }
-  document.getElementById('signout-btn').addEventListener('click', signOut);
   document.getElementById('signout-btn-2').addEventListener('click', signOut);
+
+  // Phone number auto-format: (xxx) xxx-xxxx
+  document.getElementById('profile-phone').addEventListener('input', function () {
+    const digits = this.value.replace(/\D/g, '').slice(0, 10);
+    let formatted = '';
+    if (digits.length > 0) formatted = '(' + digits.slice(0, 3);
+    if (digits.length >= 4) formatted += ') ' + digits.slice(3, 6);
+    if (digits.length >= 7) formatted += '-' + digits.slice(6, 10);
+    this.value = formatted;
+  });
 
   // Save profile
   document.getElementById('save-profile-btn').addEventListener('click', async () => {
@@ -1031,7 +1039,10 @@
     const btn = document.getElementById('save-profile-btn');
     btn.disabled = true;
     btn.textContent = 'Saving…';
-    const { data, error } = await sb.auth.updateUser({ data: { first_name: firstName, last_name: lastName, phone } });
+    const { error } = await sb.from('profiles').upsert(
+      { user_id: currentUser.id, first_name: firstName, last_name: lastName, phone, updated_at: new Date().toISOString() },
+      { onConflict: 'user_id' }
+    );
     btn.disabled = false;
     btn.textContent = 'Save Changes';
     if (error) { showToast(error.message, true); return; }

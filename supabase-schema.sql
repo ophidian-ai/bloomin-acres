@@ -29,6 +29,14 @@ create table if not exists admins (
 
 -- ─── User Data ───────────────────────────────────────────────────────────────
 
+create table if not exists profiles (
+  user_id uuid primary key references auth.users(id) on delete cascade,
+  first_name text,
+  last_name text,
+  phone text,
+  updated_at timestamptz default now()
+);
+
 create table if not exists user_favorites (
   id uuid primary key default gen_random_uuid(),
   user_id uuid not null references auth.users(id) on delete cascade,
@@ -69,6 +77,7 @@ create table if not exists order_items (
 alter table menu_sections enable row level security;
 alter table menu_items enable row level security;
 alter table admins enable row level security;
+alter table profiles enable row level security;
 alter table user_favorites enable row level security;
 alter table user_cart enable row level security;
 alter table orders enable row level security;
@@ -98,6 +107,9 @@ create policy "Admins read own row"
   on admins for select using (auth.uid() = user_id);
 
 -- Users: can only access their own data
+create policy "Users manage own profile"
+  on profiles for all using (auth.uid() = user_id);
+
 create policy "Users manage own favorites"
   on user_favorites for all using (auth.uid() = user_id);
 
