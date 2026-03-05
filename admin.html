@@ -45,70 +45,7 @@
       background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23n)'/%3E%3C/svg%3E");
     }
 
-    /* ===== LOGIN OVERLAY ===== */
-    #login-overlay {
-      position: fixed; inset: 0; z-index: 1000;
-      background: radial-gradient(ellipse at center, rgba(74,51,34,.97) 0%, rgba(30,20,12,.99) 100%);
-      display: flex; align-items: center; justify-content: center;
-      padding: 1rem;
-    }
-    #login-overlay.hidden { display: none; }
-    .login-card {
-      background: var(--earth-brown);
-      border: 1px solid rgba(237,163,57,.2);
-      border-radius: 10px;
-      padding: 3rem 2.5rem 2.5rem;
-      width: 100%; max-width: 400px;
-      box-shadow: 0 8px 32px rgba(0,0,0,.5), 0 2px 0 rgba(237,163,57,.1) inset;
-    }
-    .login-logo { height: 64px; display: block; margin: 0 auto 1.5rem; }
-    .login-title {
-      font-family: 'Playfair Display', serif;
-      font-size: 1.4rem; font-weight: 600;
-      text-align: center; margin-bottom: .35rem;
-      color: var(--farm-cream);
-    }
-    .login-sub {
-      font-size: .78rem; text-align: center;
-      color: rgba(250,240,230,.45); letter-spacing: .06em;
-      margin-bottom: 2rem;
-    }
-    .field-label {
-      display: block;
-      font-size: .72rem; font-weight: 600; letter-spacing: .12em;
-      text-transform: uppercase; color: rgba(250,240,230,.55);
-      margin-bottom: .4rem;
-    }
-    .field-input {
-      width: 100%; padding: .65rem .9rem;
-      background: rgba(0,0,0,.25);
-      border: 1px solid rgba(237,163,57,.2);
-      border-radius: 5px; color: var(--farm-cream);
-      font-family: 'DM Sans', sans-serif; font-size: .95rem;
-      margin-bottom: 1.1rem;
-      transition: border-color .2s;
-    }
-    .field-input:focus { outline: none; border-color: var(--wheat-gold); }
-    .field-input::placeholder { color: rgba(250,240,230,.25); }
-    .btn-login {
-      width: 100%; padding: .75rem;
-      background: var(--burnt-orange);
-      color: var(--farm-cream); border: none; border-radius: 5px;
-      font-family: 'DM Sans', sans-serif; font-size: .9rem;
-      font-weight: 600; letter-spacing: .05em;
-      cursor: pointer;
-      box-shadow: 0 2px 8px rgba(200,90,58,.4), 0 4px 20px rgba(200,90,58,.2);
-      transition: transform .15s, box-shadow .15s;
-    }
-    .btn-login:hover { transform: translateY(-1px); box-shadow: 0 4px 16px rgba(200,90,58,.5), 0 8px 32px rgba(200,90,58,.25); }
-    .btn-login:active { transform: translateY(0); }
-    .btn-login:focus-visible { outline: 2px solid var(--wheat-gold); outline-offset: 3px; }
-    .login-error {
-      background: rgba(139,58,58,.25); border: 1px solid rgba(139,58,58,.5);
-      border-radius: 4px; padding: .6rem .85rem;
-      font-size: .82rem; color: #f5a0a0;
-      margin-bottom: 1rem; display: none;
-    }
+    /* Login is handled by account.html */
 
     /* ===== DASHBOARD LAYOUT ===== */
     #dashboard { display: none; min-height: 100vh; }
@@ -410,20 +347,7 @@
 </head>
 <body>
 
-  <!-- ===== LOGIN OVERLAY ===== -->
-  <div id="login-overlay">
-    <div class="login-card">
-      <img src="brand-assets/color-logo.png" alt="Bloomin' Acres" class="login-logo" />
-      <h1 class="login-title">Admin Login</h1>
-      <p class="login-sub">BLOOMIN' ACRES MANAGEMENT</p>
-      <div id="login-error" class="login-error"></div>
-      <label class="field-label" for="login-email">Email</label>
-      <input id="login-email" type="email" class="field-input" placeholder="you@example.com" autocomplete="email" />
-      <label class="field-label" for="login-password">Password</label>
-      <input id="login-password" type="password" class="field-input" placeholder="••••••••" autocomplete="current-password" />
-      <button id="login-btn" class="btn-login">Sign In</button>
-    </div>
-  </div>
+  <!-- Login is handled by account.html — no overlay here -->
 
   <!-- ===== DASHBOARD ===== -->
   <div id="dashboard">
@@ -584,41 +508,20 @@
 
     // ── Login ─────────────────────────────────────────────────────────────────
     function showLogin() {
-      document.getElementById('login-overlay').classList.remove('hidden');
-      document.getElementById('login-email').focus();
+      // All sign-in is handled by account.html
+      window.location.href = 'account.html';
     }
-
-    document.getElementById('login-btn').addEventListener('click', async () => {
-      const email = document.getElementById('login-email').value.trim();
-      const password = document.getElementById('login-password').value;
-      const errEl = document.getElementById('login-error');
-      const btn = document.getElementById('login-btn');
-      errEl.style.display = 'none';
-      btn.disabled = true;
-      btn.textContent = 'Signing in…';
-
-      const { data, error } = await sb.auth.signInWithPassword({ email, password });
-      btn.disabled = false;
-      btn.textContent = 'Sign In';
-
-      if (error) {
-        errEl.textContent = error.message;
-        errEl.style.display = 'block';
-        return;
-      }
-      document.getElementById('login-overlay').classList.add('hidden');
-      enterDashboard(data.user);
-    });
-
-    // Allow Enter key to submit login
-    ['login-email','login-password'].forEach(id => {
-      document.getElementById(id).addEventListener('keydown', e => {
-        if (e.key === 'Enter') document.getElementById('login-btn').click();
-      });
-    });
 
     // ── Dashboard ─────────────────────────────────────────────────────────────
     async function enterDashboard(user) {
+      // Verify user is an admin before showing dashboard
+      const { data: adminRow } = await sb.from('admins').select('user_id').eq('user_id', user.id).maybeSingle();
+      if (!adminRow) {
+        await sb.auth.signOut();
+        window.location.href = 'account.html';
+        return;
+      }
+
       document.getElementById('dashboard').classList.add('visible');
       document.getElementById('topbar-user-email').textContent = user.email;
       document.getElementById('account-email-display').textContent = user.email;
@@ -631,11 +534,7 @@
     // ── Logout ────────────────────────────────────────────────────────────────
     document.getElementById('logout-btn').addEventListener('click', async () => {
       await sb.auth.signOut();
-      document.getElementById('dashboard').classList.remove('visible');
-      document.getElementById('login-overlay').classList.remove('hidden');
-      document.getElementById('login-email').value = '';
-      document.getElementById('login-password').value = '';
-      document.getElementById('login-email').focus();
+      window.location.href = 'account.html';
     });
 
     // ── Tabs ──────────────────────────────────────────────────────────────────
