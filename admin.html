@@ -494,6 +494,34 @@
       white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
       max-width: 160px;
     }
+    .lp-section-heading {
+      font-family: 'DM Sans', sans-serif;
+      font-size: .75rem; font-weight: 700;
+      letter-spacing: .13em; text-transform: uppercase;
+      color: rgba(250,240,230,.45);
+      padding: 1.5rem 0 .6rem;
+      border-top: 1px solid rgba(237,163,57,.12);
+      margin-top: .25rem;
+    }
+    .lp-section-heading:first-of-type { border-top: none; padding-top: .25rem; }
+    .lp-field { display: flex; flex-direction: column; gap: .4rem; margin-bottom: .85rem; }
+    .lp-field label { font-family: 'DM Sans', sans-serif; font-size: .78rem; font-weight: 600; letter-spacing: .07em; text-transform: uppercase; color: var(--wheat-gold); }
+    .lp-text-input {
+      background: rgba(250,240,230,.07);
+      border: 1px solid rgba(250,240,230,.16);
+      border-radius: 5px;
+      color: var(--farm-cream);
+      padding: .5rem .75rem;
+      font-size: .9rem;
+      font-family: inherit;
+      width: 100%;
+      box-sizing: border-box;
+    }
+    .lp-text-input:focus { outline: none; border-color: rgba(237,163,57,.5); background: rgba(250,240,230,.1); }
+    .lp-textarea { min-height: 80px; resize: vertical; }
+    .lp-save-row { display: flex; align-items: center; gap: .75rem; margin-top: .35rem; }
+    .lp-cards-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; }
+    @media (max-width: 900px) { .lp-cards-grid { grid-template-columns: 1fr; } }
   </style>
 </head>
 <body>
@@ -661,57 +689,178 @@
     <div id="tab-landing" class="tab-panel">
       <h2 class="section-heading">Landing Page</h2>
       <p style="font-size:.85rem;color:rgba(250,240,230,.85);margin-top:.35rem;margin-bottom:1.75rem;text-shadow:0 1px 3px rgba(0,0,0,.8);">
-        Upload photos for the three feature cards on the home page.
+        Edit all text and images shown on the home page.
       </p>
-      <div style="display:flex;flex-direction:column;gap:1.5rem;">
+
+      <!-- ── Images ─────────────────────────────────────────── -->
+      <p class="lp-section-heading">Images</p>
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:1rem;">
+
         <div class="landing-card-upload">
-          <div class="landing-card-label">Card 1 — Sourdough Loaves</div>
+          <div class="landing-card-label">Our Story Photo</div>
+          <div class="landing-card-preview-wrap">
+            <img class="landing-card-preview" id="lc-preview-hero" src="https://placehold.co/600x400/7A9B8E/FAF0E6?text=At+the+Farmstand" alt="" />
+          </div>
+          <div class="lc-row">
+            <label class="btn-upload-label" for="lc-input-hero">Choose</label>
+            <input type="file" id="lc-input-hero" class="lc-file-input" accept="image/*" data-key="landing-hero" data-preview="lc-preview-hero" data-name="lc-name-hero" />
+            <button type="button" class="btn-secondary lc-upload-btn" data-key="landing-hero" data-input="lc-input-hero" disabled>
+              <svg width="11" height="11" viewBox="0 0 14 14" fill="none" aria-hidden="true"><path d="M2 7l3.5 3.5L12 3" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg> Save
+            </button>
+            <span class="lc-filename" id="lc-name-hero"></span>
+          </div>
+        </div>
+
+        <div class="landing-card-upload">
+          <div class="landing-card-label">Card 1 Image</div>
           <div class="landing-card-preview-wrap">
             <img class="landing-card-preview" id="lc-preview-1" src="https://placehold.co/600x400/C8A96E/4A3322?text=Sourdough+Loaves" alt="" />
           </div>
           <div class="lc-row">
-            <label class="btn-upload-label" for="lc-input-1">Choose Image</label>
+            <label class="btn-upload-label" for="lc-input-1">Choose</label>
             <input type="file" id="lc-input-1" class="lc-file-input" accept="image/*" data-key="landing-card-1" data-preview="lc-preview-1" data-name="lc-name-1" />
             <button type="button" class="btn-secondary lc-upload-btn" data-key="landing-card-1" data-input="lc-input-1" disabled>
-              <svg width="11" height="11" viewBox="0 0 14 14" fill="none" aria-hidden="true"><path d="M2 7l3.5 3.5L12 3" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
-              Save
+              <svg width="11" height="11" viewBox="0 0 14 14" fill="none" aria-hidden="true"><path d="M2 7l3.5 3.5L12 3" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg> Save
             </button>
             <span class="lc-filename" id="lc-name-1"></span>
           </div>
         </div>
 
         <div class="landing-card-upload">
-          <div class="landing-card-label">Card 2 — Fresh Produce</div>
+          <div class="landing-card-label">Card 2 Image</div>
           <div class="landing-card-preview-wrap">
             <img class="landing-card-preview" id="lc-preview-2" src="https://placehold.co/600x400/7A9B8E/FAF0E6?text=Fresh+Produce" alt="" />
           </div>
           <div class="lc-row">
-            <label class="btn-upload-label" for="lc-input-2">Choose Image</label>
+            <label class="btn-upload-label" for="lc-input-2">Choose</label>
             <input type="file" id="lc-input-2" class="lc-file-input" accept="image/*" data-key="landing-card-2" data-preview="lc-preview-2" data-name="lc-name-2" />
             <button type="button" class="btn-secondary lc-upload-btn" data-key="landing-card-2" data-input="lc-input-2" disabled>
-              <svg width="11" height="11" viewBox="0 0 14 14" fill="none" aria-hidden="true"><path d="M2 7l3.5 3.5L12 3" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
-              Save
+              <svg width="11" height="11" viewBox="0 0 14 14" fill="none" aria-hidden="true"><path d="M2 7l3.5 3.5L12 3" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg> Save
             </button>
             <span class="lc-filename" id="lc-name-2"></span>
           </div>
         </div>
 
         <div class="landing-card-upload">
-          <div class="landing-card-label">Card 3 — Seasonal Pastries</div>
+          <div class="landing-card-label">Card 3 Image</div>
           <div class="landing-card-preview-wrap">
             <img class="landing-card-preview" id="lc-preview-3" src="https://placehold.co/600x400/8B3A3A/FAF0E6?text=Seasonal+Pastries" alt="" />
           </div>
           <div class="lc-row">
-            <label class="btn-upload-label" for="lc-input-3">Choose Image</label>
+            <label class="btn-upload-label" for="lc-input-3">Choose</label>
             <input type="file" id="lc-input-3" class="lc-file-input" accept="image/*" data-key="landing-card-3" data-preview="lc-preview-3" data-name="lc-name-3" />
             <button type="button" class="btn-secondary lc-upload-btn" data-key="landing-card-3" data-input="lc-input-3" disabled>
-              <svg width="11" height="11" viewBox="0 0 14 14" fill="none" aria-hidden="true"><path d="M2 7l3.5 3.5L12 3" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
-              Save
+              <svg width="11" height="11" viewBox="0 0 14 14" fill="none" aria-hidden="true"><path d="M2 7l3.5 3.5L12 3" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg> Save
             </button>
             <span class="lc-filename" id="lc-name-3"></span>
           </div>
         </div>
+
+        <div class="landing-card-upload" style="grid-column:1/-1;">
+          <div class="landing-card-label">Map — auto-generated from Address field below</div>
+          <div style="background:rgba(250,240,230,.05);border:1px solid rgba(237,163,57,.12);border-radius:6px;overflow:hidden;height:180px;">
+            <iframe id="admin-map-preview"
+              src="https://maps.google.com/maps?q=3650+N+State+Road+9+Hope+IN+47246&output=embed"
+              style="width:100%;height:100%;border:0;" allowfullscreen title="Map preview"></iframe>
+          </div>
+          <p style="font-size:.78rem;color:rgba(250,240,230,.45);margin-top:.5rem;">Save the Address field below to update this map.</p>
+        </div>
+
       </div>
+
+      <!-- ── Our Story ──────────────────────────────────────── -->
+      <p class="lp-section-heading">Our Story Section</p>
+      <div class="lp-field">
+        <label for="inp-welcome-heading">Section Heading</label>
+        <input type="text" id="inp-welcome-heading" class="lp-text-input" data-key="lp-welcome-heading" placeholder="Where the garden meets the oven." />
+        <div class="lp-save-row">
+          <button type="button" class="btn-secondary lp-text-save-btn" data-key="lp-welcome-heading" data-input="inp-welcome-heading">Save</button>
+        </div>
+      </div>
+      <div class="lp-field">
+        <label for="inp-welcome-body">Body Text</label>
+        <textarea id="inp-welcome-body" class="lp-text-input lp-textarea" data-key="lp-welcome-body" placeholder="Your story..."></textarea>
+        <div class="lp-save-row">
+          <button type="button" class="btn-secondary lp-text-save-btn" data-key="lp-welcome-body" data-input="inp-welcome-body">Save</button>
+        </div>
+      </div>
+
+      <!-- ── Feature Cards ──────────────────────────────────── -->
+      <p class="lp-section-heading">Feature Cards (What We Make)</p>
+      <div class="lp-cards-grid">
+        <div>
+          <div class="landing-card-label" style="margin-bottom:.6rem;">Card 1</div>
+          <div class="lp-field">
+            <label for="inp-card1-title">Title</label>
+            <input type="text" id="inp-card1-title" class="lp-text-input" data-key="lp-card1-title" placeholder="Sourdough Loaves" />
+          </div>
+          <div class="lp-field">
+            <label for="inp-card1-desc">Description</label>
+            <textarea id="inp-card1-desc" class="lp-text-input lp-textarea" data-key="lp-card1-desc" placeholder="Description..." style="min-height:64px;"></textarea>
+          </div>
+          <button type="button" class="btn-secondary lp-text-save-btn" data-key="lp-card1-title,lp-card1-desc" data-multi="true" data-inputs="inp-card1-title,inp-card1-desc">Save Card 1</button>
+        </div>
+        <div>
+          <div class="landing-card-label" style="margin-bottom:.6rem;">Card 2</div>
+          <div class="lp-field">
+            <label for="inp-card2-title">Title</label>
+            <input type="text" id="inp-card2-title" class="lp-text-input" data-key="lp-card2-title" placeholder="Fresh Produce" />
+          </div>
+          <div class="lp-field">
+            <label for="inp-card2-desc">Description</label>
+            <textarea id="inp-card2-desc" class="lp-text-input lp-textarea" data-key="lp-card2-desc" placeholder="Description..." style="min-height:64px;"></textarea>
+          </div>
+          <button type="button" class="btn-secondary lp-text-save-btn" data-key="lp-card2-title,lp-card2-desc" data-multi="true" data-inputs="inp-card2-title,inp-card2-desc">Save Card 2</button>
+        </div>
+        <div>
+          <div class="landing-card-label" style="margin-bottom:.6rem;">Card 3</div>
+          <div class="lp-field">
+            <label for="inp-card3-title">Title</label>
+            <input type="text" id="inp-card3-title" class="lp-text-input" data-key="lp-card3-title" placeholder="Seasonal Pastries" />
+          </div>
+          <div class="lp-field">
+            <label for="inp-card3-desc">Description</label>
+            <textarea id="inp-card3-desc" class="lp-text-input lp-textarea" data-key="lp-card3-desc" placeholder="Description..." style="min-height:64px;"></textarea>
+          </div>
+          <button type="button" class="btn-secondary lp-text-save-btn" data-key="lp-card3-title,lp-card3-desc" data-multi="true" data-inputs="inp-card3-title,inp-card3-desc">Save Card 3</button>
+        </div>
+      </div>
+
+      <!-- ── Hours & Contact ────────────────────────────────── -->
+      <p class="lp-section-heading">Hours &amp; Contact</p>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;">
+        <div class="lp-field">
+          <label for="inp-hours-tues">Tues – Thurs Hours</label>
+          <input type="text" id="inp-hours-tues" class="lp-text-input" data-key="lp-hours-tues" placeholder="10a – 6p" />
+          <div class="lp-save-row"><button type="button" class="btn-secondary lp-text-save-btn" data-key="lp-hours-tues" data-input="inp-hours-tues">Save</button></div>
+        </div>
+        <div class="lp-field">
+          <label for="inp-hours-fri">Friday Hours</label>
+          <input type="text" id="inp-hours-fri" class="lp-text-input" data-key="lp-hours-fri" placeholder="2p – 6p" />
+          <div class="lp-save-row"><button type="button" class="btn-secondary lp-text-save-btn" data-key="lp-hours-fri" data-input="inp-hours-fri">Save</button></div>
+        </div>
+        <div class="lp-field">
+          <label for="inp-hours-sat">Saturday Hours</label>
+          <input type="text" id="inp-hours-sat" class="lp-text-input" data-key="lp-hours-sat" placeholder="4p – 6p (market season)" />
+          <div class="lp-save-row"><button type="button" class="btn-secondary lp-text-save-btn" data-key="lp-hours-sat" data-input="inp-hours-sat">Save</button></div>
+        </div>
+        <div class="lp-field">
+          <label for="inp-address">Address</label>
+          <input type="text" id="inp-address" class="lp-text-input" data-key="lp-address" placeholder="3650 N State Road 9, Hope, IN 47246" />
+          <div class="lp-save-row"><button type="button" class="btn-secondary lp-text-save-btn" data-key="lp-address" data-input="inp-address">Save</button></div>
+        </div>
+        <div class="lp-field">
+          <label for="inp-email">Email</label>
+          <input type="email" id="inp-email" class="lp-text-input" data-key="lp-email" placeholder="email@example.com" />
+          <div class="lp-save-row"><button type="button" class="btn-secondary lp-text-save-btn" data-key="lp-email" data-input="inp-email">Save</button></div>
+        </div>
+        <div class="lp-field">
+          <label for="inp-phone">Phone</label>
+          <input type="tel" id="inp-phone" class="lp-text-input" data-key="lp-phone" placeholder="(812) 603-2442" />
+          <div class="lp-save-row"><button type="button" class="btn-secondary lp-text-save-btn" data-key="lp-phone" data-input="inp-phone">Save</button></div>
+        </div>
+      </div>
+
     </div>
 
   </div><!-- /dashboard -->
@@ -793,7 +942,8 @@
       document.getElementById('account-avatar').textContent = (user.email || 'A')[0].toUpperCase();
 
       // Load data in parallel
-      await Promise.all([loadProducts(), loadMenuFromSupabase(), loadMenuSchedule(), loadSavedMenus(), loadLandingImages()]);
+      await loadProducts(); // must complete before menu editor renders (populates allProducts for dropdowns)
+      await Promise.all([loadMenuFromSupabase(), loadMenuSchedule(), loadSavedMenus(), loadLandingContent()]);
     }
 
     // ── Logout ────────────────────────────────────────────────────────────────
@@ -1170,19 +1320,30 @@
       btn.disabled = false;
     });
 
-    // ── Landing Page Images ───────────────────────────────────────────────────
-    async function loadLandingImages() {
-      const { data } = await sb
-        .from('site_content')
-        .select('key, value')
-        .in('key', ['landing-card-1', 'landing-card-2', 'landing-card-3']);
-      (data || []).forEach(row => {
-        const n = row.key.replace('landing-card-', '');
-        const preview = document.getElementById(`lc-preview-${n}`);
-        if (preview && row.value) preview.src = row.value;
+    // ── Landing Page Content ──────────────────────────────────────────────────
+    async function loadLandingContent() {
+      const { data } = await sb.from('site_content').select('key, value');
+      const imgPreviewMap = {
+        'landing-hero':   'lc-preview-hero',
+        'landing-card-1': 'lc-preview-1',
+        'landing-card-2': 'lc-preview-2',
+        'landing-card-3': 'lc-preview-3',
+      };
+      (data || []).forEach(({ key, value }) => {
+        if (!value) return;
+        if (imgPreviewMap[key]) {
+          const el = document.getElementById(imgPreviewMap[key]);
+          if (el) el.src = value;
+        }
+        // Text inputs: key like "lp-welcome-heading" → input id "inp-welcome-heading"
+        if (key.startsWith('lp-')) {
+          const el = document.getElementById('inp-' + key.slice(3));
+          if (el) el.value = value;
+        }
       });
     }
 
+    // Image file inputs
     document.querySelectorAll('.lc-file-input').forEach(input => {
       input.addEventListener('change', () => {
         const file = input.files[0];
@@ -1198,9 +1359,9 @@
 
     document.querySelectorAll('.lc-upload-btn').forEach(btn => {
       btn.addEventListener('click', async () => {
-        const key      = btn.dataset.key;
-        const inputEl  = document.getElementById(btn.dataset.input);
-        const file     = inputEl.files[0];
+        const key     = btn.dataset.key;
+        const inputEl = document.getElementById(btn.dataset.input);
+        const file    = inputEl.files[0];
         if (!file) return;
 
         btn.disabled = true;
@@ -1220,18 +1381,55 @@
         }
 
         const { data: { publicUrl } } = sb.storage.from('site-images').getPublicUrl(path);
-
         const { error: dbErr } = await sb.from('site_content')
           .upsert({ key, value: publicUrl }, { onConflict: 'key' });
 
-        if (dbErr) {
-          showToast('Save failed: ' + dbErr.message, true);
-        } else {
-          showToast('Image saved');
-        }
+        if (dbErr) showToast('Save failed: ' + dbErr.message, true);
+        else showToast('Image saved');
 
         btn.disabled = false;
         btn.innerHTML = '<svg width="11" height="11" viewBox="0 0 14 14" fill="none"><path d="M2 7l3.5 3.5L12 3" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg> Save';
+      });
+    });
+
+    // Cache original labels before any interaction
+    document.querySelectorAll('.lp-text-save-btn').forEach(btn => {
+      btn.setAttribute('data-label', btn.textContent.trim());
+    });
+
+    // Text / textarea save buttons
+    document.querySelectorAll('.lp-text-save-btn').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        const originalLabel = btn.getAttribute('data-label') || 'Save';
+        const isMulti = btn.dataset.multi === 'true';
+        btn.disabled = true;
+        btn.textContent = 'Saving…';
+
+        let rows;
+        if (isMulti) {
+          const keys   = btn.dataset.key.split(',');
+          const inputs = btn.dataset.inputs.split(',');
+          rows = keys.map((k, i) => ({ key: k.trim(), value: document.getElementById(inputs[i].trim())?.value.trim() || '' }));
+        } else {
+          const inputEl = document.getElementById(btn.dataset.input);
+          rows = [{ key: btn.dataset.key, value: inputEl?.value.trim() || '' }];
+        }
+
+        const { error } = await sb.from('site_content').upsert(rows, { onConflict: 'key' });
+        if (error) {
+          showToast('Save failed: ' + error.message, true);
+        } else {
+          showToast('Saved');
+          // Update map preview when address is saved
+          if (btn.dataset.key === 'lp-address') {
+            const addr = rows[0].value;
+            const mapFrame = document.getElementById('admin-map-preview');
+            if (mapFrame && addr) mapFrame.src = `https://maps.google.com/maps?q=${encodeURIComponent(addr)}&output=embed`;
+          }
+        }
+
+        btn.disabled = false;
+        btn.textContent = originalLabel;
       });
     });
 

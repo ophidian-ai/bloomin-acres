@@ -402,15 +402,50 @@
     });
   }
 
-  // Load landing card images from site_content
-  const { data: cardContent } = await sb
-    .from('site_content')
-    .select('key, value')
-    .in('key', ['landing-card-1', 'landing-card-2', 'landing-card-3']);
-  (cardContent || []).forEach(row => {
-    const n = row.key.replace('landing-card-', '');
-    const img = document.getElementById(`landing-card-img-${n}`);
-    if (img && row.value) img.src = row.value;
+  // Load all editable landing page content
+  const { data: lpContent } = await sb.from('site_content').select('key, value');
+  const imgKeys = {
+    'landing-hero':   'landing-hero-img',
+    'landing-card-1': 'landing-card-img-1',
+    'landing-card-2': 'landing-card-img-2',
+    'landing-card-3': 'landing-card-img-3',
+    'landing-map':    'landing-map-img',
+  };
+  const textKeys = {
+    'lp-welcome-heading': { id: 'lp-welcome-heading', html: true },
+    'lp-welcome-body':    { id: 'lp-welcome-body' },
+    'lp-card1-title':     { id: 'lp-card1-title' },
+    'lp-card1-desc':      { id: 'lp-card1-desc' },
+    'lp-card2-title':     { id: 'lp-card2-title' },
+    'lp-card2-desc':      { id: 'lp-card2-desc' },
+    'lp-card3-title':     { id: 'lp-card3-title' },
+    'lp-card3-desc':      { id: 'lp-card3-desc' },
+    'lp-hours-tues':      { id: 'lp-hours-tues' },
+    'lp-hours-fri':       { id: 'lp-hours-fri' },
+    'lp-hours-sat':       { id: 'lp-hours-sat', html: true },
+    'lp-address':         { id: 'lp-address', html: true, map: true },
+    'lp-email':           { id: 'lp-email', email: true },
+    'lp-phone':           { id: 'lp-phone', phone: true },
+  };
+  (lpContent || []).forEach(({ key, value }) => {
+    if (!value) return;
+    if (imgKeys[key]) {
+      const el = document.getElementById(imgKeys[key]);
+      if (el) el.src = value;
+    } else if (textKeys[key]) {
+      const cfg = textKeys[key];
+      const el = document.getElementById(cfg.id);
+      if (!el) return;
+      if (cfg.html)   el.innerHTML = value;
+      else if (cfg.email) { el.textContent = value; el.href = `mailto:${value}`; }
+      else if (cfg.phone) { el.textContent = value; el.href = `tel:${value.replace(/\D/g,'')}`; }
+      else el.textContent = value;
+      // Update map iframe when address changes
+      if (cfg.map) {
+        const mapFrame = document.getElementById('landing-map-iframe');
+        if (mapFrame) mapFrame.src = `https://maps.google.com/maps?q=${encodeURIComponent(value)}&output=embed`;
+      }
+    }
   });
 })();
 </script>
@@ -529,10 +564,10 @@
     <!-- Text -->
     <div>
       <span class="overline" style="color:var(--sage-dark);">Our Story</span>
-      <h2 style="font-size:clamp(2rem,4vw,3.1rem);color:var(--earth-brown);margin-bottom:1.5rem;">
+      <h2 id="lp-welcome-heading" style="font-size:clamp(2rem,4vw,3.1rem);color:var(--earth-brown);margin-bottom:1.5rem;">
         Where the garden<br/><em>meets the oven.</em>
       </h2>
-      <p style="font-size:1.05rem;line-height:1.75;color:var(--earth-mid);max-width:480px;">
+      <p id="lp-welcome-body" style="font-size:1.05rem;line-height:1.75;color:var(--earth-mid);max-width:480px;">
         Bloomin' Acres started with a backyard sourdough starter and a garden bed that kept
         growing. Now every week we bring our long-fermented loaves, sun-kissed produce, and
         fresh-from-the-oven pastries right to you — made entirely by hand, with ingredients
@@ -551,7 +586,7 @@
     <!-- Image -->
     <div style="border-radius:4px;overflow:hidden;position:relative;box-shadow:var(--shadow-card);">
       <img src="https://placehold.co/640x480/7A9B8E/FAF0E6?text=At+the+Farmstand"
-           alt="The Bloomin' Acres farmstand" loading="lazy"
+           alt="The Bloomin' Acres farmstand" loading="lazy" id="landing-hero-img"
            style="width:100%;height:420px;object-fit:cover;" />
       <div style="position:absolute;inset:0;background:linear-gradient(to top,rgba(74,51,34,.55) 0%,transparent 50%);"></div>
       <div style="position:absolute;inset:0;background:rgba(122,155,142,.16);mix-blend-mode:multiply;"></div>
@@ -597,8 +632,8 @@
         <div style="position:absolute;inset:0;background:rgba(200,90,58,.1);mix-blend-mode:multiply;"></div>
       </div>
       <div style="padding:1.5rem 1.75rem 2rem;">
-        <h3 style="font-size:1.3rem;color:var(--earth-brown);margin-bottom:.5rem;letter-spacing:-.02em;">Sourdough Loaves</h3>
-        <p style="font-size:.9rem;color:var(--earth-mid);line-height:1.65;">
+        <h3 id="lp-card1-title" style="font-size:1.3rem;color:var(--earth-brown);margin-bottom:.5rem;letter-spacing:-.02em;">Sourdough Loaves</h3>
+        <p id="lp-card1-desc" style="font-size:.9rem;color:var(--earth-mid);line-height:1.65;">
           Long-fermented, hand-shaped, baked to a crackling crust. Classic, jalapeño cheddar, and seasonal varieties.
         </p>
       </div>
@@ -613,8 +648,8 @@
         <div style="position:absolute;inset:0;background:rgba(122,155,142,.18);mix-blend-mode:multiply;"></div>
       </div>
       <div style="padding:1.5rem 1.75rem 2rem;">
-        <h3 style="font-size:1.3rem;color:var(--earth-brown);margin-bottom:.5rem;letter-spacing:-.02em;">Fresh Produce</h3>
-        <p style="font-size:.9rem;color:var(--earth-mid);line-height:1.65;">
+        <h3 id="lp-card2-title" style="font-size:1.3rem;color:var(--earth-brown);margin-bottom:.5rem;letter-spacing:-.02em;">Fresh Produce</h3>
+        <p id="lp-card2-desc" style="font-size:.9rem;color:var(--earth-mid);line-height:1.65;">
           Seasonal vegetables and herbs harvested fresh from our garden beds — vibrant, clean, and grown with care.
         </p>
       </div>
@@ -629,8 +664,8 @@
         <div style="position:absolute;inset:0;background:rgba(139,58,58,.15);mix-blend-mode:multiply;"></div>
       </div>
       <div style="padding:1.5rem 1.75rem 2rem;">
-        <h3 style="font-size:1.3rem;color:var(--earth-brown);margin-bottom:.5rem;letter-spacing:-.02em;">Seasonal Pastries</h3>
-        <p style="font-size:.9rem;color:var(--earth-mid);line-height:1.65;">
+        <h3 id="lp-card3-title" style="font-size:1.3rem;color:var(--earth-brown);margin-bottom:.5rem;letter-spacing:-.02em;">Seasonal Pastries</h3>
+        <p id="lp-card3-desc" style="font-size:.9rem;color:var(--earth-mid);line-height:1.65;">
           Gourmet snickerdoodles, sourdough muffins, and pantry staples that rotate with the season and the harvest.
         </p>
       </div>
@@ -743,24 +778,24 @@
       <div class="hours-card" style="margin-bottom:1.75rem;">
         <p style="font-weight:600;letter-spacing:.12em;font-size:.72rem;text-transform:uppercase;color:var(--wheat-gold);margin-bottom:.875rem;">Hours</p>
         <div style="display:grid;grid-template-columns:auto 1fr;gap:.3rem 1.5rem;font-size:.93rem;line-height:1.6;">
-          <span style="opacity:.75;">Tues – Thurs</span><span>10a – 6p</span>
-          <span style="opacity:.75;">Friday</span><span>2p – 6p</span>
-          <span style="opacity:.75;">Saturday</span><span>4p – 6p <span style="opacity:.6;font-size:.82em;">(market season)</span></span>
+          <span style="opacity:.75;">Tues – Thurs</span><span id="lp-hours-tues">10a – 6p</span>
+          <span style="opacity:.75;">Friday</span><span id="lp-hours-fri">2p – 6p</span>
+          <span style="opacity:.75;">Saturday</span><span id="lp-hours-sat">4p – 6p <span style="opacity:.6;font-size:.82em;">(market season)</span></span>
           <span style="opacity:.75;">Sun &amp; Mon</span><span style="opacity:.6;">Closed</span>
         </div>
       </div>
 
       <div style="font-size:.93rem;line-height:1.85;opacity:.78;margin-bottom:2rem;">
-        <p>3650 N State Road 9<br/>Hope, IN &nbsp;47246</p>
+        <p id="lp-address">3650 N State Road 9<br/>Hope, IN &nbsp;47246</p>
         <p style="margin-top:.4rem;">
-          <a href="mailto:c.lefler@bloominacresgreens.net"
+          <a id="lp-email" href="mailto:c.lefler@bloominacresgreens.net"
              style="color:var(--wheat-gold);text-decoration:none;transition:opacity .25s ease;"
              onmouseover="this.style.opacity='.65'" onmouseout="this.style.opacity='1'">
             c.lefler@bloominacresgreens.net
           </a>
         </p>
         <p>
-          <a href="tel:8126032442"
+          <a id="lp-phone" href="tel:8126032442"
              style="color:var(--wheat-gold);text-decoration:none;transition:opacity .25s ease;"
              onmouseover="this.style.opacity='.65'" onmouseout="this.style.opacity='1'">
             (812) 603-2442
@@ -779,12 +814,13 @@
       </a>
     </div>
 
-    <!-- Map placeholder -->
+    <!-- Map -->
     <div style="border-radius:4px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,.28),0 16px 48px rgba(0,0,0,.22);position:relative;">
-      <img src="https://placehold.co/640x460/4E6E64/A8C4BB?text=Hope%2C+IN"
-           alt="Map showing Bloomin' Acres location in Hope, IN" loading="lazy"
-           style="width:100%;height:420px;object-fit:cover;" />
-      <div style="position:absolute;bottom:0;left:0;right:0;height:70px;background:linear-gradient(to top,rgba(78,110,100,.5),transparent);"></div>
+      <iframe id="landing-map-iframe"
+        src="https://maps.google.com/maps?q=3650+N+State+Road+9+Hope+IN+47246&output=embed"
+        style="width:100%;height:420px;border:0;display:block;" allowfullscreen
+        title="Bloomin' Acres location map"></iframe>
+      <div style="position:absolute;bottom:0;left:0;right:0;height:70px;background:linear-gradient(to top,rgba(78,110,100,.5),transparent);pointer-events:none;"></div>
     </div>
   </div>
 </section>
