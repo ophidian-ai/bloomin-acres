@@ -6,7 +6,7 @@
   <title>Menu — Bloomin' Acres Farmstand & Bakery</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400;1,600&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,500;1,400&family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400;1,600&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet" />
   <script src="https://cdn.tailwindcss.com"></script>
   <script>
     tailwind.config = {
@@ -159,9 +159,14 @@
       gap: .5rem;
     }
     .item-name {
-      font-family: 'Playfair Display', serif;
+      font-family: 'Lora', Georgia, serif;
       font-size: .88rem;
       color: var(--earth-brown);
+    }
+    .section-orn {
+      width: 10px; height: 14px;
+      fill: rgba(78,110,100,.55);
+      flex-shrink: 0;
     }
     .item-dots {
       flex: 1;
@@ -451,7 +456,8 @@
 
         const labelEl = document.createElement('div');
         labelEl.className = 'section-divider';
-        labelEl.innerHTML = `<span class="section-title">${escHtml(section.title)}</span>`;
+        const orn = (flip) => `<svg class="section-orn" viewBox="0 0 10 14" xmlns="http://www.w3.org/2000/svg"${flip ? ' style="transform:scaleX(-1)"' : ''}><ellipse cx="5" cy="3.5" rx="2" ry="3"/><line x1="5" y1="6.5" x2="5" y2="13" stroke="rgba(78,110,100,.55)" stroke-width="1" fill="none"/><ellipse cx="2.8" cy="9.5" rx="1.5" ry="2.2" transform="rotate(-22 2.8 9.5)"/><ellipse cx="7.2" cy="9.5" rx="1.5" ry="2.2" transform="rotate(22 7.2 9.5)"/></svg>`;
+        labelEl.innerHTML = `${orn(false)}<span class="section-title">${escHtml(section.title)}</span>${orn(true)}`;
         content.appendChild(labelEl);
 
         items.forEach(item => {
