@@ -161,7 +161,7 @@ body::after {
   display: flex; align-items: center; gap: .875rem; margin-top: 2rem;
 }
 .welcome-quote-sprout {
-  width: 48px; height: 48px; object-fit: contain; flex-shrink: 0;
+  width: 68px; height: 68px; object-fit: contain; flex-shrink: 0;
 }
 .welcome-quote-text {
   font-family: var(--font-display); font-style: italic;
