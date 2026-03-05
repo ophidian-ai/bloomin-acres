@@ -237,6 +237,44 @@
       background: rgba(78,110,100,.08);
     }
 
+    /* Variations button + dropdown */
+    .btn-options {
+      background: none; border: 1px solid rgba(74,51,34,.18);
+      border-radius: 5px; cursor: pointer;
+      padding: .18rem .55rem;
+      font-family: 'DM Sans', sans-serif;
+      font-size: .7rem; font-weight: 600;
+      letter-spacing: .06em; text-transform: uppercase;
+      color: var(--earth-mid);
+      transition: color .2s, border-color .2s, background .2s;
+    }
+    .btn-options:hover {
+      color: var(--earth-brown);
+      border-color: rgba(74,51,34,.4);
+      background: rgba(74,51,34,.06);
+    }
+    .btn-options.open { border-color: rgba(74,51,34,.4); color: var(--earth-brown); }
+    .variation-dropdown {
+      display: none;
+      margin: .4rem .25rem 0;
+      background: rgba(74,51,34,.05);
+      border: 1px solid rgba(74,51,34,.12);
+      border-radius: 5px;
+      overflow: hidden;
+    }
+    .variation-dropdown.open { display: block; }
+    .variation-dropdown-row {
+      display: flex; justify-content: space-between; align-items: center;
+      padding: .3rem .75rem;
+      font-family: 'DM Sans', sans-serif;
+      font-size: .75rem;
+      color: var(--earth-brown);
+      border-bottom: 1px solid rgba(74,51,34,.07);
+    }
+    .variation-dropdown-row:last-child { border-bottom: none; }
+    .variation-dropdown-name { font-weight: 500; }
+    .variation-dropdown-price { color: var(--earth-mid); }
+
     /* Account link in nav */
     .nav-account {
       font-family: 'DM Sans', sans-serif;
@@ -445,9 +483,11 @@
 
       // 3. Fetch Stripe products + schedule in parallel
       let productMap = {};
-      const [stripeRes, scheduleRes] = await Promise.all([
+      let detailsMap = {};
+      const [stripeRes, scheduleRes, detailsRes] = await Promise.all([
         fetch('/api/stripe/products').catch(() => null),
         sb.from('menu_schedule').select('start_date,end_date').eq('id', 1).maybeSingle(),
+        sb.from('product_details').select('stripe_product_id, variations'),
       ]);
       if (stripeRes && stripeRes.ok) {
         try {
@@ -455,6 +495,7 @@
           if (Array.isArray(products)) products.forEach(p => { productMap[p.id] = p; });
         } catch { /* non-fatal */ }
       }
+      (detailsRes.data || []).forEach(d => { detailsMap[d.stripe_product_id] = d; });
       // Show schedule banner if dates are set
       const sched = scheduleRes.data;
       if (sched && (sched.start_date || sched.end_date)) {
@@ -510,6 +551,22 @@
           const pid = item.stripe_product_id;
           const isFav = userFavIds.has(pid);
 
+          const variations = detailsMap[pid]?.variations || [];
+          const baseAmount = product?.unit_amount ?? null;
+          const currency = product?.currency || 'usd';
+          const fmtPrice = cents => new Intl.NumberFormat('en-US', { style: 'currency', currency }).format(cents / 100);
+
+          const variationDropdownHtml = variations.length > 0 ? `
+            <div class="variation-dropdown" id="var-dd-${escHtml(pid)}">
+              ${variations.map(v => {
+                const total = (baseAmount || 0) + (v.price_delta || 0);
+                return `<div class="variation-dropdown-row">
+                  <span class="variation-dropdown-name">${escHtml(v.name)}</span>
+                  <span class="variation-dropdown-price">${fmtPrice(total)}</span>
+                </div>`;
+              }).join('')}
+            </div>` : '';
+
           const row = document.createElement('div');
           row.className = 'menu-item';
           row.innerHTML = `
@@ -520,13 +577,28 @@
             </div>
             <div class="menu-item-actions">
               <a class="btn-view" href="product.html?id=${encodeURIComponent(pid)}">View</a>
+              ${variations.length > 0
+                ? `<button class="btn-options" data-pid="${escHtml(pid)}">Options &#9662;</button>`
+                : ''}
               <button class="btn-fav${isFav ? ' active' : ''}" data-pid="${escHtml(pid)}" aria-label="Save to favorites">
                 <svg width="11" height="11" viewBox="0 0 24 24" fill="${isFav ? 'currentColor' : 'none'}" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
                 ${isFav ? 'Saved' : 'Save'}
               </button>
               <button class="btn-add-cart" data-pid="${escHtml(pid)}">+ Cart</button>
             </div>
+            ${variationDropdownHtml}
           `;
+
+          // Options toggle
+          const optBtn = row.querySelector('.btn-options');
+          if (optBtn) {
+            optBtn.addEventListener('click', () => {
+              const dd = row.querySelector('.variation-dropdown');
+              const open = dd.classList.toggle('open');
+              optBtn.classList.toggle('open', open);
+              optBtn.innerHTML = `Options ${open ? '&#9652;' : '&#9662;'}`;
+            });
+          }
 
           // Favorite button
           row.querySelector('.btn-fav').addEventListener('click', async (e) => {
