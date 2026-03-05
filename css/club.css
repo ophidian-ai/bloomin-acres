@@ -6,7 +6,12 @@
 /* ── Body / Page Base ───────────────────────────────────── */
 body {
   font-family: var(--font-body);
-  background: var(--farm-cream);
+  background-color: var(--earth-brown);
+  background-image: url('../brand-assets/farm-background.png');
+  background-size: cover;
+  background-position: center center;
+  background-attachment: fixed;
+  background-repeat: no-repeat;
   color: var(--earth-brown);
   line-height: 1.7;
   min-height: 100vh;
