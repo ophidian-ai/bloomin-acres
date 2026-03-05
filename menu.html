@@ -345,6 +345,13 @@
   </nav>
   <div id="menu-toast"></div>
 
+  <!-- Schedule banner (shown when admin has set a date range) -->
+  <div id="schedule-banner" style="display:none;text-align:center;padding:.55rem 1.5rem;background:rgba(237,163,57,.07);border-bottom:1px solid rgba(237,163,57,.1);">
+    <span style="font-family:'DM Sans',sans-serif;font-size:.75rem;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--cream-warm);opacity:.8;">
+      Available <span id="schedule-range-text"></span>
+    </span>
+  </div>
+
   <!-- Menu card -->
   <main class="page-wrap">
     <div class="menu-card">
@@ -431,13 +438,33 @@
         (cartRes.data || []).forEach(r => userCartIds.add(r.stripe_product_id));
       }
 
-      // 3. Fetch Stripe products
+      // 3. Fetch Stripe products + schedule in parallel
       let productMap = {};
-      try {
-        const r = await fetch('/api/stripe/products');
-        const products = await r.json();
-        if (Array.isArray(products)) products.forEach(p => { productMap[p.id] = p; });
-      } catch { /* non-fatal */ }
+      const [stripeRes, scheduleRes] = await Promise.all([
+        fetch('/api/stripe/products').catch(() => null),
+        sb.from('menu_schedule').select('start_date,end_date').eq('id', 1).maybeSingle(),
+      ]);
+      if (stripeRes && stripeRes.ok) {
+        try {
+          const products = await stripeRes.json();
+          if (Array.isArray(products)) products.forEach(p => { productMap[p.id] = p; });
+        } catch { /* non-fatal */ }
+      }
+      // Show schedule banner if dates are set
+      const sched = scheduleRes.data;
+      if (sched && (sched.start_date || sched.end_date)) {
+        const fmtDate = d => {
+          const [y, m, day] = d.split('-');
+          return new Date(y, parseInt(m) - 1, parseInt(day))
+            .toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+        };
+        let rangeText = '';
+        if (sched.start_date && sched.end_date) rangeText = `${fmtDate(sched.start_date)} – ${fmtDate(sched.end_date)}`;
+        else if (sched.start_date) rangeText = `starting ${fmtDate(sched.start_date)}`;
+        else rangeText = `through ${fmtDate(sched.end_date)}`;
+        document.getElementById('schedule-range-text').textContent = rangeText;
+        document.getElementById('schedule-banner').style.display = 'block';
+      }
 
       // 4. Fetch menu from Supabase
       const { data: sections, error: secErr } = await sb

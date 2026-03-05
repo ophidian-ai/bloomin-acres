@@ -72,6 +72,26 @@ create table if not exists order_items (
   unit_amount integer
 );
 
+-- ─── Menu Schedule ───────────────────────────────────────────────────────────
+-- Singleton row (id=1) storing the active date range shown on the menu page.
+
+create table if not exists menu_schedule (
+  id integer primary key default 1,
+  start_date date,
+  end_date date,
+  updated_at timestamptz default now()
+);
+
+-- ─── Saved Menus ─────────────────────────────────────────────────────────────
+-- Named snapshots of menu_sections + menu_items the admin can reload later.
+
+create table if not exists saved_menus (
+  id uuid primary key default gen_random_uuid(),
+  title text not null,
+  sections jsonb not null,
+  created_at timestamptz default now()
+);
+
 -- ─── Product Details ─────────────────────────────────────────────────────────
 -- Stores admin-managed descriptions and images for each Stripe product.
 -- Requires a public Supabase Storage bucket named "product-images".
@@ -95,6 +115,8 @@ alter table user_cart enable row level security;
 alter table orders enable row level security;
 alter table order_items enable row level security;
 alter table product_details enable row level security;
+alter table menu_schedule enable row level security;
+alter table saved_menus enable row level security;
 
 -- Public: anyone can read the menu
 create policy "Public read sections"
@@ -142,6 +164,19 @@ create policy "Public read product_details"
 
 create policy "Admin write product_details"
   on product_details for all
+  using (exists (select 1 from admins where user_id = auth.uid()));
+
+-- Menu schedule: public read, admin write
+create policy "Public read menu_schedule"
+  on menu_schedule for select using (true);
+
+create policy "Admin write menu_schedule"
+  on menu_schedule for all
+  using (exists (select 1 from admins where user_id = auth.uid()));
+
+-- Saved menus: admin only
+create policy "Admin manage saved_menus"
+  on saved_menus for all
   using (exists (select 1 from admins where user_id = auth.uid()));
 
 -- Service role (webhook) can insert orders

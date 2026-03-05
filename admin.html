@@ -334,6 +334,97 @@
     .btn-publish:focus-visible { outline: 2px solid var(--wheat-gold); outline-offset: 3px; }
     .btn-publish:disabled { opacity: .6; cursor: not-allowed; transform: none; }
 
+    /* ===== SCHEDULE PANEL ===== */
+    .schedule-panel {
+      background: rgba(74,51,34,.25);
+      border: 1px solid rgba(237,163,57,.12);
+      border-radius: 6px;
+      padding: 1rem 1.25rem;
+      margin-bottom: 1.5rem;
+    }
+    .sub-heading {
+      font-size: .68rem; font-weight: 700; letter-spacing: .15em;
+      text-transform: uppercase; color: rgba(250,240,230,.4);
+      margin-bottom: .8rem;
+    }
+    .schedule-row { display: flex; align-items: flex-end; gap: .75rem; flex-wrap: wrap; }
+    .schedule-field { display: flex; flex-direction: column; gap: .3rem; }
+    .field-label {
+      font-size: .64rem; font-weight: 600; letter-spacing: .12em;
+      text-transform: uppercase; color: rgba(250,240,230,.35);
+    }
+    .date-input {
+      background: rgba(0,0,0,.25); border: 1px solid rgba(237,163,57,.2);
+      border-radius: 4px; color: var(--farm-cream);
+      font-family: 'DM Sans', sans-serif; font-size: .85rem;
+      padding: .4rem .65rem; transition: border-color .2s; color-scheme: dark;
+    }
+    .date-input:focus { outline: none; border-color: var(--wheat-gold); }
+    .schedule-dash { color: rgba(250,240,230,.25); font-size: .9rem; padding-bottom: .5rem; }
+    .btn-secondary {
+      font-family: 'DM Sans', sans-serif; font-size: .74rem; font-weight: 600;
+      letter-spacing: .08em; text-transform: uppercase;
+      background: rgba(122,155,142,.2); color: var(--sage-light);
+      border: 1px solid rgba(122,155,142,.3); border-radius: 4px;
+      padding: .45rem 1rem; cursor: pointer;
+      transition: background .2s, border-color .2s;
+      display: inline-flex; align-items: center; gap: .4rem; white-space: nowrap;
+    }
+    .btn-secondary:hover { background: rgba(122,155,142,.38); border-color: var(--sage-light); }
+    .btn-secondary:disabled { opacity: .5; cursor: default; }
+    .btn-secondary:focus-visible { outline: 2px solid var(--wheat-gold); outline-offset: 3px; }
+
+    /* ===== SAVE SNAPSHOT ROW ===== */
+    .save-menu-row {
+      display: flex; gap: .75rem; align-items: center;
+      padding: 1.25rem 0 0; flex-wrap: wrap;
+      border-top: 1px solid rgba(237,163,57,.1); margin-top: .25rem;
+    }
+    .save-menu-input {
+      flex: 1; min-width: 180px;
+      background: rgba(0,0,0,.2); border: 1px solid rgba(237,163,57,.15);
+      border-radius: 4px; color: var(--farm-cream);
+      font-family: 'DM Sans', sans-serif; font-size: .85rem;
+      padding: .45rem .75rem; transition: border-color .2s;
+    }
+    .save-menu-input:focus { outline: none; border-color: var(--wheat-gold); }
+    .save-menu-input::placeholder { color: rgba(250,240,230,.2); }
+
+    /* ===== SAVED MENUS TAB ===== */
+    .saved-menus-list { display: flex; flex-direction: column; gap: .65rem; margin-top: 1.25rem; }
+    .saved-menu-card {
+      background: rgba(74,51,34,.4); border: 1px solid rgba(237,163,57,.12);
+      border-radius: 6px; padding: .9rem 1.1rem;
+      display: flex; align-items: center; gap: .85rem; flex-wrap: wrap;
+    }
+    .saved-menu-title {
+      font-family: 'Playfair Display', serif; font-size: 1rem;
+      font-weight: 600; color: var(--farm-cream); flex: 1;
+    }
+    .saved-menu-meta { font-size: .72rem; color: rgba(250,240,230,.35); margin-top: .15rem; }
+    .btn-load {
+      font-family: 'DM Sans', sans-serif; font-size: .72rem; font-weight: 600;
+      letter-spacing: .07em; text-transform: uppercase;
+      background: rgba(78,110,100,.3); color: var(--sage-light);
+      border: 1px solid rgba(122,155,142,.3); border-radius: 4px;
+      padding: .38rem .85rem; cursor: pointer; white-space: nowrap;
+      transition: background .2s, border-color .2s;
+    }
+    .btn-load:hover { background: rgba(78,110,100,.55); border-color: var(--sage-dark); }
+    .btn-del-saved {
+      background: transparent; border: 1px solid rgba(200,90,58,.2);
+      color: rgba(200,90,58,.45); border-radius: 4px;
+      padding: .38rem .7rem; cursor: pointer; font-size: .72rem;
+      font-family: 'DM Sans', sans-serif; font-weight: 600;
+      letter-spacing: .07em; text-transform: uppercase; white-space: nowrap;
+      transition: background .2s, border-color .2s, color .2s;
+    }
+    .btn-del-saved:hover { background: rgba(200,90,58,.1); border-color: rgba(200,90,58,.5); color: #C85A3A; }
+    .empty-state {
+      text-align: center; padding: 3rem 1rem;
+      color: rgba(250,240,230,.25); font-size: .88rem; font-style: italic;
+    }
+
     /* Toast */
     #toast {
       position: fixed; bottom: 2rem; right: 2rem; z-index: 500;
@@ -397,6 +488,15 @@
         </svg>
         Menu Editor
       </button>
+      <button class="tab-btn" role="tab" aria-selected="false" data-tab="saved">
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
+          <rect x="2" y="1" width="10" height="12" rx="1.5" stroke="currentColor" stroke-width="1.4"/>
+          <line x1="4.5" y1="5" x2="9.5" y2="5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/>
+          <line x1="4.5" y1="7.5" x2="9.5" y2="7.5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/>
+          <line x1="4.5" y1="10" x2="7.5" y2="10" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/>
+        </svg>
+        Saved Menus
+      </button>
     </nav>
 
     <!-- Tab: Stripe Catalogue -->
@@ -426,6 +526,26 @@
           </a>
         </div>
 
+        <!-- Schedule -->
+        <div class="schedule-panel">
+          <div class="sub-heading">Menu Availability (shown on public menu page)</div>
+          <div class="schedule-row">
+            <div class="schedule-field">
+              <label class="field-label" for="schedule-start">Start Date</label>
+              <input type="date" id="schedule-start" class="date-input" />
+            </div>
+            <span class="schedule-dash">–</span>
+            <div class="schedule-field">
+              <label class="field-label" for="schedule-end">End Date</label>
+              <input type="date" id="schedule-end" class="date-input" />
+            </div>
+            <button id="btn-save-schedule" class="btn-secondary" type="button">
+              <svg width="11" height="11" viewBox="0 0 14 14" fill="none" aria-hidden="true"><path d="M2 7l3.5 3.5L12 3" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              Save Schedule
+            </button>
+          </div>
+        </div>
+
         <div class="menu-card-editor">
           <div class="menu-card-header-wrap">
             <img src="brand-assets/blank-menu-template.png" alt="" aria-hidden="true" class="menu-card-header-img" />
@@ -451,6 +571,26 @@
             Publish Menu
           </button>
         </div>
+
+        <div class="save-menu-row">
+          <input type="text" id="save-menu-title" class="save-menu-input"
+                 placeholder="Snapshot title, e.g. Spring Week 12" />
+          <button id="btn-save-menu" class="btn-secondary" type="button">
+            <svg width="11" height="11" viewBox="0 0 14 14" fill="none" aria-hidden="true"><path d="M11 1H3a1 1 0 0 0-1 1v10a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1V2a1 1 0 0 0-1-1zM9 1v5H5V1" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            Save Snapshot
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tab: Saved Menus -->
+    <div id="tab-saved" class="tab-panel">
+      <h2 class="section-heading">Saved Menus</h2>
+      <p style="font-size:.85rem;color:rgba(250,240,230,.4);margin-top:.35rem;">
+        Load a saved snapshot into the Menu Editor to restore and re-publish it.
+      </p>
+      <div class="saved-menus-list" id="saved-menus-list">
+        <div class="empty-state">Loading…</div>
       </div>
     </div>
 
@@ -467,6 +607,7 @@
     let sb = null;
     let allProducts = [];   // Stripe products
     let sections = [];      // { id?, title, items: [{ id?, stripe_product_id }] }
+    let savedMenus = [];    // { id, title, sections, created_at }
 
     // ── Helpers ──────────────────────────────────────────────────────────────
     function escHtml(s) {
@@ -532,7 +673,7 @@
       document.getElementById('account-avatar').textContent = (user.email || 'A')[0].toUpperCase();
 
       // Load data in parallel
-      await Promise.all([loadProducts(), loadMenuFromSupabase()]);
+      await Promise.all([loadProducts(), loadMenuFromSupabase(), loadMenuSchedule(), loadSavedMenus()]);
     }
 
     // ── Logout ────────────────────────────────────────────────────────────────
@@ -803,6 +944,110 @@
         btn.disabled = false;
         btn.innerHTML = `<svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true"><path d="M2 10l4-7 4 7" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/><line x1="4.5" y1="7.5" x2="9.5" y2="7.5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg> Publish Menu`;
       }
+    });
+
+    // ── Menu Schedule ─────────────────────────────────────────────────────────
+    async function loadMenuSchedule() {
+      const { data } = await sb.from('menu_schedule').select('*').eq('id', 1).maybeSingle();
+      if (data) {
+        document.getElementById('schedule-start').value = data.start_date || '';
+        document.getElementById('schedule-end').value = data.end_date || '';
+      }
+    }
+
+    document.getElementById('btn-save-schedule').addEventListener('click', async () => {
+      const btn = document.getElementById('btn-save-schedule');
+      btn.disabled = true;
+      const start = document.getElementById('schedule-start').value || null;
+      const end   = document.getElementById('schedule-end').value || null;
+      const { error } = await sb.from('menu_schedule').upsert(
+        { id: 1, start_date: start, end_date: end, updated_at: new Date().toISOString() },
+        { onConflict: 'id' }
+      );
+      if (error) showToast('Failed: ' + error.message, true);
+      else showToast('Schedule saved');
+      btn.disabled = false;
+    });
+
+    // ── Saved Menus ───────────────────────────────────────────────────────────
+    async function loadSavedMenus() {
+      const { data } = await sb.from('saved_menus').select('*').order('created_at', { ascending: false });
+      savedMenus = data || [];
+      renderSavedMenusTab();
+    }
+
+    function renderSavedMenusTab() {
+      const list = document.getElementById('saved-menus-list');
+      if (!list) return;
+      if (!savedMenus.length) {
+        list.innerHTML = '<div class="empty-state">No saved menus yet.<br>Build a menu and click "Save Snapshot" to store it here.</div>';
+        return;
+      }
+      list.innerHTML = savedMenus.map(m => {
+        const date = new Date(m.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+        const sectionCount = (m.sections || []).length;
+        return `
+        <div class="saved-menu-card">
+          <div style="flex:1;min-width:0;">
+            <div class="saved-menu-title">${escHtml(m.title)}</div>
+            <div class="saved-menu-meta">Saved ${escHtml(date)} &middot; ${sectionCount} section${sectionCount !== 1 ? 's' : ''}</div>
+          </div>
+          <button class="btn-load" data-id="${escHtml(m.id)}" type="button">Load into Editor</button>
+          <button class="btn-del-saved" data-id="${escHtml(m.id)}" type="button">Delete</button>
+        </div>`;
+      }).join('');
+
+      list.querySelectorAll('.btn-load').forEach(btn =>
+        btn.addEventListener('click', () => loadSavedMenu(btn.dataset.id))
+      );
+      list.querySelectorAll('.btn-del-saved').forEach(btn =>
+        btn.addEventListener('click', () => deleteSavedMenu(btn.dataset.id))
+      );
+    }
+
+    function loadSavedMenu(id) {
+      const menu = savedMenus.find(m => m.id === id);
+      if (!menu) return;
+      if (!confirm(`Load "${menu.title}" into the editor?\nThis replaces your current unsaved changes.`)) return;
+      sections = (menu.sections || []).map(sec => ({
+        title: sec.title,
+        items: (sec.items || []).map(i => ({ stripe_product_id: i.stripe_product_id }))
+      }));
+      renderMenuEditor();
+      // Switch to Menu Editor tab
+      document.querySelectorAll('.tab-btn').forEach(b => { b.classList.remove('active'); b.setAttribute('aria-selected','false'); });
+      document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+      const menuBtn = document.querySelector('[data-tab="menu"]');
+      menuBtn.classList.add('active'); menuBtn.setAttribute('aria-selected','true');
+      document.getElementById('tab-menu').classList.add('active');
+      showToast(`"${menu.title}" loaded — publish when ready`);
+    }
+
+    async function deleteSavedMenu(id) {
+      const menu = savedMenus.find(m => m.id === id);
+      if (!menu || !confirm(`Delete "${menu.title}"?`)) return;
+      const { error } = await sb.from('saved_menus').delete().eq('id', id);
+      if (error) showToast('Delete failed', true);
+      else { showToast('Deleted'); await loadSavedMenus(); }
+    }
+
+    document.getElementById('btn-save-menu').addEventListener('click', async () => {
+      const btn = document.getElementById('btn-save-menu');
+      const title = document.getElementById('save-menu-title').value.trim();
+      if (!title) { showToast('Enter a snapshot title first', true); return; }
+      btn.disabled = true;
+      const snapshot = sections.map(sec => ({
+        title: sec.title,
+        items: sec.items.map(i => ({ stripe_product_id: i.stripe_product_id }))
+      }));
+      const { error } = await sb.from('saved_menus').insert({ title, sections: snapshot });
+      if (error) showToast('Save failed: ' + error.message, true);
+      else {
+        showToast(`"${title}" saved`);
+        document.getElementById('save-menu-title').value = '';
+        await loadSavedMenus();
+      }
+      btn.disabled = false;
     });
 
     // ── Boot ──────────────────────────────────────────────────────────────────
