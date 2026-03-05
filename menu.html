@@ -200,6 +200,22 @@
       background: rgba(139,58,58,.06);
     }
     .btn-fav.active svg { fill: var(--berry-red); }
+    .btn-view {
+      background: none; border: 1px solid rgba(74,51,34,.18);
+      border-radius: 5px;
+      padding: .18rem .55rem;
+      font-family: 'DM Sans', sans-serif;
+      font-size: .7rem; font-weight: 600;
+      letter-spacing: .06em; text-transform: uppercase;
+      color: var(--earth-mid);
+      text-decoration: none;
+      transition: color .2s, border-color .2s, background .2s;
+    }
+    .btn-view:hover {
+      color: var(--earth-brown);
+      border-color: rgba(74,51,34,.4);
+      background: rgba(74,51,34,.06);
+    }
     .btn-add-cart {
       background: none; border: 1px solid rgba(74,51,34,.18);
       border-radius: 5px; cursor: pointer;
@@ -471,6 +487,7 @@
               <span class="item-price">${escHtml(price)}</span>
             </div>
             <div class="menu-item-actions">
+              <a class="btn-view" href="product.html?id=${encodeURIComponent(pid)}">View</a>
               <button class="btn-fav${isFav ? ' active' : ''}" data-pid="${escHtml(pid)}" aria-label="Save to favorites">
                 <svg width="11" height="11" viewBox="0 0 24 24" fill="${isFav ? 'currentColor' : 'none'}" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
                 ${isFav ? 'Saved' : 'Save'}
