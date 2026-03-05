@@ -84,7 +84,7 @@ body::after {
   margin-bottom: 1.25rem;
 }
 .club-plaque-img {
-  width: min(960px, 82vw);
+  width: min(1920px, 90vw);
   object-fit: contain;
   margin: 0 auto 2rem;
   filter: drop-shadow(0 8px 24px rgba(0,0,0,.5));
