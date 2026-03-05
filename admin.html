@@ -25,505 +25,8 @@
       }
     };
   </script>
-  <style>
-    :root {
-      --wheat-gold: #EDA339; --sage-green: #7A9B8E; --sage-dark: #4E6E64;
-      --burnt-orange: #C85A3A; --earth-brown: #4A3322; --earth-mid: #6B4C35;
-      --farm-cream: #FAF0E6; --cream-dark: #F0E4D0; --cream-warm: #EDD9B8;
-      --sidebar-w: 240px;
-    }
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-    body {
-      font-family: 'DM Sans', sans-serif;
-      background-color: var(--earth-brown);
-      background-image: url('brand-assets/farm-background.png');
-      background-size: cover;
-      background-position: center center;
-      background-attachment: fixed;
-      background-repeat: no-repeat;
-      color: var(--farm-cream);
-      min-height: 100vh;
-    }
-    body::after {
-      content: '';
-      position: fixed; inset: 0; z-index: 9999; pointer-events: none; opacity: .035;
-      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23n)'/%3E%3C/svg%3E");
-    }
-
-    /* Login is handled by account.html */
-
-    /* ===== DASHBOARD LAYOUT ===== */
-    #dashboard { display: none; min-height: 100vh; }
-    #dashboard.visible { display: flex; flex-direction: column; }
-
-    /* Top bar */
-    .topbar {
-      background-color: var(--earth-brown);
-      border-bottom: 1px solid rgba(237,163,57,.12);
-      padding: .75rem 1.5rem;
-      display: flex; align-items: center; justify-content: space-between;
-      gap: 1rem;
-      position: sticky; top: 0; z-index: 100;
-    }
-    .topbar-left { display: flex; align-items: center; gap: 1rem; }
-    .topbar-logo { height: 40px; object-fit: contain; }
-    .topbar-badge {
-      font-size: .65rem; font-weight: 600; letter-spacing: .12em;
-      text-transform: uppercase; color: rgba(237,163,57,.6);
-      background: rgba(237,163,57,.08); border: 1px solid rgba(237,163,57,.2);
-      padding: .2rem .55rem; border-radius: 3px;
-    }
-    .topbar-right { display: flex; align-items: center; gap: .75rem; }
-    .topbar-user {
-      font-size: .8rem; color: rgba(250,240,230,.5);
-      white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 200px;
-    }
-    .btn-ghost {
-      font-family: 'DM Sans', sans-serif;
-      font-size: .78rem; font-weight: 500; letter-spacing: .07em;
-      text-transform: uppercase; text-decoration: none;
-      color: rgba(250,240,230,.55);
-      padding: .35rem .7rem; border-radius: 4px;
-      border: 1px solid transparent;
-      cursor: pointer; background: transparent;
-      transition: color .2s, border-color .2s, background .2s;
-    }
-    .btn-ghost:hover { color: var(--wheat-gold); border-color: rgba(237,163,57,.3); background: rgba(237,163,57,.06); }
-    .btn-ghost:focus-visible { outline: 2px solid var(--wheat-gold); outline-offset: 3px; }
-
-    /* Account info banner */
-    .account-banner {
-      background: linear-gradient(135deg, rgba(74,51,34,.8) 0%, rgba(42,30,20,.8) 100%);
-      border-bottom: 1px solid rgba(237,163,57,.1);
-      padding: 1.5rem 2rem;
-      display: flex; align-items: center; gap: 1rem;
-    }
-    .account-avatar {
-      width: 48px; height: 48px; border-radius: 50%;
-      background: var(--burnt-orange);
-      display: flex; align-items: center; justify-content: center;
-      font-family: 'Playfair Display', serif;
-      font-size: 1.3rem; font-weight: 700; color: var(--farm-cream);
-      flex-shrink: 0;
-    }
-    .account-name { font-family: 'Playfair Display', serif; font-size: 1rem; font-weight: 600; }
-    .account-email { font-size: .78rem; color: rgba(250,240,230,.45); margin-top: .1rem; }
-
-    /* Tab bar */
-    .tab-bar {
-      background-color: var(--earth-brown);
-      border-bottom: 2px solid rgba(237,163,57,.15);
-      padding: 0 2rem;
-      display: flex; gap: 0;
-    }
-    .tab-btn {
-      font-family: 'DM Sans', sans-serif;
-      font-size: .8rem; font-weight: 600; letter-spacing: .1em;
-      text-transform: uppercase;
-      padding: .9rem 1.25rem;
-      border: none; background: transparent;
-      color: rgba(250,240,230,.45);
-      cursor: pointer; border-bottom: 2px solid transparent;
-      margin-bottom: -2px;
-      transition: color .2s, border-color .2s;
-      display: flex; align-items: center; gap: .5rem;
-    }
-    .tab-btn:hover { color: var(--farm-cream); }
-    .tab-btn.active { color: var(--wheat-gold); border-bottom-color: var(--wheat-gold); }
-    .tab-btn:focus-visible { outline: 2px solid var(--wheat-gold); outline-offset: -2px; }
-
-    /* Tab content panels */
-    .tab-panel { display: none; padding: 2rem; flex: 1; }
-    .tab-panel.active { display: block; }
-
-    /* ===== STRIPE CATALOGUE TAB ===== */
-    .catalogue-header {
-      display: flex; align-items: center; justify-content: space-between;
-      gap: 1rem; margin-bottom: 1.5rem; flex-wrap: wrap;
-    }
-    .section-heading {
-      font-family: 'Playfair Display', serif;
-      font-size: 1.6rem; font-weight: 600; color: var(--wheat-gold);
-      text-shadow: 0 0 6px #000, 1px 1px 0 #000, -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 2px 2px 0 #000, -2px -2px 0 #000;
-      letter-spacing: -.02em;
-      background: rgba(26,10,2,.5);
-      display: inline-block; padding: .2rem .6rem; border-radius: 4px;
-    }
-    .search-input {
-      padding: .55rem .9rem;
-      background: rgba(0,0,0,.25);
-      border: 1px solid rgba(237,163,57,.2);
-      border-radius: 5px; color: var(--farm-cream);
-      font-family: 'DM Sans', sans-serif; font-size: .88rem;
-      width: 240px; transition: border-color .2s;
-    }
-    .search-input:focus { outline: none; border-color: var(--wheat-gold); }
-    .search-input::placeholder { color: rgba(250,240,230,.25); }
-    .product-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-      gap: 1rem;
-    }
-    .product-card {
-      background: #3D2A1A;
-      border: 1px solid rgba(237,163,57,.2);
-      border-radius: 7px;
-      padding: 1.1rem 1.25rem;
-      transition: border-color .2s, background .2s, transform .15s;
-      cursor: pointer;
-      text-decoration: none;
-      display: block;
-      color: inherit;
-    }
-    .product-card:hover { background: #4A3322; border-color: rgba(237,163,57,.45); transform: translateY(-1px); }
-    .product-name {
-      font-family: 'Playfair Display', serif;
-      font-size: 1rem; font-weight: 600; color: var(--farm-cream);
-      margin-bottom: .25rem;
-    }
-    .product-desc {
-      font-size: .78rem; color: rgba(250,240,230,.45);
-      line-height: 1.5; margin-bottom: .75rem;
-    }
-    .product-footer { display: flex; align-items: center; justify-content: space-between; }
-    .product-price {
-      font-size: .95rem; font-weight: 600; color: var(--wheat-gold);
-    }
-    .product-id {
-      font-size: .6rem; font-family: monospace;
-      color: rgba(250,240,230,.25);
-      background: rgba(0,0,0,.2); padding: .15rem .4rem; border-radius: 3px;
-      white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 90px;
-    }
-    .skeleton-card {
-      background: rgba(74,51,34,.4);
-      border: 1px solid rgba(237,163,57,.08);
-      border-radius: 7px; padding: 1.1rem 1.25rem; height: 110px;
-      animation: pulse 1.5s ease-in-out infinite;
-    }
-    @keyframes pulse { 0%,100% { opacity:.5 } 50% { opacity:1 } }
-
-    /* ===== MENU EDITOR TAB ===== */
-    .menu-editor-wrap {
-      max-width: 720px; margin: 0 auto;
-    }
-    .editor-header {
-      display: flex; align-items: center; justify-content: space-between;
-      margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;
-    }
-    /* Menu card wrapper */
-    .menu-card-editor {
-      border-radius: 6px; overflow: hidden;
-      box-shadow: 0 4px 16px rgba(0,0,0,.4), 0 16px 48px rgba(0,0,0,.3);
-    }
-    .menu-card-header-wrap {
-      overflow: hidden;
-      position: relative;
-      padding-top: 39%;
-      height: 0;
-      background-color: var(--farm-cream);
-    }
-    .menu-card-header-img {
-      position: absolute;
-      top: 0; left: 0;
-      width: 100%; height: auto;
-      display: block;
-    }
-    .menu-card-body {
-      background-color: var(--farm-cream);
-      background-image: repeating-linear-gradient(
-        transparent 0px, transparent 27px,
-        rgba(200,169,110,.18) 27px, rgba(200,169,110,.18) 28px
-      );
-      padding: 1.5rem 2.5rem 2rem;
-    }
-    @media (max-width: 560px) { .menu-card-body { padding: 1rem 1rem 1.5rem; } }
-
-    /* Section block */
-    .section-block { margin-bottom: 1.5rem; }
-    .section-title-row {
-      display: flex; align-items: center; gap: .5rem;
-      margin-bottom: .75rem; padding-bottom: .5rem;
-      border-bottom: 1px solid rgba(122,155,142,.25);
-    }
-    .section-title-input {
-      flex: 1;
-      font-family: 'DM Sans', sans-serif;
-      font-size: .72rem; font-weight: 600;
-      letter-spacing: .22em; text-transform: uppercase;
-      color: var(--sage-dark);
-      background: transparent; border: none;
-      border-bottom: 1px dashed rgba(78,110,100,.35);
-      padding: .15rem 0;
-      outline: none;
-      transition: border-color .2s;
-    }
-    .section-title-input:focus { border-bottom-color: var(--sage-dark); }
-    .section-title-input::placeholder { color: rgba(78,110,100,.35); }
-    .icon-btn {
-      background: transparent; border: none; cursor: pointer;
-      color: rgba(74,51,34,.35); padding: .2rem;
-      border-radius: 3px; display: flex; align-items: center;
-      transition: color .2s, background .2s;
-    }
-    .icon-btn:hover { color: var(--burnt-orange); background: rgba(200,90,58,.08); }
-    .icon-btn:focus-visible { outline: 2px solid var(--wheat-gold); outline-offset: 2px; }
-
-    /* Item row */
-    .item-row {
-      display: flex; align-items: center; gap: .5rem;
-      padding: .3rem 0;
-    }
-    .item-select {
-      flex: 1;
-      font-family: 'Playfair Display', serif; font-size: .95rem;
-      color: var(--earth-brown);
-      background: transparent; border: none;
-      border-bottom: 1px dashed rgba(74,51,34,.2);
-      padding: .2rem 0; cursor: pointer; outline: none;
-      transition: border-color .2s;
-    }
-    .item-select:focus { border-bottom-color: var(--earth-brown); }
-    .item-dots-visual {
-      flex: 0 0 auto; width: 40px;
-      border-bottom: 1.5px dotted rgba(74,51,34,.2);
-      margin-bottom: 3px;
-    }
-    .reorder-btn {
-      background: transparent; border: none; cursor: pointer;
-      color: rgba(74,51,34,.3); padding: .1rem;
-      transition: color .2s;
-    }
-    .reorder-btn:hover { color: var(--sage-dark); }
-
-    /* Add item / section links */
-    .add-item-link {
-      display: inline-flex; align-items: center; gap: .35rem;
-      font-size: .75rem; font-weight: 500; letter-spacing: .06em;
-      color: var(--sage-dark); cursor: pointer;
-      padding: .35rem 0;
-      background: transparent; border: none;
-      transition: color .2s;
-    }
-    .add-item-link:hover { color: var(--burnt-orange); }
-    .add-item-link:focus-visible { outline: 2px solid var(--wheat-gold); outline-offset: 3px; }
-    .add-section-btn {
-      display: flex; align-items: center; gap: .5rem;
-      font-family: 'DM Sans', sans-serif; font-size: .78rem;
-      font-weight: 600; letter-spacing: .1em; text-transform: uppercase;
-      color: var(--farm-cream); background: rgba(78,110,100,.35);
-      border: 1px dashed rgba(122,155,142,.4);
-      border-radius: 5px; padding: .7rem 1.2rem;
-      cursor: pointer; width: 100%; justify-content: center;
-      margin-top: 1rem;
-      transition: background .2s, border-color .2s;
-    }
-    .add-section-btn:hover { background: rgba(78,110,100,.55); border-color: var(--sage-dark); }
-    .add-section-btn:focus-visible { outline: 2px solid var(--wheat-gold); outline-offset: 3px; }
-
-    /* Publish button */
-    .publish-row {
-      display: flex; justify-content: flex-end;
-      padding: 1.5rem 0 0;
-    }
-    .btn-publish {
-      font-family: 'DM Sans', sans-serif;
-      font-size: .85rem; font-weight: 600; letter-spacing: .08em;
-      text-transform: uppercase;
-      background: var(--burnt-orange); color: var(--farm-cream);
-      border: none; border-radius: 6px;
-      padding: .75rem 2rem; cursor: pointer;
-      box-shadow: 0 2px 8px rgba(200,90,58,.4), 0 4px 20px rgba(200,90,58,.2);
-      transition: transform .15s, box-shadow .15s;
-      display: flex; align-items: center; gap: .5rem;
-    }
-    .btn-publish:hover { transform: translateY(-2px); box-shadow: 0 4px 16px rgba(200,90,58,.55), 0 8px 32px rgba(200,90,58,.3); }
-    .btn-publish:active { transform: translateY(0); }
-    .btn-publish:focus-visible { outline: 2px solid var(--wheat-gold); outline-offset: 3px; }
-    .btn-publish:disabled { opacity: .6; cursor: not-allowed; transform: none; }
-
-    /* ===== SCHEDULE PANEL ===== */
-    .schedule-panel {
-      background: #3D2A1A;
-      border: 1px solid rgba(237,163,57,.25);
-      border-radius: 6px;
-      padding: 1rem 1.25rem;
-      margin-bottom: 1.5rem;
-    }
-    .sub-heading {
-      font-size: .68rem; font-weight: 700; letter-spacing: .15em;
-      text-transform: uppercase; color: rgba(250,240,230,.4);
-      margin-bottom: .8rem;
-    }
-    .schedule-row { display: flex; align-items: flex-end; gap: .75rem; flex-wrap: wrap; }
-    .schedule-field { display: flex; flex-direction: column; gap: .3rem; }
-    .field-label {
-      font-size: .64rem; font-weight: 600; letter-spacing: .12em;
-      text-transform: uppercase; color: rgba(250,240,230,.35);
-    }
-    .date-input {
-      background: rgba(0,0,0,.25); border: 1px solid rgba(237,163,57,.2);
-      border-radius: 4px; color: var(--farm-cream);
-      font-family: 'DM Sans', sans-serif; font-size: .85rem;
-      padding: .4rem .65rem; transition: border-color .2s; color-scheme: dark;
-    }
-    .date-input:focus { outline: none; border-color: var(--wheat-gold); }
-    .schedule-dash { color: rgba(250,240,230,.25); font-size: .9rem; padding-bottom: .5rem; }
-    .btn-secondary {
-      font-family: 'DM Sans', sans-serif; font-size: .74rem; font-weight: 600;
-      letter-spacing: .08em; text-transform: uppercase;
-      background: rgba(122,155,142,.2); color: var(--sage-light);
-      border: 1px solid rgba(122,155,142,.3); border-radius: 4px;
-      padding: .45rem 1rem; cursor: pointer;
-      transition: background .2s, border-color .2s;
-      display: inline-flex; align-items: center; gap: .4rem; white-space: nowrap;
-    }
-    .btn-secondary:hover { background: rgba(122,155,142,.38); border-color: var(--sage-light); }
-    .btn-secondary:disabled { opacity: .5; cursor: default; }
-    .btn-secondary:focus-visible { outline: 2px solid var(--wheat-gold); outline-offset: 3px; }
-
-    /* ===== SAVE SNAPSHOT ROW ===== */
-    .save-menu-row {
-      display: flex; gap: .75rem; align-items: center;
-      padding: 1.25rem 0 0; flex-wrap: wrap;
-      border-top: 1px solid rgba(237,163,57,.1); margin-top: .25rem;
-    }
-    .save-menu-input {
-      flex: 1; min-width: 180px;
-      background: rgba(0,0,0,.2); border: 1px solid rgba(237,163,57,.15);
-      border-radius: 4px; color: var(--farm-cream);
-      font-family: 'DM Sans', sans-serif; font-size: .85rem;
-      padding: .45rem .75rem; transition: border-color .2s;
-    }
-    .save-menu-input:focus { outline: none; border-color: var(--wheat-gold); }
-    .save-menu-input::placeholder { color: rgba(250,240,230,.2); }
-
-    /* ===== SAVED MENUS TAB ===== */
-    .saved-menus-list { display: flex; flex-direction: column; gap: .65rem; margin-top: 1.25rem; }
-    .saved-menu-card {
-      background: rgba(74,51,34,.4); border: 1px solid rgba(237,163,57,.12);
-      border-radius: 6px; padding: .9rem 1.1rem;
-      display: flex; align-items: center; gap: .85rem; flex-wrap: wrap;
-    }
-    .saved-menu-title {
-      font-family: 'Playfair Display', serif; font-size: 1rem;
-      font-weight: 600; color: var(--farm-cream); flex: 1;
-    }
-    .saved-menu-meta { font-size: .72rem; color: rgba(250,240,230,.35); margin-top: .15rem; }
-    .btn-load {
-      font-family: 'DM Sans', sans-serif; font-size: .72rem; font-weight: 600;
-      letter-spacing: .07em; text-transform: uppercase;
-      background: rgba(78,110,100,.3); color: var(--sage-light);
-      border: 1px solid rgba(122,155,142,.3); border-radius: 4px;
-      padding: .38rem .85rem; cursor: pointer; white-space: nowrap;
-      transition: background .2s, border-color .2s;
-    }
-    .btn-load:hover { background: rgba(78,110,100,.55); border-color: var(--sage-dark); }
-    .btn-del-saved {
-      background: transparent; border: 1px solid rgba(200,90,58,.2);
-      color: rgba(200,90,58,.45); border-radius: 4px;
-      padding: .38rem .7rem; cursor: pointer; font-size: .72rem;
-      font-family: 'DM Sans', sans-serif; font-weight: 600;
-      letter-spacing: .07em; text-transform: uppercase; white-space: nowrap;
-      transition: background .2s, border-color .2s, color .2s;
-    }
-    .btn-del-saved:hover { background: rgba(200,90,58,.1); border-color: rgba(200,90,58,.5); color: #C85A3A; }
-    .empty-state {
-      text-align: center; padding: 3rem 1rem;
-      color: rgba(250,240,230,.25); font-size: .88rem; font-style: italic;
-    }
-
-    /* Toast */
-    #toast {
-      position: fixed; bottom: 2rem; right: 2rem; z-index: 500;
-      background: var(--sage-dark); color: var(--farm-cream);
-      padding: .8rem 1.4rem; border-radius: 6px;
-      font-size: .85rem; font-weight: 500;
-      box-shadow: 0 4px 16px rgba(0,0,0,.4);
-      opacity: 0; transform: translateY(8px);
-      transition: opacity .25s, transform .25s;
-      pointer-events: none;
-    }
-    #toast.show { opacity: 1; transform: translateY(0); }
-    #toast.error { background: #6B2929; }
-
-    /* Landing Page tab */
-    .landing-card-upload {
-      background: rgba(250,240,230,.06);
-      border: 1px solid rgba(237,163,57,.15);
-      border-radius: 8px;
-      padding: 1.25rem 1.5rem;
-    }
-    .landing-card-label {
-      font-family: 'DM Sans', sans-serif;
-      font-size: .8rem; font-weight: 600;
-      letter-spacing: .1em; text-transform: uppercase;
-      color: var(--wheat-gold);
-      margin-bottom: .75rem;
-    }
-    .landing-card-preview-wrap {
-      width: 100%; max-width: 360px;
-      border-radius: 6px; overflow: hidden;
-      border: 1px solid rgba(237,163,57,.15);
-    }
-    .landing-card-preview {
-      width: 100%; height: 180px;
-      object-fit: cover; display: block;
-    }
-    .lc-row {
-      display: flex; align-items: center; gap: .75rem;
-      margin-top: .75rem;
-    }
-    .btn-upload-label {
-      font-family: 'DM Sans', sans-serif;
-      font-size: .78rem; font-weight: 600;
-      letter-spacing: .06em; text-transform: uppercase;
-      color: var(--farm-cream);
-      background: rgba(250,240,230,.12);
-      border: 1px solid rgba(250,240,230,.2);
-      border-radius: 5px;
-      padding: .45rem .9rem;
-      cursor: pointer;
-      transition: background .15s, border-color .15s;
-    }
-    .btn-upload-label:hover { background: rgba(250,240,230,.2); border-color: rgba(250,240,230,.35); }
-    .lc-file-input { display: none; }
-    .lc-filename {
-      font-size: .78rem;
-      color: rgba(250,240,230,.5);
-      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-      max-width: 160px;
-    }
-    .lp-section-heading {
-      font-family: 'DM Sans', sans-serif;
-      font-size: .75rem; font-weight: 700;
-      letter-spacing: .13em; text-transform: uppercase;
-      color: rgba(250,240,230,.45);
-      padding: 1.5rem 0 .6rem;
-      border-top: 1px solid rgba(237,163,57,.12);
-      margin-top: .25rem;
-    }
-    .lp-section-heading:first-of-type { border-top: none; padding-top: .25rem; }
-    .lp-field { display: flex; flex-direction: column; gap: .4rem; margin-bottom: .85rem; }
-    .lp-field label { font-family: 'DM Sans', sans-serif; font-size: .78rem; font-weight: 600; letter-spacing: .07em; text-transform: uppercase; color: var(--wheat-gold); }
-    .lp-text-input {
-      background: rgba(250,240,230,.47);
-      border: 1px solid rgba(250,240,230,.56);
-      border-radius: 5px;
-      color: #000;
-      padding: .5rem .75rem;
-      font-size: .9rem;
-      font-family: inherit;
-      width: 100%;
-      box-sizing: border-box;
-    }
-    .lp-text-input:focus { outline: none; border-color: rgba(237,163,57,.8); background: rgba(250,240,230,.5); color: #000; }
-    .lp-text-input::placeholder { color: rgba(0,0,0,.4); }
-    .lp-textarea { min-height: 80px; resize: vertical; }
-    .lp-save-row { display: flex; align-items: center; gap: .75rem; margin-top: .35rem; }
-    .lp-cards-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; }
-    @media (max-width: 900px) { .lp-cards-grid { grid-template-columns: 1fr; } }
-  </style>
+  <link rel="stylesheet" href="css/global.css" />
+  <link rel="stylesheet" href="css/admin.css" />
 </head>
 <body>
 
@@ -613,7 +116,7 @@
       <div class="menu-editor-wrap">
         <div class="editor-header">
           <h2 class="section-heading">Menu Editor</h2>
-          <a href="menu.html?from=admin" class="btn-ghost" style="border:1px solid rgba(237,163,57,.2);">
+          <a href="menu.html?from=admin" class="btn-ghost btn-ghost-bordered">
             Preview Public Menu
           </a>
         </div>
@@ -678,7 +181,7 @@
     <!-- Tab: Saved Menus -->
     <div id="tab-saved" class="tab-panel">
       <h2 class="section-heading">Saved Menus</h2>
-      <p style="font-size:.85rem;color:rgba(250,240,230,.85);margin-top:.35rem;text-shadow:0 1px 3px rgba(0,0,0,.8);">
+      <p class="saved-menus-desc">
         Load a saved snapshot into the Menu Editor to restore and re-publish it.
       </p>
       <div class="saved-menus-list" id="saved-menus-list">
@@ -689,13 +192,13 @@
     <!-- Tab: Landing Page -->
     <div id="tab-landing" class="tab-panel">
       <h2 class="section-heading">Landing Page</h2>
-      <p style="font-size:.85rem;color:rgba(250,240,230,.85);margin-top:.35rem;margin-bottom:1.75rem;text-shadow:0 1px 3px rgba(0,0,0,.8);">
+      <p class="tab-desc tab-desc-spaced">
         Edit all text and images shown on the home page.
       </p>
 
       <!-- ── Images ─────────────────────────────────────────── -->
       <p class="lp-section-heading">Images</p>
-      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:1rem;">
+      <div class="images-upload-grid">
 
         <div class="landing-card-upload">
           <div class="landing-card-label">Our Story Photo</div>
@@ -757,14 +260,14 @@
           </div>
         </div>
 
-        <div class="landing-card-upload" style="grid-column:1/-1;">
+        <div class="landing-card-upload col-span-full">
           <div class="landing-card-label">Map — auto-generated from Address field below</div>
-          <div style="background:rgba(250,240,230,.05);border:1px solid rgba(237,163,57,.12);border-radius:6px;overflow:hidden;height:180px;">
+          <div class="map-preview-wrap">
             <iframe id="admin-map-preview"
               src="https://maps.google.com/maps?q=3650+N+State+Road+9+Hope+IN+47246&output=embed"
-              style="width:100%;height:100%;border:0;" allowfullscreen title="Map preview"></iframe>
+              class="map-preview-iframe" allowfullscreen title="Map preview"></iframe>
           </div>
-          <p style="font-size:.78rem;color:rgba(250,240,230,.45);margin-top:.5rem;">Save the Address field below to update this map.</p>
+          <p class="map-hint">Save the Address field below to update this map.</p>
         </div>
 
       </div>
@@ -790,38 +293,38 @@
       <p class="lp-section-heading">Feature Cards (What We Make)</p>
       <div class="lp-cards-grid">
         <div>
-          <div class="landing-card-label" style="margin-bottom:.6rem;">Card 1</div>
+          <div class="landing-card-label landing-card-label-gap">Card 1</div>
           <div class="lp-field">
             <label for="inp-card1-title">Title</label>
             <input type="text" id="inp-card1-title" class="lp-text-input" data-key="lp-card1-title" placeholder="Sourdough Loaves" />
           </div>
           <div class="lp-field">
             <label for="inp-card1-desc">Description</label>
-            <textarea id="inp-card1-desc" class="lp-text-input lp-textarea" data-key="lp-card1-desc" placeholder="Description..." style="min-height:64px;"></textarea>
+            <textarea id="inp-card1-desc" class="lp-text-input lp-textarea lp-textarea-sm" data-key="lp-card1-desc" placeholder="Description..."></textarea>
           </div>
           <button type="button" class="btn-secondary lp-text-save-btn" data-key="lp-card1-title,lp-card1-desc" data-multi="true" data-inputs="inp-card1-title,inp-card1-desc">Save Card 1</button>
         </div>
         <div>
-          <div class="landing-card-label" style="margin-bottom:.6rem;">Card 2</div>
+          <div class="landing-card-label landing-card-label-gap">Card 2</div>
           <div class="lp-field">
             <label for="inp-card2-title">Title</label>
             <input type="text" id="inp-card2-title" class="lp-text-input" data-key="lp-card2-title" placeholder="Fresh Produce" />
           </div>
           <div class="lp-field">
             <label for="inp-card2-desc">Description</label>
-            <textarea id="inp-card2-desc" class="lp-text-input lp-textarea" data-key="lp-card2-desc" placeholder="Description..." style="min-height:64px;"></textarea>
+            <textarea id="inp-card2-desc" class="lp-text-input lp-textarea lp-textarea-sm" data-key="lp-card2-desc" placeholder="Description..."></textarea>
           </div>
           <button type="button" class="btn-secondary lp-text-save-btn" data-key="lp-card2-title,lp-card2-desc" data-multi="true" data-inputs="inp-card2-title,inp-card2-desc">Save Card 2</button>
         </div>
         <div>
-          <div class="landing-card-label" style="margin-bottom:.6rem;">Card 3</div>
+          <div class="landing-card-label landing-card-label-gap">Card 3</div>
           <div class="lp-field">
             <label for="inp-card3-title">Title</label>
             <input type="text" id="inp-card3-title" class="lp-text-input" data-key="lp-card3-title" placeholder="Seasonal Pastries" />
           </div>
           <div class="lp-field">
             <label for="inp-card3-desc">Description</label>
-            <textarea id="inp-card3-desc" class="lp-text-input lp-textarea" data-key="lp-card3-desc" placeholder="Description..." style="min-height:64px;"></textarea>
+            <textarea id="inp-card3-desc" class="lp-text-input lp-textarea lp-textarea-sm" data-key="lp-card3-desc" placeholder="Description..."></textarea>
           </div>
           <button type="button" class="btn-secondary lp-text-save-btn" data-key="lp-card3-title,lp-card3-desc" data-multi="true" data-inputs="inp-card3-title,inp-card3-desc">Save Card 3</button>
         </div>
@@ -829,7 +332,7 @@
 
       <!-- ── Hours & Contact ────────────────────────────────── -->
       <p class="lp-section-heading">Hours &amp; Contact</p>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;">
+      <div class="lp-hours-grid">
         <div class="lp-field">
           <label for="inp-hours-tues">Tues – Thurs Hours</label>
           <input type="text" id="inp-hours-tues" class="lp-text-input" data-key="lp-hours-tues" placeholder="10a – 6p" />
@@ -996,7 +499,7 @@
             <span class="product-price">${escHtml(p.price_formatted || '—')}</span>
             <span class="product-id" title="${escHtml(p.id)}">${escHtml(p.id)}</span>
           </div>
-          <div style="margin-top:.6rem;font-size:.72rem;color:rgba(237,163,57,.55);letter-spacing:.08em;text-transform:uppercase;">Click to edit →</div>
+          <div class="product-click-hint">Click to edit →</div>
         </a>
       `).join('');
     }
@@ -1259,7 +762,7 @@
         const sectionCount = (m.sections || []).length;
         return `
         <div class="saved-menu-card">
-          <div style="flex:1;min-width:0;">
+          <div class="saved-menu-card-info">
             <div class="saved-menu-title">${escHtml(m.title)}</div>
             <div class="saved-menu-meta">Saved ${escHtml(date)} &middot; ${sectionCount} section${sectionCount !== 1 ? 's' : ''}</div>
           </div>

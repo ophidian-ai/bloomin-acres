@@ -7,6 +7,8 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,500;1,400&family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400;1,600&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="css/global.css" />
+  <link rel="stylesheet" href="css/product.css" />
   <script src="https://cdn.tailwindcss.com"></script>
   <script>
     tailwind.config = {
@@ -32,364 +34,6 @@
       }
     };
   </script>
-  <style>
-    :root {
-      --wheat-gold: #EDA339; --sage-green: #7A9B8E; --sage-dark: #4E6E64;
-      --sage-light: #A8C4BB; --earth-brown: #4A3322; --earth-mid: #6B4C35;
-      --farm-cream: #FAF0E6; --cream-dark: #F0E4D0; --cream-warm: #EDD9B8;
-    }
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-    body {
-      font-family: 'DM Sans', sans-serif;
-      background-color: var(--earth-brown);
-      background-image: url('brand-assets/farm-background.png');
-      background-size: cover;
-      background-position: center center;
-      background-attachment: fixed;
-      background-repeat: no-repeat;
-      color: var(--earth-brown);
-      line-height: 1.7;
-      min-height: 100vh;
-    }
-    body::after {
-      content: '';
-      position: fixed; inset: 0; z-index: 9999; pointer-events: none;
-      opacity: 0.04;
-      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23n)' opacity='1'/%3E%3C/svg%3E");
-    }
-
-    /* Nav */
-    .site-nav {
-      background-color: #7A5540;
-      padding: 1rem 2rem;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      border-bottom: 1px solid rgba(237,163,57,.25);
-    }
-    .nav-logo { height: 96px; object-fit: contain; }
-    .nav-link {
-      font-family: 'DM Sans', sans-serif;
-      font-size: .82rem;
-      font-weight: 500;
-      letter-spacing: .08em;
-      text-transform: uppercase;
-      color: var(--cream-warm);
-      text-decoration: none;
-      display: flex; align-items: center; gap: .4rem;
-      transition: color .2s, transform .2s;
-    }
-    .nav-link:hover { color: var(--wheat-gold); }
-    .nav-back:hover { transform: translateX(-3px); }
-    .nav-right { display: flex; align-items: center; gap: 1.5rem; }
-
-    /* Page */
-    .page-wrap {
-      max-width: 680px;
-      margin: 3rem auto 4rem;
-      padding: 0 1.5rem;
-    }
-
-    /* Product card */
-    .product-card {
-      background: var(--farm-cream);
-      border-radius: 8px;
-      overflow: hidden;
-      box-shadow:
-        0 2px 4px rgba(74,51,34,.2),
-        0 8px 24px rgba(74,51,34,.3),
-        0 20px 60px rgba(74,51,34,.2);
-    }
-
-    /* Product image */
-    .product-img-wrap {
-      width: 100%;
-      background: var(--cream-warm);
-      overflow: hidden;
-      position: relative;
-    }
-    .product-img {
-      width: 100%; height: auto;
-      display: block;
-    }
-    .product-img-placeholder {
-      width: 100%; height: 100%;
-      display: flex; align-items: center; justify-content: center;
-      background: linear-gradient(135deg, var(--cream-warm) 0%, var(--cream-dark) 100%);
-    }
-    .product-img-placeholder svg { opacity: 0.25; }
-
-    /* Product body */
-    .product-body {
-      padding: 2rem 2.25rem 2.25rem;
-    }
-    .product-name {
-      font-family: 'Playfair Display', Georgia, serif;
-      font-size: 1.65rem;
-      font-weight: 700;
-      line-height: 1.25;
-      color: var(--earth-brown);
-      margin-bottom: .35rem;
-    }
-    .product-price {
-      font-family: 'DM Sans', sans-serif;
-      font-size: 1rem;
-      font-weight: 600;
-      color: var(--wheat-gold);
-      letter-spacing: .03em;
-      margin-bottom: 1rem;
-    }
-    .product-divider {
-      width: 40px; height: 2px;
-      background: var(--wheat-gold);
-      opacity: .5;
-      margin-bottom: 1rem;
-    }
-    .product-description {
-      font-family: 'DM Sans', sans-serif;
-      font-size: .9rem;
-      line-height: 1.75;
-      color: var(--earth-mid);
-      margin-bottom: 1.75rem;
-    }
-    .product-description:empty { display: none; }
-
-    /* Action buttons */
-    .product-actions {
-      display: flex;
-      gap: .75rem;
-      flex-wrap: wrap;
-    }
-    .btn-cart {
-      flex: 1;
-      min-width: 120px;
-      padding: .65rem 1.25rem;
-      background: var(--earth-brown);
-      color: var(--farm-cream);
-      border: none;
-      border-radius: 5px;
-      font-family: 'DM Sans', sans-serif;
-      font-size: .83rem;
-      font-weight: 600;
-      letter-spacing: .06em;
-      text-transform: uppercase;
-      cursor: pointer;
-      transition: background .2s, transform .1s;
-      display: flex; align-items: center; justify-content: center; gap: .4rem;
-    }
-    .btn-cart:hover { background: var(--earth-mid); }
-    .btn-cart:active { transform: scale(.98); }
-    .btn-fav {
-      padding: .65rem 1.1rem;
-      background: transparent;
-      color: var(--earth-brown);
-      border: 1.5px solid rgba(74,51,34,.2);
-      border-radius: 5px;
-      font-family: 'DM Sans', sans-serif;
-      font-size: .83rem;
-      font-weight: 500;
-      letter-spacing: .05em;
-      cursor: pointer;
-      transition: border-color .2s, color .2s, background .2s;
-      display: flex; align-items: center; gap: .4rem;
-    }
-    .btn-fav:hover { border-color: var(--wheat-gold); color: var(--earth-mid); }
-    .btn-fav.active { border-color: var(--wheat-gold); color: var(--wheat-gold); background: rgba(237,163,57,.07); }
-
-    /* Admin edit panel */
-    .admin-edit-panel {
-      display: none;
-      background: var(--cream-dark);
-      border-top: 1px solid rgba(74,51,34,.12);
-      padding: 1.5rem 2.25rem 2rem;
-    }
-    .admin-edit-panel.visible { display: block; }
-    .admin-panel-heading {
-      font-family: 'DM Sans', sans-serif;
-      font-size: .72rem;
-      font-weight: 700;
-      letter-spacing: .14em;
-      text-transform: uppercase;
-      color: var(--sage-dark);
-      margin-bottom: 1.1rem;
-      display: flex; align-items: center; gap: .5rem;
-    }
-    .admin-field { margin-bottom: 1.1rem; }
-    .admin-label {
-      display: block;
-      font-size: .75rem;
-      font-weight: 600;
-      letter-spacing: .07em;
-      text-transform: uppercase;
-      color: var(--earth-mid);
-      margin-bottom: .4rem;
-    }
-    .admin-textarea {
-      width: 100%;
-      min-height: 90px;
-      padding: .65rem .8rem;
-      border: 1.5px solid rgba(74,51,34,.18);
-      border-radius: 5px;
-      background: var(--farm-cream);
-      font-family: 'DM Sans', sans-serif;
-      font-size: .88rem;
-      line-height: 1.6;
-      color: var(--earth-brown);
-      resize: vertical;
-      transition: border-color .2s;
-    }
-    .admin-textarea:focus { outline: none; border-color: var(--sage-dark); }
-    .admin-file-wrap {
-      display: flex; align-items: center; gap: .75rem; flex-wrap: wrap;
-    }
-    .admin-img-thumb {
-      width: 56px; height: 56px;
-      object-fit: cover;
-      border-radius: 4px;
-      border: 1px solid rgba(74,51,34,.15);
-      display: none;
-    }
-    .admin-img-thumb.visible { display: block; }
-    .admin-file-input {
-      font-family: 'DM Sans', sans-serif;
-      font-size: .82rem;
-      color: var(--earth-mid);
-      flex: 1;
-    }
-    .admin-file-input::file-selector-button {
-      padding: .4rem .85rem;
-      background: transparent;
-      border: 1.5px solid rgba(74,51,34,.25);
-      border-radius: 4px;
-      font-family: 'DM Sans', sans-serif;
-      font-size: .78rem;
-      font-weight: 600;
-      color: var(--earth-brown);
-      cursor: pointer;
-      margin-right: .6rem;
-      transition: background .2s, border-color .2s;
-    }
-    .admin-file-input::file-selector-button:hover {
-      background: rgba(74,51,34,.07);
-      border-color: var(--sage-dark);
-    }
-    .btn-save {
-      padding: .6rem 1.5rem;
-      background: var(--sage-dark);
-      color: white;
-      border: none;
-      border-radius: 5px;
-      font-family: 'DM Sans', sans-serif;
-      font-size: .82rem;
-      font-weight: 600;
-      letter-spacing: .06em;
-      text-transform: uppercase;
-      cursor: pointer;
-      transition: background .2s, transform .1s;
-    }
-    .btn-save:hover { background: var(--sage-green); }
-    .btn-save:active { transform: scale(.98); }
-    .btn-save:disabled { opacity: .55; cursor: default; }
-
-    /* Variation selector (customer) */
-    .variation-selector { margin-bottom: 1.25rem; }
-    .variation-selector-label {
-      font-size: .72rem; font-weight: 700; letter-spacing: .1em;
-      text-transform: uppercase; color: var(--earth-mid);
-      display: block; margin-bottom: .55rem;
-    }
-    .variation-options { display: flex; flex-wrap: wrap; gap: .5rem; }
-    .variation-option {
-      display: flex; align-items: center;
-      padding: .45rem .9rem;
-      border: 1.5px solid rgba(74,51,34,.2);
-      border-radius: 99px;
-      cursor: pointer;
-      font-family: 'DM Sans', sans-serif; font-size: .83rem;
-      color: var(--earth-brown);
-      transition: border-color .15s, background .15s;
-      -webkit-user-select: none;
-      user-select: none;
-    }
-    .variation-option input[type="radio"] { display: none; }
-    .variation-option:hover { border-color: var(--wheat-gold); }
-    .variation-option.selected {
-      border-color: var(--earth-brown);
-      background: rgba(74,51,34,.07);
-      font-weight: 600;
-    }
-
-    /* Variations editor (admin) */
-    .variation-row {
-      display: flex; align-items: center; gap: .5rem;
-      margin-bottom: .5rem;
-    }
-    .variation-name-input {
-      flex: 2; padding: .45rem .65rem;
-      border: 1.5px solid rgba(74,51,34,.18); border-radius: 4px;
-      background: var(--farm-cream); font-family: 'DM Sans', sans-serif;
-      font-size: .85rem; color: var(--earth-brown);
-    }
-    .variation-delta-wrap {
-      flex: 1; display: flex; align-items: center; gap: .25rem;
-    }
-    .variation-delta-prefix {
-      font-size: .85rem; color: var(--earth-mid); white-space: nowrap;
-    }
-    .variation-delta-input {
-      width: 70px; padding: .45rem .5rem;
-      border: 1.5px solid rgba(74,51,34,.18); border-radius: 4px;
-      background: var(--farm-cream); font-family: 'DM Sans', sans-serif;
-      font-size: .85rem; color: var(--earth-brown);
-    }
-    .variation-name-input:focus,
-    .variation-delta-input:focus { outline: none; border-color: var(--sage-dark); }
-    .btn-variation-remove {
-      background: transparent; border: none; cursor: pointer;
-      color: rgba(74,51,34,.35); font-size: 1.1rem; line-height: 1;
-      padding: .2rem .35rem; border-radius: 3px;
-      transition: color .15s, background .15s;
-    }
-    .btn-variation-remove:hover { color: var(--burnt-orange); background: rgba(200,90,58,.08); }
-    .btn-add-variation {
-      margin-top: .35rem;
-      background: transparent; border: 1.5px dashed rgba(74,51,34,.25);
-      border-radius: 4px; padding: .4rem .8rem;
-      font-family: 'DM Sans', sans-serif; font-size: .78rem; font-weight: 600;
-      color: var(--earth-mid); cursor: pointer; letter-spacing: .04em;
-      transition: border-color .15s, color .15s;
-    }
-    .btn-add-variation:hover { border-color: var(--sage-dark); color: var(--sage-dark); }
-
-    /* Toast */
-    #toast {
-      position: fixed; bottom: 1.5rem; left: 50%; transform: translateX(-50%);
-      background: var(--earth-brown); color: var(--farm-cream);
-      padding: .6rem 1.4rem; border-radius: 99px;
-      font-family: 'DM Sans', sans-serif; font-size: .82rem; font-weight: 500;
-      box-shadow: 0 4px 20px rgba(0,0,0,.25);
-      opacity: 0; pointer-events: none;
-      transition: opacity .25s;
-      z-index: 1000;
-    }
-    #toast.show { opacity: 1; }
-    #toast.error { background: #8B3A3A; }
-
-    /* Skeleton */
-    .skeleton { background: rgba(74,51,34,.08); border-radius: 4px; }
-    .skeleton-img { width: 100%; aspect-ratio: 4/3; }
-    .skeleton-line { height: 1em; margin-bottom: .5rem; }
-
-    /* Footer */
-    .site-footer {
-      text-align: center;
-      padding: 2rem;
-      font-size: .78rem;
-      color: rgba(250,240,230,.3);
-      font-family: 'DM Sans', sans-serif;
-      letter-spacing: .04em;
-    }
-  </style>
 </head>
 <body>
   <nav class="site-nav">
@@ -415,10 +59,10 @@
       <!-- Skeleton while loading -->
       <div class="product-img-wrap skeleton skeleton-img" id="img-skeleton"></div>
       <div class="product-body">
-        <div class="skeleton skeleton-line" style="width:55%;height:1.6rem;margin-bottom:.5rem;" id="name-skeleton"></div>
-        <div class="skeleton skeleton-line" style="width:25%;height:.9rem;margin-bottom:1.5rem;" id="price-skeleton"></div>
-        <div class="skeleton skeleton-line" style="width:100%;margin-bottom:.4rem;" id="desc-skeleton-1"></div>
-        <div class="skeleton skeleton-line" style="width:85%;" id="desc-skeleton-2"></div>
+        <div class="skeleton skeleton-line skeleton-name" id="name-skeleton"></div>
+        <div class="skeleton skeleton-line skeleton-price" id="price-skeleton"></div>
+        <div class="skeleton skeleton-line skeleton-desc-1" id="desc-skeleton-1"></div>
+        <div class="skeleton skeleton-line skeleton-desc-2" id="desc-skeleton-2"></div>
       </div>
     </div>
   </main>
@@ -539,7 +183,7 @@
 
       const adminVariationsHtml = `
         <div class="admin-field">
-          <label class="admin-label">Variations <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--earth-mid);font-size:.72rem;">(optional — e.g. sizes, flavors)</span></label>
+          <label class="admin-label">Variations <span class="admin-label-note">(optional — e.g. sizes, flavors)</span></label>
           <div id="variations-list">
             ${(productDetails?.variations || []).map(v => `
               <div class="variation-row">
@@ -582,7 +226,7 @@
                   <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
                   Save
                 </button>`
-              : `<a href="account.html" class="btn-cart" style="text-decoration:none;">Sign In to Order</a>`
+              : `<a href="account.html" class="btn-cart">Sign In to Order</a>`
             }
           </div>
         </div>
