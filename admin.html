@@ -633,7 +633,7 @@
         grid.innerHTML = `<p style="color:#f5a0a0;font-size:.85rem;">${escHtml(data.error)}</p>`;
         return;
       }
-      allProducts = data;
+      allProducts = data.sort((a, b) => (a.name || '').localeCompare(b.name || ''));
       renderProductGrid(allProducts);
     }
 
