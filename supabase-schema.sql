@@ -115,6 +115,7 @@ create table if not exists site_content (
 create table if not exists product_details (
   stripe_product_id text primary key,
   description text,
+  ingredients text,
   image_url text,
   variations jsonb not null default '[]'::jsonb,
   updated_at timestamptz default now()
