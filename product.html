@@ -36,6 +36,92 @@
   </script>
 </head>
 <body>
+
+<!-- Hamburger toggle -->
+<button type="button" class="nav-toggle" id="nav-toggle" aria-label="Open navigation" aria-expanded="false" aria-controls="nav-sidebar">
+  <span></span><span></span><span></span>
+</button>
+
+<!-- Sidebar drawer -->
+<div class="nav-sidebar" id="nav-sidebar" role="dialog" aria-modal="true" aria-label="Site navigation">
+  <img src="brand-assets/color-logo.png" alt="Bloomin' Acres" class="nav-sidebar-logo" />
+  <nav>
+    <a href="index.html"   class="nav-sidebar-link">Home</a>
+    <a href="menu.html"    class="nav-sidebar-link accent">Menu</a>
+    <a href="club.html"    class="nav-sidebar-link">The Club</a>
+    <!-- Sign In — shown when logged out -->
+    <a href="account.html" class="nav-sidebar-link" id="sidebar-signin-link">Sign In</a>
+    <!-- My Account submenu — shown when logged in -->
+    <div class="nav-account-item" id="sidebar-account-item" style="display:none;">
+      <button type="button" class="nav-account-toggle" id="sidebar-account-toggle" aria-haspopup="true" aria-expanded="false">
+        <span>My Account</span>
+        <svg class="chevron" viewBox="0 0 10 10" fill="none" aria-hidden="true">
+          <path d="M2 3.5l3 3 3-3" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </button>
+      <div class="nav-account-submenu" role="menu">
+        <a href="account.html?tab=cart" role="menuitem">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
+          Cart
+        </a>
+        <a href="account.html?tab=favorites" role="menuitem">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+          Favorites
+        </a>
+        <a href="account.html?tab=orders" role="menuitem">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+          Orders
+        </a>
+        <a href="account.html?tab=profile" role="menuitem">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+          Profile
+        </a>
+      </div>
+    </div>
+    <!-- Sign Out — shown when logged in -->
+    <button type="button" class="nav-sidebar-link nav-signout-btn" id="sidebar-signout-btn" style="display:none;">Sign Out</button>
+  </nav>
+</div>
+
+<!-- Backdrop -->
+<div class="nav-overlay" id="nav-overlay" aria-hidden="true"></div>
+
+<script>
+  (() => {
+    const toggle  = document.getElementById('nav-toggle');
+    const sidebar = document.getElementById('nav-sidebar');
+    const overlay = document.getElementById('nav-overlay');
+
+    function openNav() {
+      sidebar.classList.add('open');
+      overlay.classList.add('open');
+      toggle.classList.add('open');
+      toggle.setAttribute('aria-expanded', 'true');
+    }
+    function closeNav() {
+      sidebar.classList.remove('open');
+      overlay.classList.remove('open');
+      toggle.classList.remove('open');
+      toggle.setAttribute('aria-expanded', 'false');
+    }
+
+    toggle.addEventListener('click', () => sidebar.classList.contains('open') ? closeNav() : openNav());
+    overlay.addEventListener('click', closeNav);
+    sidebar.querySelectorAll('.nav-sidebar-link').forEach(link => {
+      link.addEventListener('click', closeNav);
+    });
+
+    const acctToggle = document.getElementById('sidebar-account-toggle');
+    const acctItem   = document.getElementById('sidebar-account-item');
+    acctToggle.addEventListener('click', () => {
+      const open = acctItem.classList.toggle('open');
+      acctToggle.setAttribute('aria-expanded', open);
+    });
+
+    document.addEventListener('keydown', e => { if (e.key === 'Escape') closeNav(); });
+  })();
+</script>
+
   <nav class="site-nav">
     <a href="index.html">
       <img src="brand-assets/color-logo.png" class="nav-logo" alt="Bloomin' Acres" />
@@ -115,6 +201,11 @@
 
       // Load auth state
       const { data: { session } } = await sb.auth.getSession();
+      // Wire sidebar auth state
+      const signinLink = document.getElementById('sidebar-signin-link');
+      const acctItemEl = document.getElementById('sidebar-account-item');
+      const signoutBtn = document.getElementById('sidebar-signout-btn');
+
       if (session) {
         currentUser = session.user;
         const { data: adminRow } = await sb.from('admins').select('user_id').eq('user_id', currentUser.id).maybeSingle();
@@ -126,6 +217,23 @@
           e.preventDefault();
           await sb.auth.signOut();
           window.location.href = 'index.html';
+        });
+
+        // Sidebar: hide sign-in, show account submenu or dashboard link
+        signinLink.style.display = 'none';
+        if (isAdmin) {
+          const dashLink = document.createElement('a');
+          dashLink.href = 'admin.html';
+          dashLink.className = 'nav-sidebar-link';
+          dashLink.textContent = 'Dashboard';
+          acctItemEl.parentNode.insertBefore(dashLink, acctItemEl);
+        } else {
+          acctItemEl.style.display = 'block';
+        }
+        signoutBtn.style.display = 'block';
+        signoutBtn.addEventListener('click', async () => {
+          await sb.auth.signOut();
+          window.location.reload();
         });
       }
 
@@ -161,6 +269,7 @@
       const currency = stripeProduct?.currency || 'usd';
       const price = stripeProduct ? (stripeProduct.price_formatted || '') : '';
       const description = productDetails?.description || '';
+      const ingredients = productDetails?.ingredients || '';
       const imageUrl = productDetails?.image_url || stripeProduct?.images?.[0] || '';
       const variations = productDetails?.variations || [];
 
@@ -177,9 +286,11 @@
               if (v.quantity > 0 && v.quantity <= 5) {
                 label += ` <span class="variation-stock-note">(${v.quantity} left)</span>`;
               }
+              const vIngredients = v.ingredients ? `<span class="variation-ingredients">${escHtml(v.ingredients)}</span>` : '';
               return `<label class="variation-option${i === 0 ? ' selected' : ''}">
                 <input type="radio" name="variation" value="${v.price_delta || 0}" data-name="${escHtml(v.name)}" ${i === 0 ? 'checked' : ''} />
                 ${label}
+                ${vIngredients}
               </label>`;
             }).join('')}
           </div>
@@ -190,25 +301,28 @@
           <label class="admin-label">Variations <span class="admin-label-note">(optional — e.g. sizes, flavors)</span></label>
           <div id="variations-list">
             ${(productDetails?.variations || []).map(v => `
-              <div class="variation-row${v.available === false ? ' variation-row-unavailable' : ''}">
-                <span class="variation-drag-handle" title="Drag to reorder">
-                  <svg width="10" height="14" viewBox="0 0 10 14" fill="currentColor" aria-hidden="true">
-                    <circle cx="3" cy="2" r="1.2"/><circle cx="7" cy="2" r="1.2"/>
-                    <circle cx="3" cy="7" r="1.2"/><circle cx="7" cy="7" r="1.2"/>
-                    <circle cx="3" cy="12" r="1.2"/><circle cx="7" cy="12" r="1.2"/>
-                  </svg>
-                </span>
-                <input type="checkbox" class="variation-available-check" title="Visible to customers" ${v.available !== false ? 'checked' : ''} />
-                <input type="text" class="variation-name-input" placeholder="Name (e.g. Large)" value="${escHtml(v.name)}" />
-                <div class="variation-delta-wrap">
-                  <span class="variation-delta-prefix">+$</span>
-                  <input type="number" class="variation-delta-input" step="0.01" min="0" placeholder="0.00" value="${((v.price_delta || 0) / 100).toFixed(2)}" />
+              <div class="variation-row-wrap">
+                <div class="variation-row${v.available === false ? ' variation-row-unavailable' : ''}">
+                  <span class="variation-drag-handle" title="Drag to reorder">
+                    <svg width="10" height="14" viewBox="0 0 10 14" fill="currentColor" aria-hidden="true">
+                      <circle cx="3" cy="2" r="1.2"/><circle cx="7" cy="2" r="1.2"/>
+                      <circle cx="3" cy="7" r="1.2"/><circle cx="7" cy="7" r="1.2"/>
+                      <circle cx="3" cy="12" r="1.2"/><circle cx="7" cy="12" r="1.2"/>
+                    </svg>
+                  </span>
+                  <input type="checkbox" class="variation-available-check" title="Visible to customers" ${v.available !== false ? 'checked' : ''} />
+                  <input type="text" class="variation-name-input" placeholder="Name (e.g. Large)" value="${escHtml(v.name)}" />
+                  <div class="variation-delta-wrap">
+                    <span class="variation-delta-prefix">+$</span>
+                    <input type="number" class="variation-delta-input" step="0.01" min="0" placeholder="0.00" value="${((v.price_delta || 0) / 100).toFixed(2)}" />
+                  </div>
+                  <div class="variation-qty-wrap">
+                    <span class="variation-qty-label">Qty</span>
+                    <input type="number" class="variation-qty-input" min="0" max="9999" placeholder="0" value="${v.quantity ?? 0}" />
+                  </div>
+                  <button type="button" class="btn-variation-remove" title="Remove">&times;</button>
                 </div>
-                <div class="variation-qty-wrap">
-                  <span class="variation-qty-label">Qty</span>
-                  <input type="number" class="variation-qty-input" min="0" max="9999" placeholder="0" value="${v.quantity ?? 0}" />
-                </div>
-                <button type="button" class="btn-variation-remove" title="Remove">&times;</button>
+                <input type="text" class="variation-ingredients-input" placeholder="Ingredients for this variant…" value="${escHtml(v.ingredients || '')}" />
               </div>`).join('')}
           </div>
           <button type="button" class="btn-add-variation" id="btn-add-variation">+ Add Variation</button>
@@ -231,6 +345,7 @@
           <div class="product-price" id="product-price-display">${escHtml(price)}</div>
           <div class="product-divider"></div>
           <p class="product-description" id="product-desc-display">${escHtml(description)}</p>
+          <p class="product-ingredients" id="product-ingredients-display">${escHtml(ingredients)}</p>
           ${variationSelectorHtml}
           <div class="product-actions" id="product-actions">
             ${currentUser
@@ -254,7 +369,11 @@
           </div>
           <div class="admin-field">
             <label class="admin-label" for="edit-description">Description</label>
-            <textarea class="admin-textarea" id="edit-description" placeholder="Describe this product — ingredients, how it's made, serving suggestions…">${escHtml(description)}</textarea>
+            <textarea class="admin-textarea" id="edit-description" placeholder="Describe this product — how it's made, serving suggestions…">${escHtml(description)}</textarea>
+          </div>
+          <div class="admin-field">
+            <label class="admin-label" for="edit-ingredients">Ingredients</label>
+            <textarea class="admin-textarea" id="edit-ingredients" placeholder="e.g. Organic flour, water, sea salt, sourdough starter…">${escHtml(productDetails?.ingredients || '')}</textarea>
           </div>
           <div class="admin-field">
             <label class="admin-label">Product Image</label>
@@ -343,9 +462,12 @@
     }
 
     function wireVariationRowBehavior(row) {
-      // Remove button
+      // Remove button — remove the wrap (parent) if it exists, otherwise the row
       const removeBtn = row.querySelector('.btn-variation-remove');
-      if (removeBtn) removeBtn.addEventListener('click', () => row.remove());
+      if (removeBtn) removeBtn.addEventListener('click', () => {
+        const wrap = row.closest('.variation-row-wrap');
+        (wrap || row).remove();
+      });
 
       // Checkbox toggle
       const checkbox = row.querySelector('.variation-available-check');
@@ -355,104 +477,112 @@
         });
       }
 
-      // Drag handle — desktop HTML5 drag-and-drop
+      // Drag handle — desktop HTML5 drag-and-drop (operates on wraps)
       const handle = row.querySelector('.variation-drag-handle');
       if (!handle) return;
+      const wrap = row.closest('.variation-row-wrap') || row;
 
-      handle.addEventListener('mousedown', () => { row.setAttribute('draggable', 'true'); });
-      handle.addEventListener('mouseup', () => { row.removeAttribute('draggable'); });
+      handle.addEventListener('mousedown', () => { wrap.setAttribute('draggable', 'true'); });
+      handle.addEventListener('mouseup', () => { wrap.removeAttribute('draggable'); });
 
-      row.addEventListener('dragstart', (e) => {
+      wrap.addEventListener('dragstart', (e) => {
+        wrap.classList.add('dragging');
         row.classList.add('variation-row-dragging');
         e.dataTransfer.effectAllowed = 'move';
-        row._dragIndex = [...row.parentNode.children].indexOf(row);
       });
-      row.addEventListener('dragend', () => {
+      wrap.addEventListener('dragend', () => {
+        wrap.classList.remove('dragging');
         row.classList.remove('variation-row-dragging');
-        row.removeAttribute('draggable');
-        row.parentNode.querySelectorAll('.variation-row').forEach(r => {
+        wrap.removeAttribute('draggable');
+        document.querySelectorAll('#variations-list .variation-row').forEach(r => {
           r.classList.remove('drag-over-above', 'drag-over-below');
         });
       });
-      row.addEventListener('dragover', (e) => {
+      wrap.addEventListener('dragover', (e) => {
         e.preventDefault();
         e.dataTransfer.dropEffect = 'move';
-        const rect = row.getBoundingClientRect();
+        const rect = wrap.getBoundingClientRect();
         const midY = rect.top + rect.height / 2;
         row.classList.toggle('drag-over-above', e.clientY < midY);
         row.classList.toggle('drag-over-below', e.clientY >= midY);
       });
-      row.addEventListener('dragleave', () => {
+      wrap.addEventListener('dragleave', () => {
         row.classList.remove('drag-over-above', 'drag-over-below');
       });
-      row.addEventListener('drop', (e) => {
+      wrap.addEventListener('drop', (e) => {
         e.preventDefault();
         row.classList.remove('drag-over-above', 'drag-over-below');
-        const list = row.parentNode;
-        const rows = [...list.querySelectorAll('.variation-row')];
-        const draggedRow = rows.find(r => r.classList.contains('variation-row-dragging'));
-        if (!draggedRow || draggedRow === row) return;
-        const rect = row.getBoundingClientRect();
+        const list = document.getElementById('variations-list');
+        const draggedWrap = list.querySelector('.variation-row-wrap.dragging');
+        if (!draggedWrap || draggedWrap === wrap) return;
+        const rect = wrap.getBoundingClientRect();
         const midY = rect.top + rect.height / 2;
         if (e.clientY < midY) {
-          list.insertBefore(draggedRow, row);
+          list.insertBefore(draggedWrap, wrap);
         } else {
-          list.insertBefore(draggedRow, row.nextSibling);
+          list.insertBefore(draggedWrap, wrap.nextSibling);
         }
       });
 
       // Touch drag for mobile
       let touchStartY = 0;
-      let touchClone = null;
-      let touchRows = [];
+      let touchWraps = [];
       handle.addEventListener('touchstart', (e) => {
         e.preventDefault();
         touchStartY = e.touches[0].clientY;
+        wrap.classList.add('dragging');
         row.classList.add('variation-row-dragging');
-        touchRows = [...row.parentNode.querySelectorAll('.variation-row')];
+        touchWraps = [...document.querySelectorAll('#variations-list .variation-row-wrap')];
       }, { passive: false });
       handle.addEventListener('touchmove', (e) => {
         e.preventDefault();
         const y = e.touches[0].clientY;
-        touchRows.forEach(r => {
-          r.classList.remove('drag-over-above', 'drag-over-below');
-          if (r === row) return;
-          const rect = r.getBoundingClientRect();
+        touchWraps.forEach(w => {
+          const r = w.querySelector('.variation-row');
+          if (r) r.classList.remove('drag-over-above', 'drag-over-below');
+          if (w === wrap) return;
+          const rect = w.getBoundingClientRect();
           if (y > rect.top && y < rect.bottom) {
             const mid = rect.top + rect.height / 2;
-            r.classList.toggle('drag-over-above', y < mid);
-            r.classList.toggle('drag-over-below', y >= mid);
+            if (r) {
+              r.classList.toggle('drag-over-above', y < mid);
+              r.classList.toggle('drag-over-below', y >= mid);
+            }
           }
         });
       }, { passive: false });
       handle.addEventListener('touchend', (e) => {
         e.preventDefault();
+        wrap.classList.remove('dragging');
         row.classList.remove('variation-row-dragging');
         const y = e.changedTouches[0].clientY;
-        const list = row.parentNode;
+        const list = document.getElementById('variations-list');
         let target = null;
         let above = false;
-        touchRows.forEach(r => {
-          if (r === row) return;
-          const rect = r.getBoundingClientRect();
+        touchWraps.forEach(w => {
+          if (w === wrap) return;
+          const rect = w.getBoundingClientRect();
           if (y > rect.top && y < rect.bottom) {
-            target = r;
+            target = w;
             above = y < rect.top + rect.height / 2;
           }
-          r.classList.remove('drag-over-above', 'drag-over-below');
+          const wr = w.querySelector('.variation-row');
+          if (wr) wr.classList.remove('drag-over-above', 'drag-over-below');
         });
         if (target) {
           if (above) {
-            list.insertBefore(row, target);
+            list.insertBefore(wrap, target);
           } else {
-            list.insertBefore(row, target.nextSibling);
+            list.insertBefore(wrap, target.nextSibling);
           }
         }
-        touchRows = [];
+        touchWraps = [];
       }, { passive: false });
     }
 
-    function addVariationRow(name = '', delta = '', available = true, quantity = 0) {
+    function addVariationRow(name = '', delta = '', available = true, quantity = 0, ingredients = '') {
+      const wrap = document.createElement('div');
+      wrap.className = 'variation-row-wrap';
       const row = document.createElement('div');
       row.className = 'variation-row' + (!available ? ' variation-row-unavailable' : '');
       row.innerHTML = `
@@ -474,8 +604,15 @@
           <input type="number" class="variation-qty-input" min="0" max="9999" placeholder="0" value="${quantity}" />
         </div>
         <button type="button" class="btn-variation-remove" title="Remove">&times;</button>`;
+      wrap.appendChild(row);
+      const ingredientsInput = document.createElement('input');
+      ingredientsInput.type = 'text';
+      ingredientsInput.className = 'variation-ingredients-input';
+      ingredientsInput.placeholder = 'Ingredients for this variant…';
+      ingredientsInput.value = ingredients;
+      wrap.appendChild(ingredientsInput);
       wireVariationRowBehavior(row);
-      document.getElementById('variations-list').appendChild(row);
+      document.getElementById('variations-list').appendChild(wrap);
     }
 
     function wireAdminSave() {
@@ -484,7 +621,7 @@
       const thumb = document.getElementById('admin-img-thumb');
 
       // Wire existing variation rows (drag, checkbox, remove)
-      document.querySelectorAll('#variations-list .variation-row').forEach(row => {
+      document.querySelectorAll('#variations-list .variation-row-wrap .variation-row').forEach(row => {
         wireVariationRowBehavior(row);
       });
 
@@ -529,27 +666,33 @@
         }
 
         const description = document.getElementById('edit-description').value.trim();
+        const ingredients = document.getElementById('edit-ingredients').value.trim();
 
         // Collect variations
         const variations = [];
-        document.querySelectorAll('#variations-list .variation-row').forEach(row => {
+        document.querySelectorAll('#variations-list .variation-row-wrap').forEach(wrap => {
+          const row = wrap.querySelector('.variation-row');
           const name = row.querySelector('.variation-name-input').value.trim();
           const deltaRaw = parseFloat(row.querySelector('.variation-delta-input').value) || 0;
           const available = row.querySelector('.variation-available-check').checked;
           const quantity = parseInt(row.querySelector('.variation-qty-input').value, 10) || 0;
-          if (name) variations.push({ name, price_delta: Math.round(deltaRaw * 100), available, quantity });
+          const vIngredients = wrap.querySelector('.variation-ingredients-input')?.value.trim() || '';
+          if (name) variations.push({ name, price_delta: Math.round(deltaRaw * 100), available, quantity, ingredients: vIngredients });
         });
 
         const { error } = await sb.from('product_details').upsert(
-          { stripe_product_id: productId, description, image_url: imageUrl, variations, updated_at: new Date().toISOString() },
+          { stripe_product_id: productId, description, ingredients, image_url: imageUrl, variations, updated_at: new Date().toISOString() },
           { onConflict: 'stripe_product_id' }
         );
 
         if (error) {
           showToast('Save failed: ' + error.message, true);
         } else {
-          productDetails = { description, image_url: imageUrl, variations };
+          productDetails = { description, ingredients, image_url: imageUrl, variations };
           showToast('Product updated');
+          // Refresh ingredients display
+          const ingredientsDisplay = document.getElementById('product-ingredients-display');
+          if (ingredientsDisplay) ingredientsDisplay.textContent = ingredients;
           // Refresh the product image display
           const imgWrap = document.querySelector('.product-img-wrap');
           if (imgWrap && imageUrl) {
@@ -585,9 +728,11 @@
                 if (v.quantity > 0 && v.quantity <= 5) {
                   label += ` <span class="variation-stock-note">(${v.quantity} left)</span>`;
                 }
+                const vIng = v.ingredients ? `<span class="variation-ingredients">${escHtml(v.ingredients)}</span>` : '';
                 return `<label class="variation-option${i === 0 ? ' selected' : ''}">
                   <input type="radio" name="variation" value="${v.price_delta || 0}" data-name="${escHtml(v.name)}" ${i === 0 ? 'checked' : ''} />
                   ${label}
+                  ${vIng}
                 </label>`;
               }).join('');
               // Re-wire pill click listeners

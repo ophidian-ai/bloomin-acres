@@ -31,6 +31,88 @@
 </head>
 <body>
 
+<!-- Hamburger toggle -->
+<button type="button" class="nav-toggle" id="nav-toggle" aria-label="Open navigation" aria-expanded="false" aria-controls="nav-sidebar">
+  <span></span><span></span><span></span>
+</button>
+
+<!-- Sidebar drawer -->
+<div class="nav-sidebar" id="nav-sidebar" role="dialog" aria-modal="true" aria-label="Site navigation">
+  <img src="brand-assets/color-logo.png" alt="Bloomin' Acres" class="nav-sidebar-logo" />
+  <nav>
+    <a href="index.html"   class="nav-sidebar-link">Home</a>
+    <a href="menu.html"    class="nav-sidebar-link accent">Menu</a>
+    <a href="club.html"    class="nav-sidebar-link">The Club</a>
+    <a href="account.html" class="nav-sidebar-link" id="sidebar-signin-link">Sign In</a>
+    <div class="nav-account-item" id="sidebar-account-item" style="display:none;">
+      <button type="button" class="nav-account-toggle" id="sidebar-account-toggle" aria-haspopup="true" aria-expanded="false">
+        <span>My Account</span>
+        <svg class="chevron" viewBox="0 0 10 10" fill="none" aria-hidden="true">
+          <path d="M2 3.5l3 3 3-3" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </button>
+      <div class="nav-account-submenu" role="menu">
+        <a href="account.html?tab=cart" role="menuitem">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
+          Cart
+        </a>
+        <a href="account.html?tab=favorites" role="menuitem">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+          Favorites
+        </a>
+        <a href="account.html?tab=orders" role="menuitem">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+          Orders
+        </a>
+        <a href="account.html?tab=profile" role="menuitem">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+          Profile
+        </a>
+      </div>
+    </div>
+    <button type="button" class="nav-sidebar-link nav-signout-btn" id="sidebar-signout-btn" style="display:none;">Sign Out</button>
+  </nav>
+</div>
+
+<!-- Backdrop -->
+<div class="nav-overlay" id="nav-overlay" aria-hidden="true"></div>
+
+<script>
+  (() => {
+    const toggle  = document.getElementById('nav-toggle');
+    const sidebar = document.getElementById('nav-sidebar');
+    const overlay = document.getElementById('nav-overlay');
+
+    function openNav() {
+      sidebar.classList.add('open');
+      overlay.classList.add('open');
+      toggle.classList.add('open');
+      toggle.setAttribute('aria-expanded', 'true');
+    }
+    function closeNav() {
+      sidebar.classList.remove('open');
+      overlay.classList.remove('open');
+      toggle.classList.remove('open');
+      toggle.setAttribute('aria-expanded', 'false');
+    }
+
+    toggle.addEventListener('click', () => sidebar.classList.contains('open') ? closeNav() : openNav());
+    overlay.addEventListener('click', closeNav);
+    sidebar.querySelectorAll('.nav-sidebar-link').forEach(link => {
+      link.addEventListener('click', closeNav);
+    });
+
+    const acctToggle = document.getElementById('sidebar-account-toggle');
+    const acctItem   = document.getElementById('sidebar-account-item');
+    acctToggle.addEventListener('click', () => {
+      const open = acctItem.classList.toggle('open');
+      acctToggle.setAttribute('aria-expanded', open);
+    });
+
+    document.addEventListener('keydown', e => { if (e.key === 'Escape') closeNav(); });
+  })();
+</script>
+
 <!-- Loading overlay -->
 <div id="loading"><div class="spinner"></div></div>
 
@@ -336,7 +418,29 @@
     const targetTab = params.get('tab');
 
     const { data: { session } } = await sb.auth.getSession();
+
+    // Wire sidebar auth state
+    const signinLink = document.getElementById('sidebar-signin-link');
+    const acctItemEl = document.getElementById('sidebar-account-item');
+    const signoutBtn = document.getElementById('sidebar-signout-btn');
+
     if (session) {
+      signinLink.style.display = 'none';
+      const { data: adminCheck } = await sb.from('admins').select('user_id').eq('user_id', session.user.id).maybeSingle();
+      if (adminCheck) {
+        const dashLink = document.createElement('a');
+        dashLink.href = 'admin.html';
+        dashLink.className = 'nav-sidebar-link';
+        dashLink.textContent = 'Dashboard';
+        acctItemEl.parentNode.insertBefore(dashLink, acctItemEl);
+      } else {
+        acctItemEl.style.display = 'block';
+      }
+      signoutBtn.style.display = 'block';
+      signoutBtn.addEventListener('click', async () => {
+        await sb.auth.signOut();
+        window.location.reload();
+      });
       await enterDashboard(session.user, targetTab);
     } else {
       showAuthCard();

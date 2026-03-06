@@ -346,7 +346,13 @@
         labelEl.innerHTML = `<span class="section-title">${escHtml(section.title)}</span>`;
         content.appendChild(labelEl);
 
-        items.forEach(item => {
+        const sortedItems = [...items].sort((a, b) => {
+          const nameA = (productMap[a.stripe_product_id]?.name || a.stripe_product_id).toLowerCase();
+          const nameB = (productMap[b.stripe_product_id]?.name || b.stripe_product_id).toLowerCase();
+          return nameA.localeCompare(nameB);
+        });
+
+        sortedItems.forEach(item => {
           const product = productMap[item.stripe_product_id];
           const name = product ? product.name : item.stripe_product_id;
           const price = product?.price_formatted ?? '';
@@ -374,9 +380,12 @@
               }).join('')}
             </div>` : '';
 
+          const imageUrl = product?.images?.[0] || '';
+
           const row = document.createElement('div');
           row.className = 'menu-item';
           row.innerHTML = `
+            ${imageUrl ? `<a class="menu-item-img-link" href="product.html?id=${encodeURIComponent(pid)}"><img class="menu-item-img" src="${escHtml(imageUrl)}" alt="${escHtml(name)}" loading="lazy" /></a>` : ''}
             <div class="menu-item-row">
               <a class="item-name" href="product.html?id=${encodeURIComponent(pid)}">${escHtml(name)}</a>
               <span class="item-dots" aria-hidden="true"></span>

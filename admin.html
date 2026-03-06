@@ -30,6 +30,55 @@
 </head>
 <body>
 
+<!-- Hamburger toggle -->
+<button type="button" class="nav-toggle" id="nav-toggle" aria-label="Open navigation" aria-expanded="false" aria-controls="nav-sidebar">
+  <span></span><span></span><span></span>
+</button>
+
+<!-- Sidebar drawer -->
+<div class="nav-sidebar" id="nav-sidebar" role="dialog" aria-modal="true" aria-label="Site navigation">
+  <img src="brand-assets/color-logo.png" alt="Bloomin' Acres" class="nav-sidebar-logo" />
+  <nav>
+    <a href="index.html"   class="nav-sidebar-link">Home</a>
+    <a href="menu.html"    class="nav-sidebar-link accent">Menu</a>
+    <a href="club.html"    class="nav-sidebar-link">The Club</a>
+    <a href="admin.html"   class="nav-sidebar-link">Dashboard</a>
+    <button type="button" class="nav-sidebar-link nav-signout-btn" id="sidebar-signout-btn" style="display:none;">Sign Out</button>
+  </nav>
+</div>
+
+<!-- Backdrop -->
+<div class="nav-overlay" id="nav-overlay" aria-hidden="true"></div>
+
+<script>
+  (() => {
+    const toggle  = document.getElementById('nav-toggle');
+    const sidebar = document.getElementById('nav-sidebar');
+    const overlay = document.getElementById('nav-overlay');
+
+    function openNav() {
+      sidebar.classList.add('open');
+      overlay.classList.add('open');
+      toggle.classList.add('open');
+      toggle.setAttribute('aria-expanded', 'true');
+    }
+    function closeNav() {
+      sidebar.classList.remove('open');
+      overlay.classList.remove('open');
+      toggle.classList.remove('open');
+      toggle.setAttribute('aria-expanded', 'false');
+    }
+
+    toggle.addEventListener('click', () => sidebar.classList.contains('open') ? closeNav() : openNav());
+    overlay.addEventListener('click', closeNav);
+    sidebar.querySelectorAll('.nav-sidebar-link').forEach(link => {
+      link.addEventListener('click', closeNav);
+    });
+
+    document.addEventListener('keydown', e => { if (e.key === 'Escape') closeNav(); });
+  })();
+</script>
+
   <!-- Login is handled by account.html — no overlay here -->
 
   <!-- ===== DASHBOARD ===== -->
@@ -547,6 +596,14 @@
 
     // ── Logout ────────────────────────────────────────────────────────────────
     document.getElementById('logout-btn').addEventListener('click', async () => {
+      await sb.auth.signOut();
+      window.location.href = 'account.html';
+    });
+
+    // Wire sidebar sign-out
+    const sidebarSignout = document.getElementById('sidebar-signout-btn');
+    sidebarSignout.style.display = 'block';
+    sidebarSignout.addEventListener('click', async () => {
       await sb.auth.signOut();
       window.location.href = 'account.html';
     });
