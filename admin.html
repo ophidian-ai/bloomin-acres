@@ -645,6 +645,7 @@
       }
       grid.innerHTML = products.map(p => `
         <a class="product-card" href="product.html?id=${encodeURIComponent(p.id)}">
+          ${p.images && p.images[0] ? `<img class="product-card-img" src="${escHtml(p.images[0])}" alt="${escHtml(p.name)}" loading="lazy" />` : ''}
           <div class="product-name">${escHtml(p.name)}</div>
           ${p.description ? `<div class="product-desc">${escHtml(p.description)}</div>` : ''}
           <div class="product-footer">

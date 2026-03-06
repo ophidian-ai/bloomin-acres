@@ -380,12 +380,9 @@
               }).join('')}
             </div>` : '';
 
-          const imageUrl = product?.images?.[0] || '';
-
           const row = document.createElement('div');
           row.className = 'menu-item';
           row.innerHTML = `
-            ${imageUrl ? `<a class="menu-item-img-link" href="product.html?id=${encodeURIComponent(pid)}"><img class="menu-item-img" src="${escHtml(imageUrl)}" alt="${escHtml(name)}" loading="lazy" /></a>` : ''}
             <div class="menu-item-row">
               <a class="item-name" href="product.html?id=${encodeURIComponent(pid)}">${escHtml(name)}</a>
               <span class="item-dots" aria-hidden="true"></span>
