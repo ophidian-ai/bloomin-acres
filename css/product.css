@@ -290,6 +290,10 @@ body {
 .variation-row {
   display: flex; align-items: center; gap: .5rem;
   margin-bottom: .5rem;
+  border: 1.5px solid transparent;
+  border-radius: 4px;
+  padding: .25rem .25rem .25rem 0;
+  transition: border-color .15s, opacity .2s;
 }
 .variation-name-input {
   flex: 2; padding: .45rem .65rem;
@@ -327,6 +331,53 @@ body {
   transition: border-color .15s, color .15s;
 }
 .btn-add-variation:hover { border-color: var(--sage-dark); color: var(--sage-dark); }
+
+/* Drag handle */
+.variation-drag-handle {
+  display: flex; align-items: center; justify-content: center;
+  width: 20px; flex-shrink: 0;
+  cursor: grab; color: rgba(74,51,34,.3);
+  touch-action: none;
+}
+.variation-drag-handle:active { cursor: grabbing; }
+.variation-drag-handle svg { pointer-events: none; }
+
+/* Availability checkbox */
+.variation-available-check {
+  flex-shrink: 0;
+  width: 15px; height: 15px;
+  accent-color: var(--sage-dark);
+  cursor: pointer;
+}
+
+/* Quantity input */
+.variation-qty-wrap {
+  display: flex; align-items: center; gap: .25rem; flex-shrink: 0;
+}
+.variation-qty-label {
+  font-size: .75rem; color: var(--earth-mid); white-space: nowrap;
+}
+.variation-qty-input {
+  width: 58px; padding: .45rem .4rem;
+  border: 1.5px solid rgba(74,51,34,.18); border-radius: 4px;
+  background: var(--farm-cream); font-family: var(--font-body);
+  font-size: .85rem; color: var(--earth-brown);
+  text-align: center;
+}
+.variation-qty-input:focus { outline: none; border-color: var(--sage-dark); }
+
+/* Drag and availability states */
+.variation-row-unavailable { opacity: .42; }
+.variation-row.drag-over-above { border-top-color: var(--sage-dark); }
+.variation-row.drag-over-below { border-bottom-color: var(--sage-dark); }
+.variation-row-dragging { opacity: .35; }
+
+/* Stock note on customer pills */
+.variation-stock-note {
+  font-size: .75rem;
+  color: var(--burnt-orange);
+  font-weight: 400;
+}
 
 /* ── Toast ───────────────────────────────────────────────── */
 #toast {

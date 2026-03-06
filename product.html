@@ -164,15 +164,19 @@
       const imageUrl = productDetails?.image_url || stripeProduct?.images?.[0] || '';
       const variations = productDetails?.variations || [];
 
-      const variationSelectorHtml = variations.length > 0 ? `
+      const visibleVariations = variations.filter(v => v.available !== false && (v.quantity === undefined || v.quantity > 0));
+      const variationSelectorHtml = visibleVariations.length > 0 ? `
         <div class="variation-selector">
           <span class="variation-selector-label">Options</span>
           <div class="variation-options" id="variation-options">
-            ${variations.map((v, i) => {
+            ${visibleVariations.map((v, i) => {
               const totalCents = (baseAmount || 0) + (v.price_delta || 0);
-              const label = v.price_delta
+              let label = v.price_delta
                 ? `${escHtml(v.name)} &nbsp;·&nbsp; ${formatPrice(totalCents, currency)}`
                 : escHtml(v.name);
+              if (v.quantity > 0 && v.quantity <= 5) {
+                label += ` <span class="variation-stock-note">(${v.quantity} left)</span>`;
+              }
               return `<label class="variation-option${i === 0 ? ' selected' : ''}">
                 <input type="radio" name="variation" value="${v.price_delta || 0}" data-name="${escHtml(v.name)}" ${i === 0 ? 'checked' : ''} />
                 ${label}
@@ -186,11 +190,23 @@
           <label class="admin-label">Variations <span class="admin-label-note">(optional — e.g. sizes, flavors)</span></label>
           <div id="variations-list">
             ${(productDetails?.variations || []).map(v => `
-              <div class="variation-row">
+              <div class="variation-row${v.available === false ? ' variation-row-unavailable' : ''}">
+                <span class="variation-drag-handle" title="Drag to reorder">
+                  <svg width="10" height="14" viewBox="0 0 10 14" fill="currentColor" aria-hidden="true">
+                    <circle cx="3" cy="2" r="1.2"/><circle cx="7" cy="2" r="1.2"/>
+                    <circle cx="3" cy="7" r="1.2"/><circle cx="7" cy="7" r="1.2"/>
+                    <circle cx="3" cy="12" r="1.2"/><circle cx="7" cy="12" r="1.2"/>
+                  </svg>
+                </span>
+                <input type="checkbox" class="variation-available-check" title="Visible to customers" ${v.available !== false ? 'checked' : ''} />
                 <input type="text" class="variation-name-input" placeholder="Name (e.g. Large)" value="${escHtml(v.name)}" />
                 <div class="variation-delta-wrap">
                   <span class="variation-delta-prefix">+$</span>
                   <input type="number" class="variation-delta-input" step="0.01" min="0" placeholder="0.00" value="${((v.price_delta || 0) / 100).toFixed(2)}" />
+                </div>
+                <div class="variation-qty-wrap">
+                  <span class="variation-qty-label">Qty</span>
+                  <input type="number" class="variation-qty-input" min="0" max="9999" placeholder="0" value="${v.quantity ?? 0}" />
                 </div>
                 <button type="button" class="btn-variation-remove" title="Remove">&times;</button>
               </div>`).join('')}
@@ -326,17 +342,139 @@
       });
     }
 
-    function addVariationRow(name = '', delta = '') {
+    function wireVariationRowBehavior(row) {
+      // Remove button
+      const removeBtn = row.querySelector('.btn-variation-remove');
+      if (removeBtn) removeBtn.addEventListener('click', () => row.remove());
+
+      // Checkbox toggle
+      const checkbox = row.querySelector('.variation-available-check');
+      if (checkbox) {
+        checkbox.addEventListener('change', () => {
+          row.classList.toggle('variation-row-unavailable', !checkbox.checked);
+        });
+      }
+
+      // Drag handle — desktop HTML5 drag-and-drop
+      const handle = row.querySelector('.variation-drag-handle');
+      if (!handle) return;
+
+      handle.addEventListener('mousedown', () => { row.setAttribute('draggable', 'true'); });
+      handle.addEventListener('mouseup', () => { row.removeAttribute('draggable'); });
+
+      row.addEventListener('dragstart', (e) => {
+        row.classList.add('variation-row-dragging');
+        e.dataTransfer.effectAllowed = 'move';
+        row._dragIndex = [...row.parentNode.children].indexOf(row);
+      });
+      row.addEventListener('dragend', () => {
+        row.classList.remove('variation-row-dragging');
+        row.removeAttribute('draggable');
+        row.parentNode.querySelectorAll('.variation-row').forEach(r => {
+          r.classList.remove('drag-over-above', 'drag-over-below');
+        });
+      });
+      row.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        e.dataTransfer.dropEffect = 'move';
+        const rect = row.getBoundingClientRect();
+        const midY = rect.top + rect.height / 2;
+        row.classList.toggle('drag-over-above', e.clientY < midY);
+        row.classList.toggle('drag-over-below', e.clientY >= midY);
+      });
+      row.addEventListener('dragleave', () => {
+        row.classList.remove('drag-over-above', 'drag-over-below');
+      });
+      row.addEventListener('drop', (e) => {
+        e.preventDefault();
+        row.classList.remove('drag-over-above', 'drag-over-below');
+        const list = row.parentNode;
+        const rows = [...list.querySelectorAll('.variation-row')];
+        const draggedRow = rows.find(r => r.classList.contains('variation-row-dragging'));
+        if (!draggedRow || draggedRow === row) return;
+        const rect = row.getBoundingClientRect();
+        const midY = rect.top + rect.height / 2;
+        if (e.clientY < midY) {
+          list.insertBefore(draggedRow, row);
+        } else {
+          list.insertBefore(draggedRow, row.nextSibling);
+        }
+      });
+
+      // Touch drag for mobile
+      let touchStartY = 0;
+      let touchClone = null;
+      let touchRows = [];
+      handle.addEventListener('touchstart', (e) => {
+        e.preventDefault();
+        touchStartY = e.touches[0].clientY;
+        row.classList.add('variation-row-dragging');
+        touchRows = [...row.parentNode.querySelectorAll('.variation-row')];
+      }, { passive: false });
+      handle.addEventListener('touchmove', (e) => {
+        e.preventDefault();
+        const y = e.touches[0].clientY;
+        touchRows.forEach(r => {
+          r.classList.remove('drag-over-above', 'drag-over-below');
+          if (r === row) return;
+          const rect = r.getBoundingClientRect();
+          if (y > rect.top && y < rect.bottom) {
+            const mid = rect.top + rect.height / 2;
+            r.classList.toggle('drag-over-above', y < mid);
+            r.classList.toggle('drag-over-below', y >= mid);
+          }
+        });
+      }, { passive: false });
+      handle.addEventListener('touchend', (e) => {
+        e.preventDefault();
+        row.classList.remove('variation-row-dragging');
+        const y = e.changedTouches[0].clientY;
+        const list = row.parentNode;
+        let target = null;
+        let above = false;
+        touchRows.forEach(r => {
+          if (r === row) return;
+          const rect = r.getBoundingClientRect();
+          if (y > rect.top && y < rect.bottom) {
+            target = r;
+            above = y < rect.top + rect.height / 2;
+          }
+          r.classList.remove('drag-over-above', 'drag-over-below');
+        });
+        if (target) {
+          if (above) {
+            list.insertBefore(row, target);
+          } else {
+            list.insertBefore(row, target.nextSibling);
+          }
+        }
+        touchRows = [];
+      }, { passive: false });
+    }
+
+    function addVariationRow(name = '', delta = '', available = true, quantity = 0) {
       const row = document.createElement('div');
-      row.className = 'variation-row';
+      row.className = 'variation-row' + (!available ? ' variation-row-unavailable' : '');
       row.innerHTML = `
+        <span class="variation-drag-handle" title="Drag to reorder">
+          <svg width="10" height="14" viewBox="0 0 10 14" fill="currentColor" aria-hidden="true">
+            <circle cx="3" cy="2" r="1.2"/><circle cx="7" cy="2" r="1.2"/>
+            <circle cx="3" cy="7" r="1.2"/><circle cx="7" cy="7" r="1.2"/>
+            <circle cx="3" cy="12" r="1.2"/><circle cx="7" cy="12" r="1.2"/>
+          </svg>
+        </span>
+        <input type="checkbox" class="variation-available-check" title="Visible to customers" ${available ? 'checked' : ''} />
         <input type="text" class="variation-name-input" placeholder="Name (e.g. Large)" value="${escHtml(name)}" />
         <div class="variation-delta-wrap">
           <span class="variation-delta-prefix">+$</span>
           <input type="number" class="variation-delta-input" step="0.01" min="0" placeholder="0.00" value="${escHtml(String(delta))}" />
         </div>
+        <div class="variation-qty-wrap">
+          <span class="variation-qty-label">Qty</span>
+          <input type="number" class="variation-qty-input" min="0" max="9999" placeholder="0" value="${quantity}" />
+        </div>
         <button type="button" class="btn-variation-remove" title="Remove">&times;</button>`;
-      row.querySelector('.btn-variation-remove').addEventListener('click', () => row.remove());
+      wireVariationRowBehavior(row);
       document.getElementById('variations-list').appendChild(row);
     }
 
@@ -345,9 +483,9 @@
       const fileInput = document.getElementById('edit-image');
       const thumb = document.getElementById('admin-img-thumb');
 
-      // Wire existing remove buttons
-      document.querySelectorAll('.btn-variation-remove').forEach(b => {
-        b.addEventListener('click', () => b.closest('.variation-row').remove());
+      // Wire existing variation rows (drag, checkbox, remove)
+      document.querySelectorAll('#variations-list .variation-row').forEach(row => {
+        wireVariationRowBehavior(row);
       });
 
       document.getElementById('btn-add-variation').addEventListener('click', () => addVariationRow());
@@ -397,7 +535,9 @@
         document.querySelectorAll('#variations-list .variation-row').forEach(row => {
           const name = row.querySelector('.variation-name-input').value.trim();
           const deltaRaw = parseFloat(row.querySelector('.variation-delta-input').value) || 0;
-          if (name) variations.push({ name, price_delta: Math.round(deltaRaw * 100) });
+          const available = row.querySelector('.variation-available-check').checked;
+          const quantity = parseInt(row.querySelector('.variation-qty-input').value, 10) || 0;
+          if (name) variations.push({ name, price_delta: Math.round(deltaRaw * 100), available, quantity });
         });
 
         const { error } = await sb.from('product_details').upsert(
@@ -417,6 +557,53 @@
           }
           const descDisplay = document.getElementById('product-desc-display');
           if (descDisplay) descDisplay.textContent = description;
+
+          // Refresh customer-facing variation pills
+          const visibleVars = variations.filter(v => v.available !== false && (v.quantity === undefined || v.quantity > 0));
+          const selectorDiv = document.querySelector('.variation-selector');
+          const optionsDiv = document.getElementById('variation-options');
+          if (visibleVars.length > 0) {
+            if (!selectorDiv) {
+              // Create variation selector if it didn't exist before
+              const newSelector = document.createElement('div');
+              newSelector.className = 'variation-selector';
+              newSelector.innerHTML = `
+                <span class="variation-selector-label">Options</span>
+                <div class="variation-options" id="variation-options"></div>`;
+              const actionsDiv = document.getElementById('product-actions');
+              if (actionsDiv) actionsDiv.parentNode.insertBefore(newSelector, actionsDiv);
+            }
+            const targetDiv = document.getElementById('variation-options');
+            if (targetDiv) {
+              const baseAmount = stripeProduct?.unit_amount ?? null;
+              const currency = stripeProduct?.currency || 'usd';
+              targetDiv.innerHTML = visibleVars.map((v, i) => {
+                const totalCents = (baseAmount || 0) + (v.price_delta || 0);
+                let label = v.price_delta
+                  ? `${escHtml(v.name)} &nbsp;·&nbsp; ${formatPrice(totalCents, currency)}`
+                  : escHtml(v.name);
+                if (v.quantity > 0 && v.quantity <= 5) {
+                  label += ` <span class="variation-stock-note">(${v.quantity} left)</span>`;
+                }
+                return `<label class="variation-option${i === 0 ? ' selected' : ''}">
+                  <input type="radio" name="variation" value="${v.price_delta || 0}" data-name="${escHtml(v.name)}" ${i === 0 ? 'checked' : ''} />
+                  ${label}
+                </label>`;
+              }).join('');
+              // Re-wire pill click listeners
+              targetDiv.querySelectorAll('.variation-option').forEach(lbl => {
+                lbl.addEventListener('click', () => {
+                  targetDiv.querySelectorAll('.variation-option').forEach(l => l.classList.remove('selected'));
+                  lbl.classList.add('selected');
+                });
+              });
+            }
+            const sel = document.querySelector('.variation-selector');
+            if (sel) sel.style.display = '';
+          } else {
+            // Hide variation selector when no variants pass the filter
+            if (selectorDiv) selectorDiv.style.display = 'none';
+          }
         }
 
         btn.disabled = false;

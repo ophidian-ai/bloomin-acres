@@ -354,13 +354,14 @@
           const isFav = userFavIds.has(pid);
 
           const variations = detailsMap[pid]?.variations || [];
+          const availableVariations = variations.filter(v => v.available !== false && (v.quantity === undefined || v.quantity > 0));
           const baseAmount = product?.unit_amount ?? null;
           const currency = product?.currency || 'usd';
           const fmtPrice = cents => new Intl.NumberFormat('en-US', { style: 'currency', currency }).format(cents / 100);
 
-          const variationDropdownHtml = variations.length > 0 ? `
+          const variationDropdownHtml = availableVariations.length > 0 ? `
             <div class="variation-dropdown" id="var-dd-${escHtml(pid)}">
-              ${variations.map(v => {
+              ${availableVariations.map(v => {
                 const total = (baseAmount || 0) + (v.price_delta || 0);
                 return `<div class="variation-dropdown-row">
                   <span class="variation-dropdown-name">${escHtml(v.name)}</span>
@@ -383,7 +384,7 @@
             </div>
             <div class="menu-item-actions">
               <a class="btn-view" href="product.html?id=${encodeURIComponent(pid)}">View</a>
-              ${variations.length > 0
+              ${availableVariations.length > 0
                 ? `<button class="btn-options" data-pid="${escHtml(pid)}">Options &#9662;</button>`
                 : ''}
               ${currentUser ? `<button class="btn-fav${isFav ? ' active' : ''}" data-pid="${escHtml(pid)}" aria-label="Save to favorites">
