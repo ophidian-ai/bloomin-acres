@@ -39,8 +39,8 @@
   const basketImg = document.createElement('img');
   basketImg.src = 'brand-assets/basket-icon.png';
   basketImg.alt = '';
-  basketImg.width = 20;
-  basketImg.height = 20;
+  basketImg.width = 40;
+  basketImg.height = 40;
   basketImg.setAttribute('aria-hidden', 'true');
   cartLink.appendChild(basketImg);
   const cartBadge = document.createElement('span');
