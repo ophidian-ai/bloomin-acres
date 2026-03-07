@@ -15,7 +15,11 @@ body {
   color: var(--earth-brown);
   line-height: 1.7;
   min-height: 100vh;
+  display: flex;
+  flex-direction: column;
 }
+
+.page-wrap { flex: 1; }
 
 /* ── Nav ─────────────────────────────────────────────────── */
 .site-nav {
