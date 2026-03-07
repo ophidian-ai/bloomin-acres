@@ -3,6 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="icon" type="image/png" href="/brand-assets/sprout.png" />
   <title>The Bread Box Club — Bloomin' Acres Farmstand & Bakery</title>
   <meta name="description" content="Join The Bread Box Club for weekly curated sourdough selections, member discounts, referral rewards, and exclusive perks from Bloomin' Acres." />
   <meta property="og:title" content="The Bread Box Club — Bloomin' Acres" />
@@ -501,6 +502,17 @@
     }
     window.location.href = url;
   }
+
+  // Re-enable join buttons when returning via back/forward cache
+  window.addEventListener('pageshow', function(e) {
+    if (e.persisted) {
+      var origTexts = { 'join-btn': 'Join the Club', 'join-btn-2': 'Join the Club', 'join-btn-3': 'Join to Get Your Code' };
+      Object.keys(origTexts).forEach(function(id) {
+        var btn = document.getElementById(id);
+        if (btn) { btn.disabled = false; btn.textContent = origTexts[id]; }
+      });
+    }
+  });
 
   ['join-btn', 'join-btn-2', 'join-btn-3'].forEach(id => {
     document.getElementById(id)?.addEventListener('click', handleJoin);
