@@ -420,6 +420,7 @@
     const targetTab = params.get('tab');
 
     const { data: { session } } = await sb.auth.getSession();
+    const alreadySignedIn = !!session;
 
     // Wire sidebar auth state
     const signinLink = document.getElementById('sidebar-signin-link');
@@ -448,8 +449,10 @@
       showAuthCard();
     }
 
+    // Only redirect on genuine new sign-ins, not token refreshes when already logged in
     sb.auth.onAuthStateChange((event, session) => {
       if (event === 'SIGNED_IN' && session) {
+        if (alreadySignedIn) return;
         if (isSigningUp) {
           isSigningUp = false;
           window.location.href = 'account.html?tab=profile';
