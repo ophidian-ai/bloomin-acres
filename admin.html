@@ -1226,8 +1226,9 @@
         }
 
         const { data: { publicUrl } } = sb.storage.from('site-images').getPublicUrl(path);
+        const bustUrl = publicUrl + '?t=' + Date.now();
         const { error: dbErr } = await sb.from('site_content')
-          .upsert({ key, value: publicUrl }, { onConflict: 'key' });
+          .upsert({ key, value: bustUrl }, { onConflict: 'key' });
 
         if (dbErr) showToast('Save failed: ' + dbErr.message, true);
         else showToast('Image saved');

@@ -4,6 +4,12 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Product — Bloomin' Acres Farmstand & Bakery</title>
+  <meta name="description" content="View product details, select options, and add to cart. Fresh from Bloomin' Acres Farmstand & Bakery in Hope, Indiana." />
+  <meta property="og:title" content="Product — Bloomin' Acres Farmstand & Bakery" />
+  <meta property="og:description" content="Fresh handcrafted goods from Bloomin' Acres Farmstand & Bakery." />
+  <meta property="og:type" content="product" />
+  <meta property="og:image" content="/brand-assets/color-logo.png" />
+  <meta name="twitter:card" content="summary_large_image" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,500;1,400&family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400;1,600&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet" />
@@ -154,7 +160,7 @@
   </main>
 
   <footer class="site-footer">
-    <p>&copy; 2025 Bloomin' Acres Farmstand &amp; Bakery &mdash; Hope, IN</p>
+    <p>&copy; 2026 Bloomin' Acres Farmstand &amp; Bakery &mdash; Hope, IN</p>
   </footer>
 
   <!-- Supabase CDN -->
@@ -392,6 +398,11 @@
         lbl.addEventListener('click', () => {
           document.querySelectorAll('.variation-option').forEach(l => l.classList.remove('selected'));
           lbl.classList.add('selected');
+          const radio = lbl.querySelector('input[name="variation"]');
+          if (radio && baseAmount !== null) {
+            const delta = parseInt(radio.value, 10) || 0;
+            document.getElementById('product-price-display').textContent = formatPrice(baseAmount + delta, currency);
+          }
         });
       });
 

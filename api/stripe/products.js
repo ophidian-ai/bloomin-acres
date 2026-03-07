@@ -1,7 +1,8 @@
 import Stripe from 'stripe';
 
 export default async function handler(req, res) {
-  res.setHeader('Access-Control-Allow-Origin', '*');
+  const allowedOrigin = process.env.ALLOWED_ORIGIN || (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'http://localhost:3000');
+  res.setHeader('Access-Control-Allow-Origin', allowedOrigin);
 
   const secretKey = process.env.STRIPE_SECRET_KEY;
   if (!secretKey) {

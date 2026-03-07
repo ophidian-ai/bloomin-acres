@@ -3,7 +3,9 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>My Account — Bloomin' Acres</title>
+  <title>My Account — Bloomin' Acres Farmstand & Bakery</title>
+  <meta name="description" content="Manage your Bloomin' Acres account — view orders, favorites, cart, profile, and Bread Box Club membership." />
+  <meta name="robots" content="noindex" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400;1,600&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600&display=swap" rel="stylesheet" />
@@ -553,10 +555,11 @@
     const rows = cartItems.map(item => {
       const p = products[item.stripe_product_id];
       const name = p?.name || item.stripe_product_id;
-      const price = p?.unit_amount ?? 0;
+      const varLabel = item.variation_name ? ` — ${item.variation_name}` : '';
+      const price = (p?.unit_amount ?? 0) + (item.variation_delta || 0);
       total += price * item.quantity;
       return `<div class="cart-item" data-id="${item.id}" data-pid="${item.stripe_product_id}">
-        <div class="cart-item-name">${name}</div>
+        <div class="cart-item-name">${name}${varLabel}</div>
         <div class="qty-controls">
           <button class="qty-btn" data-action="dec" data-id="${item.id}">−</button>
           <span class="qty-num">${item.quantity}</span>
@@ -601,7 +604,7 @@
   async function startCheckout() {
     const btn = document.getElementById('checkout-btn');
     btn.disabled = true; btn.textContent = 'Redirecting…';
-    const items = cartItems.map(i => ({ stripe_product_id: i.stripe_product_id, quantity: i.quantity }));
+    const items = cartItems.map(i => ({ stripe_product_id: i.stripe_product_id, quantity: i.quantity, variation_name: i.variation_name || '', variation_delta: i.variation_delta || 0 }));
     const r = await fetch('/api/stripe/checkout', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
