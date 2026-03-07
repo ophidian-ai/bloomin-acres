@@ -43,7 +43,7 @@
     <a href="menu.html"    class="nav-sidebar-link accent">Menu</a>
     <a href="club.html"    class="nav-sidebar-link">The Club</a>
     <a href="admin.html"   class="nav-sidebar-link">Dashboard</a>
-    <button type="button" class="nav-sidebar-link nav-signout-btn" id="sidebar-signout-btn" style="display:none;">Sign Out</button>
+    <button type="button" class="nav-sidebar-link nav-signout-btn hidden" id="sidebar-signout-btn">Sign Out</button>
   </nav>
 </div>
 
@@ -183,7 +183,7 @@
       <div class="menu-editor-wrap">
         <div class="editor-header">
           <h2 class="section-heading">Menu Editor</h2>
-          <div style="display:flex;gap:.5rem;align-items:center;">
+          <div class="editor-actions">
             <button id="preview-draft-btn" class="btn-ghost btn-ghost-bordered" title="Preview your unsaved editor changes">
               Preview Draft
             </button>
@@ -553,7 +553,7 @@
     </div>
 
     <!-- Print Dialog Modal -->
-    <div class="print-modal-overlay" id="print-modal" style="display:none;">
+    <div class="print-modal-overlay hidden" id="print-modal">
       <div class="print-modal">
         <h3>Print Order Tickets</h3>
         <div class="print-field">
@@ -566,7 +566,7 @@
             <option value="3x4">Label (3 x 4)</option>
           </select>
         </div>
-        <div class="print-field" id="print-type-filters" style="display:none;">
+        <div class="print-field hidden" id="print-type-filters">
           <label>Type of orders</label>
           <label class="print-checkbox"><input type="checkbox" id="print-paid" checked /> Paid (<span id="print-paid-count">0</span>)</label>
           <label class="print-checkbox"><input type="checkbox" id="print-fulfilled" checked /> Fulfilled (<span id="print-fulfilled-count">0</span>)</label>
@@ -576,7 +576,7 @@
           <label>Which details to include?</label>
           <label class="print-radio"><input type="radio" name="print-detail" value="all" checked /> All Details</label>
           <label class="print-radio"><input type="radio" name="print-detail" value="custom" /> Custom</label>
-          <div class="print-custom-fields" id="print-custom-fields" style="display:none;">
+          <div class="print-custom-fields hidden" id="print-custom-fields">
             <label class="print-checkbox"><input type="checkbox" checked data-field="name" /> Customer name</label>
             <label class="print-checkbox"><input type="checkbox" checked data-field="phone" /> Phone</label>
             <label class="print-checkbox"><input type="checkbox" checked data-field="items" /> Items</label>
@@ -610,7 +610,7 @@
         <button type="button" class="period-btn" data-period="week">This Week</button>
         <button type="button" class="period-btn active" data-period="month">This Month</button>
         <button type="button" class="period-btn" data-period="custom">Custom Range</button>
-        <div class="custom-range" id="custom-range" style="display:none;">
+        <div class="custom-range hidden" id="custom-range">
           <input type="date" id="range-start" aria-label="Start date" />
           <span>to</span>
           <input type="date" id="range-end" aria-label="End date" />
@@ -780,7 +780,7 @@
 
     // Wire sidebar sign-out
     const sidebarSignout = document.getElementById('sidebar-signout-btn');
-    sidebarSignout.style.display = 'block';
+    sidebarSignout.classList.remove('hidden');
     sidebarSignout.addEventListener('click', async () => {
       await sb.auth.signOut();
       window.location.href = 'account.html';
@@ -803,12 +803,12 @@
       const grid = document.getElementById('product-grid');
       const r = await fetch('/api/stripe/products').catch(() => null);
       if (!r || !r.ok) {
-        grid.innerHTML = '<p style="color:rgba(250,240,230,.45);font-size:.85rem;">Could not load Stripe products. Check STRIPE_SECRET_KEY in .env.</p>';
+        grid.innerHTML = '<p class="grid-message">Could not load Stripe products. Check STRIPE_SECRET_KEY in .env.</p>';
         return;
       }
       const data = await r.json();
       if (data.error) {
-        grid.innerHTML = `<p style="color:#f5a0a0;font-size:.85rem;">${escHtml(data.error)}</p>`;
+        grid.innerHTML = `<p class="grid-message grid-error">${escHtml(data.error)}</p>`;
         return;
       }
       allProducts = data.sort((a, b) => (a.name || '').localeCompare(b.name || ''));
@@ -818,7 +818,7 @@
     function renderProductGrid(products) {
       const grid = document.getElementById('product-grid');
       if (!products.length) {
-        grid.innerHTML = '<p style="color:rgba(250,240,230,.45);font-size:.85rem;">No active products found in your Stripe account.</p>';
+        grid.innerHTML = '<p class="grid-message">No active products found in your Stripe account.</p>';
         return;
       }
       grid.innerHTML = products.map(p => `
@@ -1429,7 +1429,7 @@
         .order('created_at', { ascending: false });
 
       if (error) {
-        list.innerHTML = `<p style="color:#f5a0a0;font-size:.85rem;">Failed to load orders: ${escHtml(error.message)}</p>`;
+        list.innerHTML = `<p class="grid-message grid-error">Failed to load orders: ${escHtml(error.message)}</p>`;
         return;
       }
 
@@ -1578,27 +1578,27 @@
       const typeFilters = document.getElementById('print-type-filters');
 
       if (bulk) {
-        typeFilters.style.display = '';
+        typeFilters.classList.remove('hidden');
         const counts = { paid: 0, fulfilled: 0, cancelled: 0 };
         printOrders.forEach(o => { if (counts[o.status] !== undefined) counts[o.status]++; });
         document.getElementById('print-paid-count').textContent = counts.paid;
         document.getElementById('print-fulfilled-count').textContent = counts.fulfilled;
         document.getElementById('print-cancelled-count').textContent = counts.cancelled;
       } else {
-        typeFilters.style.display = 'none';
+        typeFilters.classList.add('hidden');
       }
 
-      modal.style.display = 'flex';
+      modal.classList.remove('hidden');
     }
 
     document.getElementById('print-cancel').addEventListener('click', () => {
-      document.getElementById('print-modal').style.display = 'none';
+      document.getElementById('print-modal').classList.add('hidden');
     });
 
     // Toggle custom fields visibility
     document.querySelectorAll('input[name="print-detail"]').forEach(r => {
       r.addEventListener('change', () => {
-        document.getElementById('print-custom-fields').style.display = r.value === 'custom' && r.checked ? '' : 'none';
+        document.getElementById('print-custom-fields').classList.toggle('hidden', !(r.value === 'custom' && r.checked));
       });
     });
 
@@ -1624,7 +1624,7 @@
 
       if (!orders.length) { showToast('No orders to print', true); return; }
       printTickets(orders, size, fields);
-      document.getElementById('print-modal').style.display = 'none';
+      document.getElementById('print-modal').classList.add('hidden');
     });
 
     function printTickets(orders, size, fields) {
@@ -1682,7 +1682,7 @@
         btn.classList.add('active');
         analyticsPeriod = btn.dataset.period;
         const customRange = document.getElementById('custom-range');
-        customRange.style.display = analyticsPeriod === 'custom' ? 'flex' : 'none';
+        customRange.classList.toggle('hidden', analyticsPeriod !== 'custom');
         if (analyticsPeriod !== 'custom') renderAnalytics();
       });
     });
@@ -1777,7 +1777,7 @@
         const pct = (val / max) * 100;
         const label = new Date(date + 'T12:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
         return `<div class="chart-bar-col" title="${label}: ${fmtUSD.format(val)}">
-          <div class="chart-bar" style="height:${Math.max(pct, 2)}%"></div>
+          <div class="chart-bar" style="--bar-h:${Math.max(pct, 2)}%"></div>
           <div class="chart-bar-label">${entries.length <= 14 ? label : ''}</div>
         </div>`;
       }).join('')}</div>`;
@@ -1849,7 +1849,7 @@
             const p = analyticsData.profileMap[uid];
             const name = p ? [p.first_name, p.last_name].filter(Boolean).join(' ') || uid.slice(0,8) : uid.slice(0,8);
             return `<div class="top-customer-row"><span>${escHtml(name)}</span><span>${fmtUSD.format(spend / 100)}</span></div>`;
-          }).join('') : '<div style="color:rgba(250,240,230,.35);font-size:.82rem;">No data</div>'}
+          }).join('') : '<div class="grid-message">No data</div>'}
         </div>`;
     }
 
