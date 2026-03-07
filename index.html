@@ -188,7 +188,7 @@
   };
   const textKeys = {
     'lp-welcome-heading': { id: 'lp-welcome-heading', html: true },
-    'lp-welcome-body':    { id: 'lp-welcome-body' },
+    'lp-welcome-body':    { id: 'lp-welcome-body', nl2br: true },
     'lp-card1-title':     { id: 'lp-card1-title' },
     'lp-card1-desc':      { id: 'lp-card1-desc' },
     'lp-card2-title':     { id: 'lp-card2-title' },
@@ -212,6 +212,7 @@
       const el = document.getElementById(cfg.id);
       if (!el) return;
       if (cfg.html)   el.innerHTML = value;
+      else if (cfg.nl2br) { const d=document.createElement('div'); d.textContent=value; el.innerHTML=d.innerHTML.replace(/\n/g,'<br>'); }
       else if (cfg.email) { el.textContent = value; el.href = `mailto:${value}`; }
       else if (cfg.phone) { el.textContent = value; el.href = `tel:${value.replace(/\D/g,'')}`; }
       else el.textContent = value;
