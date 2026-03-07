@@ -141,6 +141,18 @@
         </svg>
         Landing Page
       </button>
+      <button type="button" class="tab-btn" role="tab" aria-selected="false" data-tab="orders">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+          <path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>
+        </svg>
+        Orders
+      </button>
+      <button type="button" class="tab-btn" role="tab" aria-selected="false" data-tab="analytics">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+          <line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/>
+        </svg>
+        Analytics
+      </button>
       <button type="button" class="tab-btn" role="tab" aria-selected="false" data-tab="club">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
           <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/>
@@ -504,6 +516,172 @@
       </div>
 
     </div><!-- /tab-club -->
+
+    <!-- Tab: Orders -->
+    <div id="tab-orders" class="tab-panel">
+      <div class="orders-header">
+        <h2 class="section-heading">Orders</h2>
+        <div class="orders-actions">
+          <button type="button" class="btn-secondary" id="bulk-print-btn" title="Print order tickets">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+            Print Tickets
+          </button>
+        </div>
+      </div>
+      <div class="orders-filters">
+        <input type="search" class="search-input" id="order-search" placeholder="Search by name or order ID..." aria-label="Search orders" />
+        <select class="orders-date-filter" id="order-date-filter">
+          <option value="today">Today</option>
+          <option value="week" selected>This Week</option>
+          <option value="month">This Month</option>
+          <option value="all">All Orders</option>
+        </select>
+        <select class="orders-status-filter" id="order-status-filter">
+          <option value="all">All Statuses</option>
+          <option value="paid">Paid</option>
+          <option value="fulfilled">Fulfilled</option>
+          <option value="picked_up">Picked Up</option>
+          <option value="cancelled">Cancelled</option>
+        </select>
+      </div>
+      <div class="orders-summary" id="orders-summary"></div>
+      <div class="orders-list" id="admin-orders-list">
+        <div class="skeleton-card"></div>
+        <div class="skeleton-card"></div>
+        <div class="skeleton-card"></div>
+      </div>
+    </div>
+
+    <!-- Print Dialog Modal -->
+    <div class="print-modal-overlay" id="print-modal" style="display:none;">
+      <div class="print-modal">
+        <h3>Print Order Tickets</h3>
+        <div class="print-field">
+          <label>Choose ticket size</label>
+          <select id="print-ticket-size">
+            <option value="letter">Letter (8.5 x 11)</option>
+            <option value="4x6" selected>Label (4 x 6)</option>
+            <option value="4x5">Label (4 x 5)</option>
+            <option value="3x5">Label (3 x 5)</option>
+            <option value="3x4">Label (3 x 4)</option>
+          </select>
+        </div>
+        <div class="print-field" id="print-type-filters" style="display:none;">
+          <label>Type of orders</label>
+          <label class="print-checkbox"><input type="checkbox" id="print-paid" checked /> Paid (<span id="print-paid-count">0</span>)</label>
+          <label class="print-checkbox"><input type="checkbox" id="print-fulfilled" checked /> Fulfilled (<span id="print-fulfilled-count">0</span>)</label>
+          <label class="print-checkbox"><input type="checkbox" id="print-cancelled" /> Cancelled (<span id="print-cancelled-count">0</span>)</label>
+        </div>
+        <div class="print-field">
+          <label>Which details to include?</label>
+          <label class="print-radio"><input type="radio" name="print-detail" value="all" checked /> All Details</label>
+          <label class="print-radio"><input type="radio" name="print-detail" value="custom" /> Custom</label>
+          <div class="print-custom-fields" id="print-custom-fields" style="display:none;">
+            <label class="print-checkbox"><input type="checkbox" checked data-field="name" /> Customer name</label>
+            <label class="print-checkbox"><input type="checkbox" checked data-field="phone" /> Phone</label>
+            <label class="print-checkbox"><input type="checkbox" checked data-field="items" /> Items</label>
+            <label class="print-checkbox"><input type="checkbox" checked data-field="prices" /> Prices</label>
+            <label class="print-checkbox"><input type="checkbox" checked data-field="orderId" /> Order ID</label>
+            <label class="print-checkbox"><input type="checkbox" checked data-field="date" /> Date</label>
+          </div>
+        </div>
+        <div class="print-modal-actions">
+          <button type="button" class="btn-ghost" id="print-cancel">Cancel</button>
+          <button type="button" class="btn-secondary" id="print-go">Print</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Hidden print container -->
+    <div id="print-area" class="print-area"></div>
+
+    <!-- Tab: Analytics -->
+    <div id="tab-analytics" class="tab-panel">
+      <div class="analytics-header">
+        <h2 class="section-heading">Analytics</h2>
+        <div class="analytics-actions">
+          <button type="button" class="btn-secondary" id="download-report-btn">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            Download Report
+          </button>
+        </div>
+      </div>
+      <div class="analytics-period-selector">
+        <button type="button" class="period-btn" data-period="week">This Week</button>
+        <button type="button" class="period-btn active" data-period="month">This Month</button>
+        <button type="button" class="period-btn" data-period="custom">Custom Range</button>
+        <div class="custom-range" id="custom-range" style="display:none;">
+          <input type="date" id="range-start" />
+          <span>to</span>
+          <input type="date" id="range-end" />
+          <button type="button" class="btn-secondary btn-sm" id="apply-range">Apply</button>
+        </div>
+      </div>
+
+      <!-- KPI Cards -->
+      <div class="kpi-grid" id="kpi-grid">
+        <div class="kpi-card">
+          <div class="kpi-label">Total Revenue</div>
+          <div class="kpi-value" id="kpi-revenue">--</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-label">Orders</div>
+          <div class="kpi-value" id="kpi-orders">--</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-label">Avg Order Value</div>
+          <div class="kpi-value" id="kpi-aov">--</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-label">Active Members</div>
+          <div class="kpi-value" id="kpi-members">--</div>
+        </div>
+      </div>
+
+      <!-- Revenue Chart -->
+      <div class="analytics-section">
+        <h3 class="analytics-section-title">Daily Revenue</h3>
+        <div class="chart-container" id="revenue-chart"></div>
+      </div>
+
+      <!-- Top Products -->
+      <div class="analytics-section">
+        <h3 class="analytics-section-title">Top Products</h3>
+        <div class="analytics-table-wrap">
+          <table class="analytics-table" id="top-products-table">
+            <thead>
+              <tr>
+                <th>Product</th>
+                <th class="num-col">Qty Sold</th>
+                <th class="num-col">Revenue</th>
+                <th class="num-col">% of Total</th>
+              </tr>
+            </thead>
+            <tbody id="top-products-tbody">
+              <tr><td colspan="4" class="club-table-loading">Loading...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Order Status Breakdown -->
+      <div class="analytics-section">
+        <h3 class="analytics-section-title">Order Status</h3>
+        <div class="status-breakdown" id="status-breakdown"></div>
+      </div>
+
+      <!-- Customer Insights -->
+      <div class="analytics-section">
+        <h3 class="analytics-section-title">Customer Insights</h3>
+        <div class="customer-insights-grid" id="customer-insights"></div>
+      </div>
+
+      <!-- Club Stats -->
+      <div class="analytics-section">
+        <h3 class="analytics-section-title">Club Membership</h3>
+        <div class="club-stats-grid" id="club-stats"></div>
+      </div>
+    </div>
 
   </div><!-- /dashboard -->
 
@@ -1235,6 +1413,475 @@
         });
       });
     }
+
+    // ── Orders ─────────────────────────────────────────────────────────────────
+    let allOrders = [];
+    let filteredOrders = [];
+    let ordersLoaded = false;
+
+    const fmtUSD = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' });
+
+    async function loadAllOrders() {
+      const list = document.getElementById('admin-orders-list');
+      const { data: orders, error } = await sb
+        .from('orders')
+        .select('*, order_items(*)')
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        list.innerHTML = `<p style="color:#f5a0a0;font-size:.85rem;">Failed to load orders: ${escHtml(error.message)}</p>`;
+        return;
+      }
+
+      // Fetch profiles for all unique user_ids
+      const userIds = [...new Set((orders || []).map(o => o.user_id))];
+      const profileMap = {};
+      if (userIds.length) {
+        const { data: profiles } = await sb
+          .from('profiles')
+          .select('user_id, first_name, last_name, phone')
+          .in('user_id', userIds);
+        (profiles || []).forEach(p => { profileMap[p.user_id] = p; });
+      }
+
+      allOrders = (orders || []).map(o => ({ ...o, profiles: profileMap[o.user_id] || null }));
+      applyOrderFilters();
+    }
+
+    function applyOrderFilters() {
+      const search = (document.getElementById('order-search').value || '').toLowerCase();
+      const dateFilter = document.getElementById('order-date-filter').value;
+      const statusFilter = document.getElementById('order-status-filter').value;
+      const now = new Date();
+
+      filteredOrders = allOrders.filter(o => {
+        // Date filter
+        if (dateFilter !== 'all') {
+          const d = new Date(o.created_at);
+          if (dateFilter === 'today') {
+            if (d.toDateString() !== now.toDateString()) return false;
+          } else if (dateFilter === 'week') {
+            const weekAgo = new Date(now); weekAgo.setDate(weekAgo.getDate() - 7);
+            if (d < weekAgo) return false;
+          } else if (dateFilter === 'month') {
+            if (d.getMonth() !== now.getMonth() || d.getFullYear() !== now.getFullYear()) return false;
+          }
+        }
+        // Status filter
+        if (statusFilter !== 'all' && o.status !== statusFilter) return false;
+        // Search
+        if (search) {
+          const p = o.profiles;
+          const name = p ? `${p.first_name || ''} ${p.last_name || ''}`.toLowerCase() : '';
+          const id = o.id.toLowerCase();
+          if (!name.includes(search) && !id.includes(search)) return false;
+        }
+        return true;
+      });
+
+      renderAdminOrders();
+    }
+
+    function renderAdminOrders() {
+      const list = document.getElementById('admin-orders-list');
+      const summary = document.getElementById('orders-summary');
+      const total = filteredOrders.reduce((s, o) => s + (o.total_amount || 0), 0);
+      summary.innerHTML = `<span>${filteredOrders.length} order${filteredOrders.length !== 1 ? 's' : ''}</span><span>${fmtUSD.format(total / 100)}</span>`;
+
+      if (!filteredOrders.length) {
+        list.innerHTML = '<div class="empty-state">No orders match your filters.</div>';
+        return;
+      }
+      list.innerHTML = filteredOrders.map(order => {
+        const p = order.profiles;
+        const name = p ? [p.first_name, p.last_name].filter(Boolean).join(' ') || 'Unknown' : 'Unknown';
+        const phone = p?.phone || '';
+        const date = new Date(order.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit' });
+        const items = (order.order_items || []).map(i =>
+          `<div class="admin-order-item"><span>${escHtml(i.product_name || i.stripe_product_id)} &times; ${i.quantity}</span><span>${fmtUSD.format((i.unit_amount * i.quantity) / 100)}</span></div>`
+        ).join('');
+        return `<div class="admin-order-card" data-order-id="${escHtml(order.id)}">
+          <div class="admin-order-header">
+            <div class="admin-order-customer">
+              <strong>${escHtml(name)}</strong>
+              ${phone ? `<span class="admin-order-phone">${escHtml(phone)}</span>` : ''}
+            </div>
+            <div class="admin-order-meta">
+              <span class="admin-order-date">${escHtml(date)}</span>
+              <span class="admin-order-id">#${escHtml(order.id.slice(0,8))}</span>
+            </div>
+          </div>
+          <div class="admin-order-body">
+            <div class="admin-order-items">${items}</div>
+            <div class="admin-order-footer">
+              <div class="admin-order-total">${fmtUSD.format((order.total_amount || 0) / 100)}</div>
+              <div class="admin-order-actions">
+                <select class="order-status-select status-${escHtml(order.status)}" data-id="${escHtml(order.id)}" aria-label="Order status">
+                  ${['paid','fulfilled','picked_up','cancelled'].map(s =>
+                    `<option value="${s}" ${s === order.status ? 'selected' : ''}>${s === 'picked_up' ? 'Picked Up' : s.charAt(0).toUpperCase() + s.slice(1)}</option>`
+                  ).join('')}
+                </select>
+                <button class="btn-print-single icon-btn" data-id="${escHtml(order.id)}" title="Print ticket" aria-label="Print order ticket">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>`;
+      }).join('');
+
+      // Wire status selects
+      list.querySelectorAll('.order-status-select').forEach(sel => {
+        sel.addEventListener('change', () => updateOrderStatus(sel.dataset.id, sel.value));
+      });
+      // Wire single print buttons
+      list.querySelectorAll('.btn-print-single').forEach(btn => {
+        btn.addEventListener('click', () => openPrintDialog([allOrders.find(o => o.id === btn.dataset.id)]));
+      });
+    }
+
+    async function updateOrderStatus(orderId, newStatus) {
+      const { error } = await sb.from('orders').update({ status: newStatus }).eq('id', orderId);
+      if (error) {
+        showToast('Status update failed: ' + error.message, true);
+        return;
+      }
+      const order = allOrders.find(o => o.id === orderId);
+      if (order) order.status = newStatus;
+      showToast(`Order marked as ${newStatus === 'picked_up' ? 'Picked Up' : newStatus}`);
+      applyOrderFilters();
+    }
+
+    // Wire order filter controls
+    document.getElementById('order-search').addEventListener('input', applyOrderFilters);
+    document.getElementById('order-date-filter').addEventListener('change', applyOrderFilters);
+    document.getElementById('order-status-filter').addEventListener('change', applyOrderFilters);
+
+    // Lazy-load orders tab on first click
+    document.querySelector('[data-tab="orders"]')?.addEventListener('click', async () => {
+      if (!ordersLoaded) { ordersLoaded = true; await loadAllOrders(); }
+    }, { once: true });
+
+    // Bulk print
+    document.getElementById('bulk-print-btn').addEventListener('click', () => {
+      openPrintDialog(filteredOrders, true);
+    });
+
+    // ── Print Dialog ───────────────────────────────────────────────────────────
+    let printOrders = [];
+    let printIsBulk = false;
+
+    function openPrintDialog(orders, bulk = false) {
+      printOrders = orders.filter(Boolean);
+      printIsBulk = bulk;
+      const modal = document.getElementById('print-modal');
+      const typeFilters = document.getElementById('print-type-filters');
+
+      if (bulk) {
+        typeFilters.style.display = '';
+        const counts = { paid: 0, fulfilled: 0, cancelled: 0 };
+        printOrders.forEach(o => { if (counts[o.status] !== undefined) counts[o.status]++; });
+        document.getElementById('print-paid-count').textContent = counts.paid;
+        document.getElementById('print-fulfilled-count').textContent = counts.fulfilled;
+        document.getElementById('print-cancelled-count').textContent = counts.cancelled;
+      } else {
+        typeFilters.style.display = 'none';
+      }
+
+      modal.style.display = 'flex';
+    }
+
+    document.getElementById('print-cancel').addEventListener('click', () => {
+      document.getElementById('print-modal').style.display = 'none';
+    });
+
+    // Toggle custom fields visibility
+    document.querySelectorAll('input[name="print-detail"]').forEach(r => {
+      r.addEventListener('change', () => {
+        document.getElementById('print-custom-fields').style.display = r.value === 'custom' && r.checked ? '' : 'none';
+      });
+    });
+
+    document.getElementById('print-go').addEventListener('click', () => {
+      const size = document.getElementById('print-ticket-size').value;
+      const detailMode = document.querySelector('input[name="print-detail"]:checked').value;
+      let fields = { name: true, phone: true, items: true, prices: true, orderId: true, date: true };
+      if (detailMode === 'custom') {
+        fields = {};
+        document.querySelectorAll('#print-custom-fields input[type="checkbox"]').forEach(cb => {
+          fields[cb.dataset.field] = cb.checked;
+        });
+      }
+
+      let orders = [...printOrders];
+      if (printIsBulk) {
+        const allowedStatuses = [];
+        if (document.getElementById('print-paid').checked) allowedStatuses.push('paid');
+        if (document.getElementById('print-fulfilled').checked) allowedStatuses.push('fulfilled');
+        if (document.getElementById('print-cancelled').checked) allowedStatuses.push('cancelled');
+        orders = orders.filter(o => allowedStatuses.includes(o.status));
+      }
+
+      if (!orders.length) { showToast('No orders to print', true); return; }
+      printTickets(orders, size, fields);
+      document.getElementById('print-modal').style.display = 'none';
+    });
+
+    function printTickets(orders, size, fields) {
+      const area = document.getElementById('print-area');
+      area.className = `print-area print-size-${size}`;
+
+      area.innerHTML = orders.map(order => {
+        const p = order.profiles;
+        const name = p ? [p.first_name, p.last_name].filter(Boolean).join(' ') || 'Customer' : 'Customer';
+        const phone = p?.phone || '';
+        const date = new Date(order.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+        const items = (order.order_items || []);
+        const total = (order.total_amount || 0) / 100;
+
+        let html = `<div class="print-ticket">`;
+        html += `<div class="ticket-brand">BLOOMIN' ACRES</div>`;
+        if (fields.orderId) html += `<div class="ticket-order-id">Order #${order.id.slice(0,8)}</div>`;
+        html += `<div class="ticket-divider"></div>`;
+        if (fields.name) html += `<div class="ticket-customer">${escHtml(name)}</div>`;
+        if (fields.phone && phone) html += `<div class="ticket-phone">${escHtml(phone)}</div>`;
+        if (fields.date) html += `<div class="ticket-date">${escHtml(date)} &middot; ${escHtml(order.status === 'picked_up' ? 'Picked Up' : (order.status || 'paid').charAt(0).toUpperCase() + (order.status || 'paid').slice(1))}</div>`;
+        if (fields.items) {
+          html += `<div class="ticket-divider"></div>`;
+          items.forEach(i => {
+            html += `<div class="ticket-item"><span>${i.quantity}&times; ${escHtml(i.product_name || i.stripe_product_id)}</span>`;
+            if (fields.prices) html += `<span>${fmtUSD.format((i.unit_amount * i.quantity) / 100)}</span>`;
+            html += `</div>`;
+          });
+          if (fields.prices) {
+            html += `<div class="ticket-divider"></div>`;
+            html += `<div class="ticket-total"><strong>TOTAL</strong><strong>${fmtUSD.format(total)}</strong></div>`;
+          }
+        }
+        html += `</div>`;
+        return html;
+      }).join('');
+
+      setTimeout(() => window.print(), 100);
+    }
+
+    // ── Analytics ──────────────────────────────────────────────────────────────
+    let analyticsLoaded = false;
+    let analyticsPeriod = 'month';
+    let analyticsData = { orders: [], members: [], referralUses: [], profileMap: {} };
+
+    // Lazy-load analytics on first click
+    document.querySelector('[data-tab="analytics"]')?.addEventListener('click', async () => {
+      if (!analyticsLoaded) { analyticsLoaded = true; await loadAnalytics(); }
+    }, { once: true });
+
+    // Period selector
+    document.querySelectorAll('.period-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.period-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        analyticsPeriod = btn.dataset.period;
+        const customRange = document.getElementById('custom-range');
+        customRange.style.display = analyticsPeriod === 'custom' ? 'flex' : 'none';
+        if (analyticsPeriod !== 'custom') renderAnalytics();
+      });
+    });
+
+    document.getElementById('apply-range')?.addEventListener('click', () => renderAnalytics());
+
+    function getDateRange() {
+      const now = new Date();
+      let start, end;
+      if (analyticsPeriod === 'week') {
+        start = new Date(now); start.setDate(start.getDate() - start.getDay() + 1); // Monday
+        start.setHours(0,0,0,0);
+        end = new Date(start); end.setDate(end.getDate() + 6); end.setHours(23,59,59,999);
+      } else if (analyticsPeriod === 'month') {
+        start = new Date(now.getFullYear(), now.getMonth(), 1);
+        end = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59, 999);
+      } else {
+        start = new Date(document.getElementById('range-start').value || now);
+        end = new Date(document.getElementById('range-end').value || now);
+        start.setHours(0,0,0,0);
+        end.setHours(23,59,59,999);
+      }
+      return { start, end };
+    }
+
+    async function loadAnalytics() {
+      const [ordersRes, membersRes, refUsesRes] = await Promise.all([
+        sb.from('orders').select('*, order_items(*)').order('created_at', { ascending: false }),
+        sb.from('club_members').select('*'),
+        sb.from('referral_uses').select('*'),
+      ]);
+      analyticsData.orders = ordersRes.data || [];
+      analyticsData.members = membersRes.data || [];
+      analyticsData.referralUses = refUsesRes.data || [];
+
+      // Fetch profiles for analytics customer insights
+      const userIds = [...new Set(analyticsData.orders.map(o => o.user_id))];
+      if (userIds.length) {
+        const { data: profiles } = await sb.from('profiles').select('user_id, first_name, last_name').in('user_id', userIds);
+        (profiles || []).forEach(p => { analyticsData.profileMap[p.user_id] = p; });
+      }
+
+      renderAnalytics();
+    }
+
+    function renderAnalytics() {
+      const { start, end } = getDateRange();
+      const periodOrders = analyticsData.orders.filter(o => {
+        const d = new Date(o.created_at);
+        return d >= start && d <= end && o.status !== 'cancelled';
+      });
+      const allPeriodOrders = analyticsData.orders.filter(o => {
+        const d = new Date(o.created_at);
+        return d >= start && d <= end;
+      });
+
+      // KPIs
+      const revenue = periodOrders.reduce((s, o) => s + (o.total_amount || 0), 0);
+      const orderCount = periodOrders.length;
+      const aov = orderCount ? revenue / orderCount : 0;
+      const activeMembers = analyticsData.members.filter(m => m.status === 'active').length;
+
+      document.getElementById('kpi-revenue').textContent = fmtUSD.format(revenue / 100);
+      document.getElementById('kpi-orders').textContent = orderCount;
+      document.getElementById('kpi-aov').textContent = fmtUSD.format(aov / 100);
+      document.getElementById('kpi-members').textContent = activeMembers;
+
+      renderRevenueChart(periodOrders, start, end);
+      renderTopProducts(periodOrders, revenue);
+      renderStatusBreakdown(allPeriodOrders);
+      renderCustomerInsights(periodOrders, start, end);
+      renderClubStats(start, end);
+    }
+
+    function renderRevenueChart(orders, start, end) {
+      const container = document.getElementById('revenue-chart');
+      const days = {};
+      const d = new Date(start);
+      while (d <= end) {
+        days[d.toISOString().slice(0,10)] = 0;
+        d.setDate(d.getDate() + 1);
+      }
+      orders.forEach(o => {
+        const key = new Date(o.created_at).toISOString().slice(0,10);
+        if (days[key] !== undefined) days[key] += (o.total_amount || 0) / 100;
+      });
+
+      const entries = Object.entries(days);
+      const max = Math.max(...entries.map(e => e[1]), 1);
+
+      container.innerHTML = `<div class="chart-bars">${entries.map(([date, val]) => {
+        const pct = (val / max) * 100;
+        const label = new Date(date + 'T12:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+        return `<div class="chart-bar-col" title="${label}: ${fmtUSD.format(val)}">
+          <div class="chart-bar" style="height:${Math.max(pct, 2)}%"></div>
+          <div class="chart-bar-label">${entries.length <= 14 ? label : ''}</div>
+        </div>`;
+      }).join('')}</div>`;
+    }
+
+    function renderTopProducts(orders, totalRevenue) {
+      const tbody = document.getElementById('top-products-tbody');
+      const products = {};
+      orders.forEach(o => {
+        (o.order_items || []).forEach(i => {
+          const name = i.product_name || i.stripe_product_id;
+          if (!products[name]) products[name] = { qty: 0, revenue: 0 };
+          products[name].qty += i.quantity;
+          products[name].revenue += i.unit_amount * i.quantity;
+        });
+      });
+
+      const sorted = Object.entries(products).sort((a, b) => b[1].qty - a[1].qty);
+      if (!sorted.length) {
+        tbody.innerHTML = '<tr><td colspan="4" class="club-table-empty">No product data for this period.</td></tr>';
+        return;
+      }
+      tbody.innerHTML = sorted.map(([name, d]) => {
+        const pct = totalRevenue ? ((d.revenue / totalRevenue) * 100).toFixed(1) : '0.0';
+        return `<tr><td>${escHtml(name)}</td><td class="num-col">${d.qty}</td><td class="num-col">${fmtUSD.format(d.revenue / 100)}</td><td class="num-col">${pct}%</td></tr>`;
+      }).join('');
+    }
+
+    function renderStatusBreakdown(orders) {
+      const el = document.getElementById('status-breakdown');
+      const counts = { paid: 0, fulfilled: 0, picked_up: 0, cancelled: 0 };
+      orders.forEach(o => { if (counts[o.status] !== undefined) counts[o.status]++; });
+      el.innerHTML = Object.entries(counts).map(([status, count]) => {
+        const label = status === 'picked_up' ? 'Picked Up' : status.charAt(0).toUpperCase() + status.slice(1);
+        return `<div class="status-stat"><div class="status-stat-count">${count}</div><div class="status-stat-label status-color-${status}">${label}</div></div>`;
+      }).join('');
+    }
+
+    function renderCustomerInsights(orders, start, end) {
+      const el = document.getElementById('customer-insights');
+      // Group orders by user
+      const userOrders = {};
+      analyticsData.orders.forEach(o => {
+        if (!userOrders[o.user_id]) userOrders[o.user_id] = [];
+        userOrders[o.user_id].push(o);
+      });
+
+      const periodUserIds = new Set(orders.map(o => o.user_id));
+      let newCustomers = 0, repeatCustomers = 0;
+      const spendByUser = {};
+
+      periodUserIds.forEach(uid => {
+        const all = userOrders[uid] || [];
+        const firstOrder = all.reduce((min, o) => new Date(o.created_at) < new Date(min.created_at) ? o : min, all[0]);
+        const firstDate = new Date(firstOrder.created_at);
+        if (firstDate >= start && firstDate <= end) newCustomers++;
+        if (all.length >= 2) repeatCustomers++;
+        spendByUser[uid] = orders.filter(o => o.user_id === uid).reduce((s, o) => s + (o.total_amount || 0), 0);
+      });
+
+      const topCustomers = Object.entries(spendByUser).sort((a, b) => b[1] - a[1]).slice(0, 5);
+
+      el.innerHTML = `
+        <div class="insight-card"><div class="insight-value">${newCustomers}</div><div class="insight-label">New Customers</div></div>
+        <div class="insight-card"><div class="insight-value">${repeatCustomers}</div><div class="insight-label">Repeat Customers</div></div>
+        <div class="insight-card insight-card-wide">
+          <div class="insight-label">Top Customers</div>
+          ${topCustomers.length ? topCustomers.map(([uid, spend]) => {
+            const p = analyticsData.profileMap[uid];
+            const name = p ? [p.first_name, p.last_name].filter(Boolean).join(' ') || uid.slice(0,8) : uid.slice(0,8);
+            return `<div class="top-customer-row"><span>${escHtml(name)}</span><span>${fmtUSD.format(spend / 100)}</span></div>`;
+          }).join('') : '<div style="color:rgba(250,240,230,.35);font-size:.82rem;">No data</div>'}
+        </div>`;
+    }
+
+    function renderClubStats(start, end) {
+      const el = document.getElementById('club-stats');
+      const members = analyticsData.members;
+      const active = members.filter(m => m.status === 'active').length;
+      const newSignups = members.filter(m => {
+        const d = new Date(m.started_at);
+        return d >= start && d <= end;
+      }).length;
+      const churned = members.filter(m => {
+        if (m.status !== 'cancelled') return false;
+        const d = new Date(m.updated_at || m.started_at);
+        return d >= start && d <= end;
+      }).length;
+      const periodReferrals = analyticsData.referralUses.filter(r => {
+        const d = new Date(r.created_at);
+        return d >= start && d <= end;
+      }).length;
+
+      el.innerHTML = `
+        <div class="insight-card"><div class="insight-value">${active}</div><div class="insight-label">Active Members</div></div>
+        <div class="insight-card"><div class="insight-value">${newSignups}</div><div class="insight-label">New Signups</div></div>
+        <div class="insight-card"><div class="insight-value">${churned}</div><div class="insight-label">Churned</div></div>
+        <div class="insight-card"><div class="insight-value">${periodReferrals}</div><div class="insight-label">Referrals</div></div>`;
+    }
+
+    // Download report
+    document.getElementById('download-report-btn')?.addEventListener('click', () => {
+      window.print();
+    });
 
     // ── Boot ──────────────────────────────────────────────────────────────────
     init();

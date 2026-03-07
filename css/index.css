@@ -135,7 +135,9 @@ body::after {
   image-rendering: -webkit-optimize-contrast;
   position: relative; z-index: 0;
 }
-.hero-cta-wrap { /* wrapper for the CTA button in hero */ }
+.hero-cta-wrap {
+  position: absolute; bottom: 5.5rem; left: 50%; transform: translateX(-50%); z-index: 1;
+}
 
 .scroll-anchor {
   position: absolute; bottom: 2rem; left: 50%; transform: translateX(-50%); z-index: 1;
