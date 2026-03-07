@@ -171,6 +171,7 @@ body::after {
 .welcome-body {
   font-size: 1.05rem; line-height: 1.75;
   color: var(--earth-mid); max-width: 480px;
+  white-space: pre-line;
 }
 .welcome-quote-wrap {
   display: flex; align-items: center; gap: .875rem; margin-top: 2rem;
