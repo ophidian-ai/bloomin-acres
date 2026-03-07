@@ -35,7 +35,7 @@
   const cartLink = document.createElement('a');
   cartLink.href = 'account.html?tab=cart';
   cartLink.className = 'topright-icon';
-  cartLink.setAttribute('aria-label', 'Cart');
+  cartLink.setAttribute('aria-label', 'Basket');
   cartLink.appendChild(svgIcon(18, CART_SVG));
   const cartBadge = document.createElement('span');
   cartBadge.className = 'topright-badge hidden';
@@ -76,7 +76,7 @@
   menu.setAttribute('role', 'menu');
 
   const menuDefs = [
-    { href: 'account.html?tab=cart', svg: CART_SVG, label: 'Cart' },
+    { href: 'account.html?tab=cart', svg: CART_SVG, label: 'Basket' },
     { href: 'account.html?tab=favorites', svg: '<path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>', label: 'Favorites' },
     { href: 'account.html?tab=orders', svg: '<path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>', label: 'Orders' },
     { href: 'account.html?tab=profile', svg: PERSON_SVG, label: 'Profile' },

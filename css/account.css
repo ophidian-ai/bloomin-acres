@@ -393,38 +393,22 @@ body::after {
 /* ── Basket Card (cart panel) ────────────────────────────── */
 .basket-card {
   position: relative;
-  background:
-    linear-gradient(135deg, rgba(250,240,230,.97) 60%, rgba(237,209,166,.85) 100%);
+  background: var(--farm-cream);
   border-radius: 16px;
-  padding: 2rem 2rem 1.75rem;
   box-shadow:
     0 2px 8px rgba(74,51,34,.06),
     0 8px 32px rgba(74,51,34,.08);
   overflow: hidden;
 }
-.basket-header {
-  text-align: center;
-  margin-bottom: 1.25rem;
+.basket-banner {
+  width: 100%;
+  aspect-ratio: 16 / 7;
+  background: url('../brand-assets/cart-template.png') center/cover no-repeat;
+  border-radius: 16px 16px 0 0;
 }
-.basket-logo {
-  width: 120px; height: auto;
-  margin: 0 auto .75rem;
+.basket-body {
+  padding: 1.5rem 2rem 1.75rem;
 }
-.basket-title {
-  font-family: var(--font-display);
-  font-size: 1.5rem;
-  font-weight: 600;
-  color: var(--earth-brown);
-  letter-spacing: -.02em;
-}
-.basket-wheat-left {
-  position: absolute;
-  bottom: 1rem; right: 1rem;
-  width: 80px; opacity: .18;
-  pointer-events: none;
-  transform: rotate(-15deg);
-}
-.basket-wheat-left img { width: 100%; }
 
 /* Basket empty state */
 .basket-empty {
