@@ -522,9 +522,8 @@
   }
 
   async function enterDashboard(user, targetTab) {
-    // Check if this user is an admin — if so, send them to admin.html
+    // Check if this user is an admin (used for admin link, but don't redirect)
     const { data: adminRow } = await sb.from('admins').select('user_id').eq('user_id', user.id).maybeSingle();
-    if (adminRow) { window.location.href = 'admin.html'; return; }
 
     currentUser = user;
     document.getElementById('auth-wrap').classList.add('hidden');
@@ -709,7 +708,7 @@
     checkoutBtn.type = 'button';
     checkoutBtn.className = 'basket-btn-checkout';
     checkoutBtn.id = 'checkout-btn';
-    checkoutBtn.textContent = 'Order Now';
+    checkoutBtn.textContent = 'Checkout';
     actionsEl.append(addMore, checkoutBtn);
     footer.append(totalEl, actionsEl);
     frag.appendChild(footer);
