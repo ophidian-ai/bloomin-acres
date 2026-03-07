@@ -31,12 +31,18 @@
   container.className = 'topright-icons';
   container.id = 'topright-icons';
 
-  // Cart icon
+  // Basket icon
   const cartLink = document.createElement('a');
   cartLink.href = 'account.html?tab=cart';
   cartLink.className = 'topright-icon';
   cartLink.setAttribute('aria-label', 'Basket');
-  cartLink.appendChild(svgIcon(18, CART_SVG));
+  const basketImg = document.createElement('img');
+  basketImg.src = 'brand-assets/basket-icon.png';
+  basketImg.alt = '';
+  basketImg.width = 20;
+  basketImg.height = 20;
+  basketImg.setAttribute('aria-hidden', 'true');
+  cartLink.appendChild(basketImg);
   const cartBadge = document.createElement('span');
   cartBadge.className = 'topright-badge hidden';
   cartBadge.id = 'topright-cart-badge';
@@ -76,7 +82,7 @@
   menu.setAttribute('role', 'menu');
 
   const menuDefs = [
-    { href: 'account.html?tab=cart', svg: CART_SVG, label: 'Basket' },
+    { href: 'account.html?tab=cart', img: 'brand-assets/basket-icon.png', label: 'Basket' },
     { href: 'account.html?tab=favorites', svg: '<path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>', label: 'Favorites' },
     { href: 'account.html?tab=orders', svg: '<path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>', label: 'Orders' },
     { href: 'account.html?tab=profile', svg: PERSON_SVG, label: 'Profile' },
@@ -87,7 +93,17 @@
     const a = document.createElement('a');
     a.href = item.href;
     a.setAttribute('role', 'menuitem');
-    a.appendChild(svgIcon(15, item.svg));
+    if (item.img) {
+      const img = document.createElement('img');
+      img.src = item.img;
+      img.alt = '';
+      img.width = 15;
+      img.height = 15;
+      img.setAttribute('aria-hidden', 'true');
+      a.appendChild(img);
+    } else {
+      a.appendChild(svgIcon(15, item.svg));
+    }
     a.appendChild(document.createTextNode(' ' + item.label));
     menu.appendChild(a);
   });
