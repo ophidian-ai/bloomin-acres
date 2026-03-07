@@ -130,13 +130,13 @@ body::after {
 }
 .hero-logo {
   width: min(1160px, 92vw); max-height: 62vh; object-fit: contain;
-  margin: 0 auto 2.25rem;
+  margin: -2rem auto 1rem;
   filter: drop-shadow(0 6px 16px rgba(0,0,0,.35));
   image-rendering: -webkit-optimize-contrast;
   position: relative; z-index: 0;
 }
 .hero-cta-wrap {
-  position: absolute; bottom: 5.5rem; left: 50%; transform: translateX(-50%); z-index: 1;
+  text-align: center; position: relative; z-index: 1;
 }
 
 .scroll-anchor {
