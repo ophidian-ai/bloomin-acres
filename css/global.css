@@ -94,22 +94,6 @@ img { display: block; max-width: 100%; }
 .nav-sidebar-link:focus-visible { outline: 2px solid var(--wheat-gold); outline-offset: 3px; border-radius: 2px; }
 .nav-sidebar-link.accent { color: var(--wheat-gold); }
 .nav-sidebar-link.accent:hover { color: #f5bc5a; }
-.nav-sidebar-link.btn {
-  display: inline-block;
-  margin-top: .5rem;
-  padding: .6rem 1.25rem;
-  background: var(--wheat-gold);
-  color: var(--earth-brown);
-  border-radius: 6px;
-  border-bottom: none;
-  font-size: .85rem;
-  font-weight: 700;
-  letter-spacing: .08em;
-  text-transform: uppercase;
-  text-align: center;
-  transition: opacity .2s, transform .15s;
-}
-.nav-sidebar-link.btn:hover { color: var(--earth-brown); opacity: .9; transform: translateY(-1px); padding-left: .5rem; }
 
 /* ── Sidebar Account Submenu ────────────────────────────── */
 .nav-account-item { border-bottom: 1px solid rgba(250,240,230,.06); }
