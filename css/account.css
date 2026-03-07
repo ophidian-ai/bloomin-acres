@@ -419,8 +419,8 @@ body::after {
   z-index: 1;
   display: flex;
   flex-direction: column;
-  align-items: center;
-  padding: 2rem 1.5rem 0;
+  align-items: flex-start;
+  padding: 2rem 1.5rem 0 2.5rem;
 }
 .basket-header-img {
   width: 180px;
@@ -428,7 +428,11 @@ body::after {
   margin-bottom: 1rem;
 }
 @media (min-width: 768px) {
+  .basket-layout { padding-left: 4rem; }
   .basket-header-img { width: 220px; }
+}
+@media (min-width: 1200px) {
+  .basket-layout { padding-left: 6rem; }
 }
 .basket-card {
   width: 100%;
