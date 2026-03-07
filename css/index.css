@@ -124,19 +124,19 @@ body::after {
 .hero-banner {
   width: min(560px, 68vw);
   object-fit: contain;
-  margin: 0 auto -28%;
+  margin: 0 auto -38%;
   filter: drop-shadow(0 4px 14px rgba(0,0,0,.4));
   position: relative; z-index: 1;
 }
 .hero-logo {
-  width: min(1160px, 92vw); max-height: 62vh; object-fit: contain;
-  margin: -2rem auto 1rem;
+  width: min(900px, 80vw); max-height: 52vh; object-fit: contain;
+  margin: 0 auto 1.5rem;
   filter: drop-shadow(0 6px 16px rgba(0,0,0,.35));
   image-rendering: -webkit-optimize-contrast;
   position: relative; z-index: 0;
 }
 .hero-cta-wrap {
-  text-align: center; position: relative; z-index: 1;
+  text-align: center; position: relative; z-index: 2; margin-bottom: 3.5rem;
 }
 
 .scroll-anchor {
