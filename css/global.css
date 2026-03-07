@@ -35,6 +35,11 @@
     0 12px 32px rgba(200,90,58,.22);
 }
 
+/* ── Utility Classes ────────────────────────────────────── */
+.hidden { display: none !important; }
+.visibility-hidden { visibility: hidden; }
+.text-muted { color: var(--earth-mid); }
+
 /* ── Shared Reset ───────────────────────────────────────── */
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 html { scroll-behavior: smooth; }

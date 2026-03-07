@@ -52,7 +52,7 @@
     <!-- Sign In — shown when logged out -->
     <a href="account.html" class="nav-sidebar-link" id="sidebar-signin-link">Sign In</a>
     <!-- My Account submenu — shown when logged in -->
-    <div class="nav-account-item" id="sidebar-account-item" style="display:none;">
+    <div class="nav-account-item hidden" id="sidebar-account-item">
       <button type="button" class="nav-account-toggle" id="sidebar-account-toggle" aria-haspopup="true" aria-expanded="false">
         <span>My Account</span>
         <svg class="chevron" viewBox="0 0 10 10" fill="none" aria-hidden="true">
@@ -79,7 +79,7 @@
       </div>
     </div>
     <!-- Sign Out — shown when logged in -->
-    <button type="button" class="nav-sidebar-link nav-signout-btn" id="sidebar-signout-btn" style="display:none;">Sign Out</button>
+    <button type="button" class="nav-sidebar-link nav-signout-btn hidden" id="sidebar-signout-btn">Sign Out</button>
   </nav>
 </div>
 
@@ -188,7 +188,7 @@
       productId = params.get('id');
       if (!productId) {
         document.getElementById('product-card').innerHTML =
-          '<div class="product-body"><p style="color:var(--earth-mid)">No product specified.</p></div>';
+          '<div class="product-body"><p class="text-muted">No product specified.</p></div>';
         return;
       }
 
@@ -220,7 +220,7 @@
         });
 
         // Sidebar: hide sign-in, show account submenu or dashboard link
-        signinLink.style.display = 'none';
+        signinLink.classList.add('hidden');
         if (isAdmin) {
           const dashLink = document.createElement('a');
           dashLink.href = 'admin.html';
@@ -228,9 +228,9 @@
           dashLink.textContent = 'Dashboard';
           acctItemEl.parentNode.insertBefore(dashLink, acctItemEl);
         } else {
-          acctItemEl.style.display = 'block';
+          acctItemEl.classList.remove('hidden');
         }
-        signoutBtn.style.display = 'block';
+        signoutBtn.classList.remove('hidden');
         signoutBtn.addEventListener('click', async () => {
           await sb.auth.signOut();
           window.location.reload();
@@ -744,10 +744,10 @@
               });
             }
             const sel = document.querySelector('.variation-selector');
-            if (sel) sel.style.display = '';
+            if (sel) sel.classList.remove('hidden');
           } else {
             // Hide variation selector when no variants pass the filter
-            if (selectorDiv) selectorDiv.style.display = 'none';
+            if (selectorDiv) selectorDiv.classList.add('hidden');
           }
         }
 

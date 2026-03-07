@@ -63,6 +63,7 @@ body::after {
   display: flex; align-items: center; justify-content: center;
   padding: 2rem 1rem;
 }
+/* .auth-wrap starts hidden via .hidden class; showAuthCard() removes .hidden to reveal flex layout */
 .auth-card {
   background: #fff;
   border-radius: 16px;
@@ -144,6 +145,7 @@ body::after {
   margin-top: .3rem;
   display: none;
 }
+.field-error.visible { display: block; }
 
 /* ── Buttons ─────────────────────────────────────────────── */
 .btn-primary {
@@ -199,8 +201,7 @@ body::after {
 .btn-danger:hover { border-color: var(--berry-red); background: rgba(139,58,58,.06); }
 
 /* ── Dashboard ───────────────────────────────────────────── */
-#dashboard { display: none; }
-#dashboard.visible { display: block; }
+/* dashboard starts hidden via .hidden class in HTML; enterDashboard() removes it */
 
 .dash-header {
   background: var(--earth-brown);
@@ -243,7 +244,7 @@ body::after {
   padding: 0 1.5rem;
   display: flex; gap: 0;
   overflow-x: auto;
-  -webkit-overflow-scrolling: touch;
+  /* touch scrolling is now default behavior in all modern browsers */
 }
 .dash-tabs-bar::-webkit-scrollbar { display: none; }
 .dash-tab {
@@ -272,6 +273,7 @@ body::after {
   display: inline-flex; align-items: center; justify-content: center;
   padding: 0 5px;
 }
+/* badge starts hidden via .hidden class; renderCart() toggles it */
 
 .dash-content {
   max-width: 900px;

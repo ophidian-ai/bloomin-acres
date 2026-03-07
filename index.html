@@ -48,7 +48,7 @@
     <!-- Sign In — shown when logged out -->
     <a href="account.html" class="nav-sidebar-link" id="sidebar-signin-link">Sign In</a>
     <!-- My Account submenu — shown when logged in -->
-    <div class="nav-account-item" id="sidebar-account-item" style="display:none;">
+    <div class="nav-account-item hidden" id="sidebar-account-item">
       <button type="button" class="nav-account-toggle" id="sidebar-account-toggle" aria-haspopup="true" aria-expanded="false">
         <span>My Account</span>
         <svg class="chevron" viewBox="0 0 10 10" fill="none" aria-hidden="true">
@@ -75,7 +75,7 @@
       </div>
     </div>
     <!-- Sign Out — shown when logged in -->
-    <button type="button" class="nav-sidebar-link nav-signout-btn" id="sidebar-signout-btn" style="display:none;">Sign Out</button>
+    <button type="button" class="nav-sidebar-link nav-signout-btn hidden" id="sidebar-signout-btn">Sign Out</button>
   </nav>
 </div>
 
@@ -136,8 +136,7 @@
   const signoutBtn  = document.getElementById('sidebar-signout-btn');
   if (session) {
     const { data: adminRow } = await sb.from('admins').select('user_id').eq('user_id', session.user.id).maybeSingle();
-    signinLink.style.display = 'none';
-    acctItem.style.display   = 'none';
+    signinLink.classList.add('hidden');
     if (adminRow) {
       const dashLink = document.createElement('a');
       dashLink.href = 'admin.html';
@@ -145,9 +144,9 @@
       dashLink.textContent = 'Dashboard';
       acctItem.parentNode.insertBefore(dashLink, acctItem);
     } else {
-      acctItem.style.display = 'block';
+      acctItem.classList.remove('hidden');
     }
-    signoutBtn.style.display = 'block';
+    signoutBtn.classList.remove('hidden');
     signoutBtn.addEventListener('click', async () => {
       await sb.auth.signOut();
       window.location.reload();

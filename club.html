@@ -46,7 +46,7 @@
     <!-- Sign In — shown when logged out -->
     <a href="account.html" class="nav-sidebar-link" id="sidebar-signin-link">Sign In</a>
     <!-- My Account submenu — shown when logged in -->
-    <div class="nav-account-item" id="sidebar-account-item" style="display:none;">
+    <div class="nav-account-item hidden" id="sidebar-account-item">
       <button type="button" class="nav-account-toggle" id="sidebar-account-toggle" aria-haspopup="true" aria-expanded="false">
         <span>My Account</span>
         <svg class="chevron" viewBox="0 0 10 10" fill="none" aria-hidden="true">
@@ -73,7 +73,7 @@
       </div>
     </div>
     <!-- Sign Out — shown when logged in -->
-    <button type="button" class="nav-sidebar-link nav-signout-btn" id="sidebar-signout-btn" style="display:none;">Sign Out</button>
+    <button type="button" class="nav-sidebar-link nav-signout-btn hidden" id="sidebar-signout-btn">Sign Out</button>
   </nav>
 </div>
 
@@ -81,7 +81,7 @@
 <div class="nav-overlay" id="nav-overlay" aria-hidden="true"></div>
 
 <!-- Referral welcome banner (shown when ?ref=CODE in URL) -->
-<div class="referral-banner" id="referral-banner" style="display:none;">
+<div class="referral-banner hidden" id="referral-banner">
   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" fill="currentColor" stroke="none"/></svg>
   <span>A friend invited you! Join today and get <strong>10% off your first month</strong>.</span>
 </div>
@@ -92,11 +92,11 @@
   <div class="club-hero-content">
     <div class="club-badge-pill">Monthly Membership</div>
     <img src="brand-assets/club-plaque.png" alt="The Bread Box Club — Monthly membership. Handcrafted bundles. Built by you." class="club-plaque-img" />
-    <div class="club-hero-actions" id="hero-actions" style="visibility:hidden;">
+    <div class="club-hero-actions visibility-hidden" id="hero-actions">
       <button class="club-cta-btn" id="join-btn">Join the Club</button>
-      <a href="account.html?tab=club" class="club-cta-btn" id="member-link" style="display:none;">Go to My Club</a>
+      <a href="account.html?tab=club" class="club-cta-btn hidden" id="member-link">Go to My Club</a>
     </div>
-    <p class="club-hero-note" id="referral-code-note" style="display:none;"></p>
+    <p class="club-hero-note hidden" id="referral-code-note"></p>
   </div>
   <!-- Decorative wheat stalks -->
   <div class="club-hero-deco" aria-hidden="true">
@@ -276,7 +276,7 @@
     </div>
 
     <!-- User's code if logged in -->
-    <div class="my-code-box" id="my-code-box" style="display:none;">
+    <div class="my-code-box hidden" id="my-code-box">
       <p class="my-code-label">Your referral link</p>
       <div class="my-code-row">
         <input class="my-code-input" id="my-code-display" readonly value="" />
@@ -364,7 +364,7 @@
   const urlRef = params.get('ref');
   if (urlRef) {
     sessionStorage.setItem('referral_code', urlRef.trim().toUpperCase());
-    document.getElementById('referral-banner').style.display = 'flex';
+    document.getElementById('referral-banner').classList.remove('hidden');
   }
 
   // ── Load config + auth ─────────────────────────────────────────────────────
@@ -387,7 +387,7 @@
   if (session) {
     currentUser = session.user;
     const { data: adminRow } = await sb.from('admins').select('user_id').eq('user_id', session.user.id).maybeSingle();
-    signinLink.style.display = 'none';
+    signinLink.classList.add('hidden');
     if (adminRow) {
       const dashLink = document.createElement('a');
       dashLink.href = 'admin.html';
@@ -395,9 +395,9 @@
       dashLink.textContent = 'Dashboard';
       acctItem.parentNode.insertBefore(dashLink, acctItem);
     } else {
-      acctItem.style.display = 'block';
+      acctItem.classList.remove('hidden');
     }
-    signoutBtn.style.display = 'block';
+    signoutBtn.classList.remove('hidden');
     signoutBtn.addEventListener('click', async () => {
       await sb.auth.signOut();
       window.location.reload();
@@ -414,21 +414,21 @@
 
     // If member, show "Go to My Club" instead of join
     if (isMember) {
-      document.getElementById('join-btn').style.display = 'none';
-      document.getElementById('member-link').style.display = 'inline-flex';
-      document.getElementById('join-btn-2').style.display = 'none';
-      document.getElementById('join-btn-3').style.display = 'none';
-      document.getElementById('referral-cta').style.display = 'none';
+      document.getElementById('join-btn').classList.add('hidden');
+      document.getElementById('member-link').classList.remove('hidden');
+      document.getElementById('join-btn-2').classList.add('hidden');
+      document.getElementById('join-btn-3').classList.add('hidden');
+      document.getElementById('referral-cta').classList.add('hidden');
     }
     // Reveal hero actions now that auth state is resolved
-    document.getElementById('hero-actions').style.visibility = 'visible';
+    document.getElementById('hero-actions').classList.remove('visibility-hidden');
 
     // Show referral code if available
     if (myReferralCode) {
       const shareUrl = `${window.location.origin}/club.html?ref=${myReferralCode}`;
       document.getElementById('my-code-display').value = shareUrl;
-      document.getElementById('my-code-box').style.display = 'block';
-      document.getElementById('referral-cta').style.display = 'none';
+      document.getElementById('my-code-box').classList.remove('hidden');
+      document.getElementById('referral-cta').classList.add('hidden');
     }
 
     // Note on hero if ref code in session
@@ -436,11 +436,11 @@
     if (storedRef && !isMember) {
       const note = document.getElementById('referral-code-note');
       note.textContent = `Referral code "${storedRef}" will be applied at signup.`;
-      note.style.display = 'block';
+      note.classList.remove('hidden');
     }
   } else {
     // Not logged in — show join button immediately
-    document.getElementById('hero-actions').style.visibility = 'visible';
+    document.getElementById('hero-actions').classList.remove('visibility-hidden');
   }
 
   // ── Load reward text from site_content ─────────────────────────────────────

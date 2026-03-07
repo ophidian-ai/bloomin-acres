@@ -321,7 +321,7 @@
         if (!dbSections || dbSections.length === 0) {
           skeleton.remove();
           content.insertAdjacentHTML('beforeend',
-            '<div class="load-error" style="padding:2rem 0;">The menu is coming soon — check back shortly!</div>');
+            '<div class="load-error menu-coming-soon">The menu is coming soon — check back shortly!</div>');
           return;
         }
         sections = dbSections;

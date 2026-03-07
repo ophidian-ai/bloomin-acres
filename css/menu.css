@@ -370,6 +370,7 @@ body {
   color: var(--earth-mid);
   font-size: 1.1rem;
 }
+.load-error.menu-coming-soon { padding: 2rem 0; }
 
 /* ── Footer ──────────────────────────────────────────────── */
 .site-footer {

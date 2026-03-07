@@ -44,7 +44,7 @@
     <a href="menu.html"    class="nav-sidebar-link accent">Menu</a>
     <a href="club.html"    class="nav-sidebar-link">The Club</a>
     <a href="account.html" class="nav-sidebar-link" id="sidebar-signin-link">Sign In</a>
-    <div class="nav-account-item" id="sidebar-account-item" style="display:none;">
+    <div class="nav-account-item hidden" id="sidebar-account-item">
       <button type="button" class="nav-account-toggle" id="sidebar-account-toggle" aria-haspopup="true" aria-expanded="false">
         <span>My Account</span>
         <svg class="chevron" viewBox="0 0 10 10" fill="none" aria-hidden="true">
@@ -70,7 +70,7 @@
         </a>
       </div>
     </div>
-    <button type="button" class="nav-sidebar-link nav-signout-btn" id="sidebar-signout-btn" style="display:none;">Sign Out</button>
+    <button type="button" class="nav-sidebar-link nav-signout-btn hidden" id="sidebar-signout-btn">Sign Out</button>
   </nav>
 </div>
 
@@ -126,7 +126,7 @@
 </header>
 
 <!-- ─── Unauthenticated: auth card ──────────────────────────────────── -->
-<div id="auth-wrap" class="auth-wrap" style="display:none;">
+<div id="auth-wrap" class="auth-wrap hidden">
   <div class="auth-card">
     <div class="auth-card-header">
       <h1>My Account</h1>
@@ -175,7 +175,7 @@
 </div>
 
 <!-- ─── Authenticated: dashboard ──────────────────────────────────────── -->
-<div id="dashboard">
+<div id="dashboard" class="hidden">
   <div class="dash-header">
     <div class="dash-header-inner">
       <div class="dash-header-user">
@@ -189,7 +189,7 @@
 
   <div class="dash-tabs-bar">
     <button class="dash-tab active" data-panel="cart">
-      Cart <span class="badge" id="cart-badge" style="display:none;">0</span>
+      Cart <span class="badge hidden" id="cart-badge">0</span>
     </button>
     <button class="dash-tab" data-panel="favorites">Favorites</button>
     <button class="dash-tab" data-panel="orders">Orders</button>
@@ -271,7 +271,7 @@
       </div>
 
       <!-- Not a member -->
-      <div id="club-non-member" style="display:none;">
+      <div id="club-non-member" class="hidden">
         <div class="empty-state">
           <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>
           <p>You're not a Bread Box Club member yet.</p>
@@ -283,7 +283,7 @@
       </div>
 
       <!-- Active/past_due member -->
-      <div id="club-member-view" style="display:none;">
+      <div id="club-member-view" class="hidden">
 
         <!-- Membership status card -->
         <div class="club-status-card">
@@ -301,7 +301,7 @@
             <button type="button" class="btn-secondary" id="add-to-box-btn">+ Add Items</button>
           </div>
           <div id="box-items-list"></div>
-          <div class="box-footer" id="box-footer" style="display:none;">
+          <div class="box-footer hidden" id="box-footer">
             <div class="box-total-row">
               <span class="box-total-amount" id="box-total-label">Total: $0.00</span>
               <span class="box-min-hint" id="box-min-hint"></span>
@@ -311,7 +311,7 @@
         </div>
 
         <!-- Product picker (hidden by default) -->
-        <div class="club-product-picker" id="club-product-picker" style="display:none;">
+        <div class="club-product-picker hidden" id="club-product-picker">
           <div class="picker-header">
             <h4>Add to Box</h4>
             <button type="button" class="picker-close" id="picker-close-btn" aria-label="Close picker">✕</button>
@@ -425,7 +425,7 @@
     const signoutBtn = document.getElementById('sidebar-signout-btn');
 
     if (session) {
-      signinLink.style.display = 'none';
+      signinLink.classList.add('hidden');
       const { data: adminCheck } = await sb.from('admins').select('user_id').eq('user_id', session.user.id).maybeSingle();
       if (adminCheck) {
         const dashLink = document.createElement('a');
@@ -434,9 +434,9 @@
         dashLink.textContent = 'Dashboard';
         acctItemEl.parentNode.insertBefore(dashLink, acctItemEl);
       } else {
-        acctItemEl.style.display = 'block';
+        acctItemEl.classList.remove('hidden');
       }
-      signoutBtn.style.display = 'block';
+      signoutBtn.classList.remove('hidden');
       signoutBtn.addEventListener('click', async () => {
         await sb.auth.signOut();
         window.location.reload();
@@ -463,8 +463,8 @@
   }
 
   function showAuthCard() {
-    document.getElementById('auth-wrap').style.display = 'flex';
-    document.getElementById('dashboard').style.display = 'none';
+    document.getElementById('auth-wrap').classList.remove('hidden');
+    document.getElementById('dashboard').classList.add('hidden');
   }
 
   async function enterDashboard(user, targetTab) {
@@ -473,8 +473,8 @@
     if (adminRow) { window.location.href = 'admin.html'; return; }
 
     currentUser = user;
-    document.getElementById('auth-wrap').style.display = 'none';
-    document.getElementById('dashboard').style.display = 'block';
+    document.getElementById('auth-wrap').classList.add('hidden');
+    document.getElementById('dashboard').classList.remove('hidden');
     document.getElementById('profile-email').textContent = user.email;
 
     // Populate profile fields from profiles table
@@ -538,7 +538,7 @@
     const badge = document.getElementById('cart-badge');
     const count = cartItems.reduce((s, i) => s + i.quantity, 0);
     badge.textContent = count;
-    badge.style.display = count ? 'inline-flex' : 'none';
+    badge.classList.toggle('hidden', !count);
 
     if (!cartItems.length) {
       el.innerHTML = `<div class="empty-state">
@@ -729,11 +729,11 @@
     const password = document.getElementById('signin-password').value;
     const errEl = document.getElementById('signin-error');
     const btn = document.getElementById('signin-btn');
-    errEl.style.display = 'none';
+    errEl.classList.remove('visible');
     btn.disabled = true; btn.textContent = 'Signing in…';
     const { error } = await sb.auth.signInWithPassword({ email, password });
     btn.disabled = false; btn.textContent = 'Sign In';
-    if (error) { errEl.textContent = error.message; errEl.style.display = 'block'; }
+    if (error) { errEl.textContent = error.message; errEl.classList.add('visible'); }
   });
 
   document.getElementById('signin-password').addEventListener('keydown', e => {
@@ -746,14 +746,14 @@
     const confirm = document.getElementById('signup-confirm').value;
     const errEl = document.getElementById('signup-error');
     const btn = document.getElementById('signup-btn');
-    errEl.style.display = 'none';
-    if (password !== confirm) { errEl.textContent = 'Passwords do not match'; errEl.style.display = 'block'; return; }
-    if (password.length < 8) { errEl.textContent = 'Password must be at least 8 characters'; errEl.style.display = 'block'; return; }
+    errEl.classList.remove('visible');
+    if (password !== confirm) { errEl.textContent = 'Passwords do not match'; errEl.classList.add('visible'); return; }
+    if (password.length < 8) { errEl.textContent = 'Password must be at least 8 characters'; errEl.classList.add('visible'); return; }
     btn.disabled = true; btn.textContent = 'Creating account…';
     isSigningUp = true;
     const { error } = await sb.auth.signUp({ email, password });
     btn.disabled = false; btn.textContent = 'Create Account';
-    if (error) { isSigningUp = false; errEl.textContent = error.message; errEl.style.display = 'block'; }
+    if (error) { isSigningUp = false; errEl.textContent = error.message; errEl.classList.add('visible'); }
     else { showToast('Account created! Check your email to confirm.'); }
   });
 
@@ -798,11 +798,11 @@
     const pw = document.getElementById('new-password').value;
     const confirm = document.getElementById('new-password-confirm').value;
     const errEl = document.getElementById('pw-error');
-    errEl.style.display = 'none';
-    if (pw !== confirm) { errEl.textContent = 'Passwords do not match'; errEl.style.display = 'block'; return; }
-    if (pw.length < 8) { errEl.textContent = 'Password must be at least 8 characters'; errEl.style.display = 'block'; return; }
+    errEl.classList.remove('visible');
+    if (pw !== confirm) { errEl.textContent = 'Passwords do not match'; errEl.classList.add('visible'); return; }
+    if (pw.length < 8) { errEl.textContent = 'Password must be at least 8 characters'; errEl.classList.add('visible'); return; }
     const { error } = await sb.auth.updateUser({ password: pw });
-    if (error) { errEl.textContent = error.message; errEl.style.display = 'block'; }
+    if (error) { errEl.textContent = error.message; errEl.classList.add('visible'); }
     else { document.getElementById('new-password').value = ''; document.getElementById('new-password-confirm').value = ''; showToast('Password updated'); }
   });
 
@@ -814,9 +814,9 @@
   const clubMinCents = 2500; // $25
 
   async function loadClub() {
-    document.getElementById('club-loading-state').style.display = 'flex';
-    document.getElementById('club-non-member').style.display = 'none';
-    document.getElementById('club-member-view').style.display = 'none';
+    document.getElementById('club-loading-state').classList.remove('hidden');
+    document.getElementById('club-non-member').classList.add('hidden');
+    document.getElementById('club-member-view').classList.add('hidden');
 
     // Check admin status (admins always have club access)
     const { data: adminRow } = await sb.from('admins').select('user_id').eq('user_id', currentUser.id).maybeSingle();
@@ -833,15 +833,15 @@
 
     const isMember = adminRow || (member && member.status !== 'cancelled');
 
-    document.getElementById('club-loading-state').style.display = 'none';
+    document.getElementById('club-loading-state').classList.add('hidden');
 
     if (!isMember) {
-      document.getElementById('club-non-member').style.display = 'block';
+      document.getElementById('club-non-member').classList.remove('hidden');
       document.getElementById('join-club-btn').addEventListener('click', startClubJoin);
       return;
     }
 
-    document.getElementById('club-member-view').style.display = 'block';
+    document.getElementById('club-member-view').classList.remove('hidden');
 
     // Status badge
     const badge = document.getElementById('club-status-badge');
@@ -876,11 +876,11 @@
     // Add items button
     document.getElementById('add-to-box-btn').addEventListener('click', () => {
       const picker = document.getElementById('club-product-picker');
-      picker.style.display = picker.style.display === 'none' ? 'block' : 'none';
-      if (picker.style.display === 'block') renderProductPicker();
+      const wasHidden = picker.classList.toggle('hidden');
+      if (!wasHidden) renderProductPicker();
     });
     document.getElementById('picker-close-btn').addEventListener('click', () => {
-      document.getElementById('club-product-picker').style.display = 'none';
+      document.getElementById('club-product-picker').classList.add('hidden');
     });
     document.getElementById('picker-search').addEventListener('input', renderProductPicker);
 
@@ -928,7 +928,7 @@
 
     if (!boxSelections.length) {
       el.innerHTML = '<p class="box-empty-msg">Your box is empty. Click "+ Add Items" to get started.</p>';
-      footer.style.display = 'none';
+      footer.classList.add('hidden');
       return;
     }
 
@@ -959,7 +959,7 @@
     });
 
     // Total / discount hint
-    footer.style.display = 'flex';
+    footer.classList.remove('hidden');
     const totalLabel = document.getElementById('box-total-label');
     const hint = document.getElementById('box-min-hint');
     totalLabel.textContent = `Total: ${fmt(total)}`;
