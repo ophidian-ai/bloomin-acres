@@ -423,13 +423,15 @@ body::after {
   padding: 2rem 1.5rem 0 2.5rem;
 }
 .basket-header-img {
-  width: 180px;
+  width: 360px;
   height: auto;
   margin-bottom: 1rem;
+  align-self: center;
+  max-width: 100%;
 }
 @media (min-width: 768px) {
   .basket-layout { padding-left: 4rem; }
-  .basket-header-img { width: 220px; }
+  .basket-header-img { width: 440px; }
 }
 @media (min-width: 1200px) {
   .basket-layout { padding-left: 6rem; }
