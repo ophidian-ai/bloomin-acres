@@ -32,8 +32,8 @@ body::after {
   to   { opacity: 1; transform: translateY(0); }
 }
 @keyframes bounce {
-  0%, 100% { transform: translateY(0); }
-  50%       { transform: translateY(9px); }
+  0%, 100% { transform: translateX(-50%) translateY(0); }
+  50%       { transform: translateX(-50%) translateY(9px); }
 }
 .animate-fade-up {
   opacity: 0; transform: translateY(28px);
@@ -55,7 +55,7 @@ body::after {
   transition: opacity 0.3s ease;
 }
 .scroll-cta:hover  { opacity: 0.45; }
-.scroll-cta:active { transform: scale(0.88); }
+.scroll-cta:active { transform: translateX(-50%) scale(0.88); }
 
 /* ── Cards ──────────────────────────────────────────────── */
 .product-card {
