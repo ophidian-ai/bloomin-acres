@@ -530,13 +530,13 @@
       </div>
       <div class="orders-filters">
         <input type="search" class="search-input" id="order-search" placeholder="Search by name or order ID..." aria-label="Search orders" />
-        <select class="orders-date-filter" id="order-date-filter">
+        <select class="orders-date-filter" id="order-date-filter" aria-label="Filter by date">
           <option value="today">Today</option>
           <option value="week" selected>This Week</option>
           <option value="month">This Month</option>
           <option value="all">All Orders</option>
         </select>
-        <select class="orders-status-filter" id="order-status-filter">
+        <select class="orders-status-filter" id="order-status-filter" aria-label="Filter by status">
           <option value="all">All Statuses</option>
           <option value="paid">Paid</option>
           <option value="fulfilled">Fulfilled</option>
@@ -558,7 +558,7 @@
         <h3>Print Order Tickets</h3>
         <div class="print-field">
           <label>Choose ticket size</label>
-          <select id="print-ticket-size">
+          <select id="print-ticket-size" aria-label="Ticket size">
             <option value="letter">Letter (8.5 x 11)</option>
             <option value="4x6" selected>Label (4 x 6)</option>
             <option value="4x5">Label (4 x 5)</option>
@@ -611,9 +611,9 @@
         <button type="button" class="period-btn active" data-period="month">This Month</button>
         <button type="button" class="period-btn" data-period="custom">Custom Range</button>
         <div class="custom-range" id="custom-range" style="display:none;">
-          <input type="date" id="range-start" />
+          <input type="date" id="range-start" aria-label="Start date" />
           <span>to</span>
-          <input type="date" id="range-end" />
+          <input type="date" id="range-end" aria-label="End date" />
           <button type="button" class="btn-secondary btn-sm" id="apply-range">Apply</button>
         </div>
       </div>
