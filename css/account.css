@@ -288,7 +288,7 @@ body::after {
 
 .dash-header {
   background: var(--earth-brown);
-  padding: 2rem 1.5rem 1.75rem;
+  padding: 1rem 1.5rem .85rem;
 }
 .dash-header-inner {
   max-width: 900px; margin: 0 auto;
@@ -394,12 +394,17 @@ body::after {
 
 /* ── Basket Card (cart panel) ────────────────────────────── */
 /* Full-page basket background */
+#dashboard:has(#panel-cart.active) > .dash-header,
+#dashboard:has(#panel-cart.active) > .dash-tabs-bar {
+  display: none;
+}
 .dash-content:has(#panel-cart.active) {
   background: transparent;
   box-shadow: none;
   padding: 0;
   max-width: none;
   border-radius: 0;
+  min-height: auto;
 }
 #panel-cart {
   position: relative;
