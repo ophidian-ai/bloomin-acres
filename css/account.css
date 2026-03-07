@@ -404,9 +404,6 @@ body::after {
 #panel-cart {
   position: relative;
   min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-  justify-content: flex-end;
 }
 .basket-page-bg {
   position: fixed;
@@ -417,13 +414,25 @@ body::after {
   z-index: 0;
   pointer-events: none;
 }
-.basket-card {
+.basket-layout {
   position: relative;
   z-index: 1;
-  max-width: 900px;
-  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 2rem 1.5rem 0;
+}
+.basket-header-img {
+  width: 180px;
+  height: auto;
+  margin-bottom: 1rem;
+}
+@media (min-width: 768px) {
+  .basket-header-img { width: 220px; }
+}
+.basket-card {
   width: 100%;
-  padding: 0 1.5rem;
+  max-width: 700px;
 }
 
 #cart-items {
