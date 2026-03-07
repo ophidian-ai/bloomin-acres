@@ -118,54 +118,45 @@
 <!-- Loading overlay -->
 <div id="loading"><div class="spinner"></div></div>
 
-<!-- Top bar -->
-<header class="topbar">
-  <a href="index.html" class="topbar-logo">
-    <img src="brand-assets/color-logo.png" alt="Bloomin' Acres logo" />
-    <span>Bloomin' Acres</span>
+<!-- Fixed top-right icons (basket + account) -->
+<div class="topright-icons" id="acct-topright-icons">
+  <a href="account.html?tab=cart" class="topright-icon" id="topbar-cart" aria-label="Basket">
+    <img src="brand-assets/basket-icon.png" alt="" width="40" height="40" aria-hidden="true" />
+    <span class="topright-badge hidden" id="topbar-cart-badge">0</span>
   </a>
-  <div class="topbar-actions">
-    <a href="index.html" class="topbar-back">← Back to site</a>
-    <!-- Basket icon -->
-    <a href="account.html?tab=cart" class="topbar-icon topbar-cart-icon" id="topbar-cart" aria-label="Basket">
-      <img src="brand-assets/basket-icon.png" alt="" width="40" height="40" aria-hidden="true" />
-      <span class="topbar-badge hidden" id="topbar-cart-badge">0</span>
-    </a>
-    <!-- Account badge -->
-    <div class="topbar-account-wrap" id="topbar-account-wrap">
-      <button type="button" class="topbar-account-btn hidden" id="topbar-account-btn" aria-haspopup="true" aria-expanded="false" aria-label="Account menu">
-        <span class="topbar-avatar" id="topbar-avatar">?</span>
+  <div class="topright-account-wrap" id="topbar-account-wrap">
+    <button type="button" class="topright-account-btn hidden" id="topbar-account-btn" aria-haspopup="true" aria-expanded="false" aria-label="Account menu">
+      <span class="topright-avatar" id="topbar-avatar">?</span>
+    </button>
+    <div class="topright-account-menu" id="topbar-account-menu" role="menu">
+      <a href="account.html?tab=cart" role="menuitem">
+        <img src="brand-assets/basket-icon.png" alt="" width="15" height="15" aria-hidden="true" />
+        Basket
+      </a>
+      <a href="account.html?tab=favorites" role="menuitem">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+        Favorites
+      </a>
+      <a href="account.html?tab=orders" role="menuitem">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+        Orders
+      </a>
+      <a href="account.html?tab=profile" role="menuitem">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+        Profile
+      </a>
+      <a href="account.html?tab=club" role="menuitem">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>
+        Club
+      </a>
+      <div class="topright-menu-divider"></div>
+      <button type="button" class="topright-menu-signout" id="topbar-signout-btn" role="menuitem">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+        Sign Out
       </button>
-      <div class="topbar-account-menu" id="topbar-account-menu" role="menu">
-        <a href="account.html?tab=cart" role="menuitem">
-          <img src="brand-assets/basket-icon.png" alt="" width="15" height="15" aria-hidden="true" />
-          Basket
-        </a>
-        <a href="account.html?tab=favorites" role="menuitem">
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
-          Favorites
-        </a>
-        <a href="account.html?tab=orders" role="menuitem">
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
-          Orders
-        </a>
-        <a href="account.html?tab=profile" role="menuitem">
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-          Profile
-        </a>
-        <a href="account.html?tab=club" role="menuitem">
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>
-          Club
-        </a>
-        <div class="topbar-menu-divider"></div>
-        <button type="button" class="topbar-menu-signout" id="topbar-signout-btn" role="menuitem">
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
-          Sign Out
-        </button>
-      </div>
     </div>
   </div>
-</header>
+</div>
 
 <!-- ─── Unauthenticated: auth card ──────────────────────────────────── -->
 <div id="auth-wrap" class="auth-wrap hidden">
