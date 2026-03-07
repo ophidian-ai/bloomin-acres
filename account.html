@@ -124,7 +124,47 @@
     <img src="brand-assets/color-logo.png" alt="Bloomin' Acres logo" />
     <span>Bloomin' Acres</span>
   </a>
-  <a href="index.html" class="topbar-back">← Back to site</a>
+  <div class="topbar-actions">
+    <a href="index.html" class="topbar-back">← Back to site</a>
+    <!-- Cart icon -->
+    <a href="account.html?tab=cart" class="topbar-icon topbar-cart-icon" id="topbar-cart" aria-label="Cart">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
+      <span class="topbar-badge hidden" id="topbar-cart-badge">0</span>
+    </a>
+    <!-- Account badge -->
+    <div class="topbar-account-wrap" id="topbar-account-wrap">
+      <button type="button" class="topbar-account-btn hidden" id="topbar-account-btn" aria-haspopup="true" aria-expanded="false" aria-label="Account menu">
+        <span class="topbar-avatar" id="topbar-avatar">?</span>
+      </button>
+      <div class="topbar-account-menu" id="topbar-account-menu" role="menu">
+        <a href="account.html?tab=cart" role="menuitem">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
+          Cart
+        </a>
+        <a href="account.html?tab=favorites" role="menuitem">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+          Favorites
+        </a>
+        <a href="account.html?tab=orders" role="menuitem">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+          Orders
+        </a>
+        <a href="account.html?tab=profile" role="menuitem">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+          Profile
+        </a>
+        <a href="account.html?tab=club" role="menuitem">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>
+          Club
+        </a>
+        <div class="topbar-menu-divider"></div>
+        <button type="button" class="topbar-menu-signout" id="topbar-signout-btn" role="menuitem">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+          Sign Out
+        </button>
+      </div>
+    </div>
+  </div>
 </header>
 
 <!-- ─── Unauthenticated: auth card ──────────────────────────────────── -->
@@ -206,7 +246,16 @@
 
     <!-- Cart panel -->
     <div class="dash-panel active" id="panel-cart">
-      <div id="cart-items"></div>
+      <div class="basket-card">
+        <div class="basket-header">
+          <img src="brand-assets/color-logo.png" alt="Bloomin' Acres" class="basket-logo" />
+          <h2 class="basket-title">Your Bloomin' Basket</h2>
+        </div>
+        <div class="basket-wheat-left">
+          <img src="brand-assets/wheat-seperater.png" alt="" aria-hidden="true" />
+        </div>
+        <div id="cart-items"></div>
+      </div>
     </div>
 
     <!-- Favorites panel -->
@@ -491,8 +540,31 @@
     document.getElementById('profile-phone').value = profile?.phone || '';
 
     // Update greeting and avatar
+    const initial = (firstName || user.email || 'U')[0].toUpperCase();
     document.getElementById('dash-greeting').textContent = firstName ? `Welcome back, ${firstName}` : 'Welcome back';
-    document.getElementById('dash-avatar').textContent = (firstName || user.email || 'U')[0].toUpperCase();
+    document.getElementById('dash-avatar').textContent = initial;
+
+    // Wire topbar account badge
+    const topbarBtn = document.getElementById('topbar-account-btn');
+    const topbarAvatar = document.getElementById('topbar-avatar');
+    const topbarMenu = document.getElementById('topbar-account-menu');
+    const topbarSignout = document.getElementById('topbar-signout-btn');
+    topbarAvatar.textContent = initial;
+    topbarBtn.classList.remove('hidden');
+    topbarBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const open = topbarMenu.classList.toggle('open');
+      topbarBtn.setAttribute('aria-expanded', open);
+    });
+    document.addEventListener('click', () => {
+      topbarMenu.classList.remove('open');
+      topbarBtn.setAttribute('aria-expanded', 'false');
+    });
+    topbarMenu.addEventListener('click', (e) => e.stopPropagation());
+    topbarSignout.addEventListener('click', async () => {
+      await sb.auth.signOut();
+      window.location.reload();
+    });
 
     // Activate requested tab
     if (targetTab) {
@@ -541,50 +613,115 @@
   function renderCart() {
     const el = document.getElementById('cart-items');
     const badge = document.getElementById('cart-badge');
+    const topbarBadge = document.getElementById('topbar-cart-badge');
     const count = cartItems.reduce((s, i) => s + i.quantity, 0);
     badge.textContent = count;
     badge.classList.toggle('hidden', !count);
+    if (topbarBadge) {
+      topbarBadge.textContent = count;
+      topbarBadge.classList.toggle('hidden', !count);
+    }
 
     if (!cartItems.length) {
-      el.innerHTML = `<div class="empty-state">
-        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
-        <p>Your cart is empty.</p>
-        <a href="menu.html">Browse the Menu</a>
-      </div>`;
+      // NOTE: All values here are static strings or from our own Stripe product data, not user input
+      el.textContent = '';
+      const emptyDiv = document.createElement('div');
+      emptyDiv.className = 'basket-empty';
+      const p = document.createElement('p');
+      p.textContent = 'Your basket is empty.';
+      const a = document.createElement('a');
+      a.href = 'menu.html';
+      a.className = 'basket-btn-browse';
+      a.textContent = 'Browse the Menu';
+      emptyDiv.append(p, a);
+      el.appendChild(emptyDiv);
       return;
     }
 
     let total = 0;
-    const rows = cartItems.map(item => {
-      const p = products[item.stripe_product_id];
-      const name = p?.name || item.stripe_product_id;
-      const varLabel = item.variation_name ? ` — ${item.variation_name}` : '';
-      const price = (p?.unit_amount ?? 0) + (item.variation_delta || 0);
+    // NOTE: product names come from our Stripe account (admin-controlled), not user input
+    const frag = document.createDocumentFragment();
+    cartItems.forEach(item => {
+      const pr = products[item.stripe_product_id];
+      const name = pr?.name || item.stripe_product_id;
+      const varLabel = item.variation_name ? ' \u2014 ' + item.variation_name : '';
+      const price = (pr?.unit_amount ?? 0) + (item.variation_delta || 0);
       total += price * item.quantity;
-      return `<div class="cart-item" data-id="${item.id}" data-pid="${item.stripe_product_id}">
-        <div class="cart-item-name">${name}${varLabel}</div>
-        <div class="qty-controls">
-          <button class="qty-btn" data-action="dec" data-id="${item.id}">−</button>
-          <span class="qty-num">${item.quantity}</span>
-          <button class="qty-btn" data-action="inc" data-id="${item.id}">+</button>
-        </div>
-        <div class="cart-item-price">${fmt(price * item.quantity)}</div>
-        <button class="remove-btn" data-id="${item.id}" aria-label="Remove">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-        </button>
-      </div>`;
-    }).join('');
 
-    el.innerHTML = rows + `<div class="cart-footer">
-      <div class="cart-total"><span>Total</span> ${fmt(total)}</div>
-      <button class="btn-primary btn-checkout" id="checkout-btn">Proceed to Checkout →</button>
-    </div>`;
+      const row = document.createElement('div');
+      row.className = 'basket-item';
+      row.dataset.id = item.id;
+
+      const bullet = document.createElement('span');
+      bullet.className = 'basket-bullet';
+
+      const nameEl = document.createElement('span');
+      nameEl.className = 'basket-item-name';
+      nameEl.textContent = name + varLabel;
+
+      const qtyWrap = document.createElement('span');
+      qtyWrap.className = 'basket-item-qty';
+      const decBtn = document.createElement('button');
+      decBtn.type = 'button';
+      decBtn.className = 'basket-qty-btn';
+      decBtn.dataset.action = 'dec';
+      decBtn.dataset.id = item.id;
+      decBtn.textContent = '\u2212';
+      const qtyNum = document.createElement('span');
+      qtyNum.className = 'basket-qty-num';
+      qtyNum.textContent = item.quantity > 1 ? '\u00d7' + item.quantity : '';
+      const incBtn = document.createElement('button');
+      incBtn.type = 'button';
+      incBtn.className = 'basket-qty-btn';
+      incBtn.dataset.action = 'inc';
+      incBtn.dataset.id = item.id;
+      incBtn.textContent = '+';
+      qtyWrap.append(decBtn, qtyNum, incBtn);
+
+      const priceEl = document.createElement('span');
+      priceEl.className = 'basket-item-price';
+      priceEl.textContent = fmt(price * item.quantity);
+
+      const removeBtn = document.createElement('button');
+      removeBtn.type = 'button';
+      removeBtn.className = 'basket-remove';
+      removeBtn.dataset.id = item.id;
+      removeBtn.setAttribute('aria-label', 'Remove');
+      removeBtn.textContent = '\u00d7';
+
+      row.append(bullet, nameEl, qtyWrap, priceEl, removeBtn);
+      frag.appendChild(row);
+    });
+
+    // Footer
+    const footer = document.createElement('div');
+    footer.className = 'basket-footer';
+    const totalEl = document.createElement('div');
+    totalEl.className = 'basket-total';
+    totalEl.textContent = 'Total: ' + fmt(total);
+    const actionsEl = document.createElement('div');
+    actionsEl.className = 'basket-actions';
+    const addMore = document.createElement('a');
+    addMore.href = 'menu.html';
+    addMore.className = 'basket-btn-add';
+    addMore.textContent = '+ Add More';
+    const checkoutBtn = document.createElement('button');
+    checkoutBtn.type = 'button';
+    checkoutBtn.className = 'basket-btn-checkout';
+    checkoutBtn.id = 'checkout-btn';
+    checkoutBtn.textContent = 'Order Now';
+    actionsEl.append(addMore, checkoutBtn);
+    footer.append(totalEl, actionsEl);
+    frag.appendChild(footer);
+
+    el.textContent = '';
+    el.appendChild(frag);
 
     // Qty controls
-    el.querySelectorAll('.qty-btn').forEach(btn => {
+    el.querySelectorAll('.basket-qty-btn').forEach(btn => {
       btn.addEventListener('click', () => updateQty(btn.dataset.id, btn.dataset.action));
     });
-    el.querySelectorAll('.remove-btn').forEach(btn => {
+    el.querySelectorAll('.basket-remove').forEach(btn => {
       btn.addEventListener('click', () => removeCartItem(btn.dataset.id));
     });
     document.getElementById('checkout-btn')?.addEventListener('click', startCheckout);

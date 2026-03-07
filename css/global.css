@@ -189,6 +189,100 @@ img { display: block; max-width: 100%; }
 }
 .toast-base.show { opacity: 1; transform: translateX(-50%) translateY(0); }
 
+/* ── Fixed Top-Right Icons (cart + account) ────────────── */
+.topright-icons {
+  position: fixed; top: 0; right: 0; z-index: 300;
+  display: flex; align-items: center; gap: .5rem;
+  margin: .65rem .75rem;
+  padding: .35rem .5rem;
+  background: rgba(0,0,0,.28); border: 1px solid rgba(250,240,230,.2);
+  border-radius: 8px;
+  -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px);
+}
+.topright-icon {
+  position: relative;
+  display: flex; align-items: center; justify-content: center;
+  width: 32px; height: 32px;
+  border-radius: 6px;
+  color: rgba(250,240,230,.75);
+  transition: color .2s, background .2s;
+  text-decoration: none;
+}
+.topright-icon:hover { color: var(--wheat-gold); background: rgba(250,240,230,.1); }
+.topright-badge {
+  position: absolute; top: -3px; right: -5px;
+  background: var(--burnt-orange);
+  color: #fff;
+  font-size: .58rem; font-weight: 700;
+  min-width: 15px; height: 15px;
+  border-radius: 8px;
+  display: flex; align-items: center; justify-content: center;
+  padding: 0 3px;
+  line-height: 1;
+}
+.topright-account-wrap { position: relative; }
+.topright-account-btn {
+  background: none; border: none; cursor: pointer; padding: 0;
+  display: flex; align-items: center;
+}
+.topright-avatar {
+  width: 30px; height: 30px; border-radius: 50%;
+  background: var(--sage-dark);
+  display: flex; align-items: center; justify-content: center;
+  font-family: var(--font-display);
+  font-size: .78rem; font-weight: 600;
+  color: var(--farm-cream);
+  transition: box-shadow .2s;
+}
+.topright-account-btn:hover .topright-avatar { box-shadow: 0 0 0 2px var(--wheat-gold); }
+.topright-account-menu {
+  position: absolute; top: calc(100% + 10px); right: -4px;
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 4px 16px rgba(74,51,34,.12), 0 12px 40px rgba(74,51,34,.10);
+  min-width: 200px;
+  padding: .5rem 0;
+  opacity: 0; visibility: hidden;
+  transform: translateY(-6px);
+  transition: opacity .2s, transform .2s, visibility .2s;
+  z-index: 500;
+}
+.topright-account-menu.open {
+  opacity: 1; visibility: visible;
+  transform: translateY(0);
+}
+.topright-account-menu a,
+.topright-account-menu button {
+  display: flex; align-items: center; gap: .65rem;
+  width: 100%; padding: .6rem 1.1rem;
+  font-family: var(--font-body);
+  font-size: .82rem; font-weight: 500;
+  color: var(--earth-brown);
+  text-decoration: none;
+  background: none; border: none; cursor: pointer;
+  transition: background .15s;
+  text-align: left;
+}
+.topright-account-menu a:hover,
+.topright-account-menu button:hover { background: rgba(122,155,142,.08); }
+.topright-account-menu svg { color: rgba(74,51,34,.4); flex-shrink: 0; }
+.topright-menu-divider {
+  height: 1px;
+  background: var(--cream-dark);
+  margin: .35rem .75rem;
+}
+.topright-menu-signout { color: var(--berry-red) !important; }
+.topright-menu-signout svg { color: rgba(139,58,58,.5) !important; }
+/* Sign-in link for logged-out state */
+.topright-signin {
+  display: flex; align-items: center; justify-content: center;
+  width: 32px; height: 32px; border-radius: 6px;
+  color: rgba(250,240,230,.75);
+  text-decoration: none;
+  transition: color .2s, background .2s;
+}
+.topright-signin:hover { color: var(--wheat-gold); background: rgba(250,240,230,.1); }
+
 /* ── Grain overlay (shared body::after for farm-bg pages) ── */
 .grain-overlay::after {
   content: '';
