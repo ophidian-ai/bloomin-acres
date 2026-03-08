@@ -71,11 +71,13 @@
           // Regular user: show My Account submenu
           acctItem.style.display = 'block';
         }
-        signoutBtn.style.display = 'block';
-        signoutBtn.addEventListener('click', async () => {
-          await sb.auth.signOut();
-          window.location.href = 'index.html';
-        });
+        if (signoutBtn) {
+          signoutBtn.style.display = 'block';
+          signoutBtn.addEventListener('click', async () => {
+            await sb.auth.signOut();
+            window.location.href = 'index.html';
+          });
+        }
       }
 
       // Load user's existing favorites (for active state)

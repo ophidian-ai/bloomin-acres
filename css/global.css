@@ -173,6 +173,9 @@ img { display: block; max-width: 100%; }
 }
 .nav-overlay.open { opacity: 1; pointer-events: auto; }
 
+/* Hide top-right icons when sidebar is open so they don't overlap sidebar content */
+.nav-sidebar.open ~ .topright-icons { display: none; }
+
 /* ── CTA Button ─────────────────────────────────────────── */
 .cta-btn {
   display: inline-flex; align-items: center; gap: .6rem;

@@ -73,11 +73,13 @@
 
     // Wire sidebar sign-out
     const sidebarSignout = document.getElementById('sidebar-signout-btn');
-    sidebarSignout.classList.remove('hidden');
-    sidebarSignout.addEventListener('click', async () => {
-      await sb.auth.signOut();
-      window.location.href = 'account.html';
-    });
+    if (sidebarSignout) {
+      sidebarSignout.classList.remove('hidden');
+      sidebarSignout.addEventListener('click', async () => {
+        await sb.auth.signOut();
+        window.location.href = 'account.html';
+      });
+    }
 
     // ── Tabs ──────────────────────────────────────────────────────────────────
     document.querySelectorAll('.tab-btn').forEach(btn => {

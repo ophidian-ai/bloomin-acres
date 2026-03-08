@@ -24,7 +24,7 @@ body {
 /* ── Nav ─────────────────────────────────────────────────── */
 .site-nav {
   background-color: #7A5540;
-  padding: 1rem 2rem 1rem 4.5rem;
+  padding: 1rem 6rem;
   display: flex;
   align-items: center;
   justify-content: center;

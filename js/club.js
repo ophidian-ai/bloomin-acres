@@ -37,11 +37,13 @@
     } else {
       acctItem.classList.remove('hidden');
     }
-    signoutBtn.classList.remove('hidden');
-    signoutBtn.addEventListener('click', async () => {
-      await sb.auth.signOut();
-      window.location.reload();
-    });
+    if (signoutBtn) {
+      signoutBtn.classList.remove('hidden');
+      signoutBtn.addEventListener('click', async () => {
+        await sb.auth.signOut();
+        window.location.reload();
+      });
+    }
 
     // Load membership status
     const [{ data: member }, { data: codeRow }] = await Promise.all([

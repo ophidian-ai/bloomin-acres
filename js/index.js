@@ -20,11 +20,13 @@
     } else {
       acctItem.classList.remove('hidden');
     }
-    signoutBtn.classList.remove('hidden');
-    signoutBtn.addEventListener('click', async () => {
-      await sb.auth.signOut();
-      window.location.reload();
-    });
+    if (signoutBtn) {
+      signoutBtn.classList.remove('hidden');
+      signoutBtn.addEventListener('click', async () => {
+        await sb.auth.signOut();
+        window.location.reload();
+      });
+    }
   }
 
   // Load all editable landing page content

@@ -68,11 +68,13 @@
       } else {
         acctItemEl.classList.remove('hidden');
       }
-      signoutBtn.classList.remove('hidden');
-      signoutBtn.addEventListener('click', async () => {
-        await sb.auth.signOut();
-        window.location.reload();
-      });
+      if (signoutBtn) {
+        signoutBtn.classList.remove('hidden');
+        signoutBtn.addEventListener('click', async () => {
+          await sb.auth.signOut();
+          window.location.reload();
+        });
+      }
       await enterDashboard(session.user, targetTab);
     } else {
       showAuthCard();
