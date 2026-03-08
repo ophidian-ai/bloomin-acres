@@ -283,6 +283,35 @@ img { display: block; max-width: 100%; }
 }
 .topright-signin:hover { color: var(--wheat-gold); background: rgba(250,240,230,.1); }
 
+/* ── Site attribution ──────────────────────────────────── */
+.site-attribution {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: .35rem;
+  margin-top: .5rem;
+  font-size: .62rem;
+  color: rgba(250,240,230,.3);
+  letter-spacing: .04em;
+}
+.site-attribution img {
+  width: 14px;
+  height: 14px;
+  opacity: .4;
+}
+.site-attribution a {
+  color: rgba(250,240,230,.3);
+  text-decoration: none;
+  transition: color .2s, opacity .2s;
+}
+.site-attribution a:hover {
+  color: rgba(250,240,230,.55);
+}
+.site-attribution a:hover + img,
+.site-attribution:hover img {
+  opacity: .65;
+}
+
 /* ── Grain overlay (shared body::after for farm-bg pages) ── */
 .grain-overlay::after {
   content: '';
