@@ -37,6 +37,7 @@
 <div class="nav-overlay" id="nav-overlay" aria-hidden="true"></div>
 
 <script src="/js/shared.js"></script>
+<script src="/js/utils.js"></script>
 
   <!-- Login is handled by account.html — no overlay here -->
 
@@ -656,21 +657,6 @@
     let allProducts = [];   // Stripe products
     let sections = [];      // { id?, title, items: [{ id?, stripe_product_id }] }
     let savedMenus = [];    // { id, title, sections, created_at }
-
-    // ── Helpers ──────────────────────────────────────────────────────────────
-    function escHtml(s) {
-      return String(s)
-        .replace(/&/g,'&amp;').replace(/</g,'&lt;')
-        .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-    }
-
-    function showToast(msg, isError = false) {
-      const t = document.getElementById('toast');
-      t.textContent = msg;
-      t.className = isError ? 'error show' : 'show';
-      clearTimeout(t._tid);
-      t._tid = setTimeout(() => { t.className = ''; }, 3200);
-    }
 
     // ── Init ─────────────────────────────────────────────────────────────────
     async function init() {

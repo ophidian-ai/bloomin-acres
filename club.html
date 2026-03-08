@@ -84,6 +84,7 @@
 <div class="nav-overlay" id="nav-overlay" aria-hidden="true"></div>
 <script src="js/topright-icons.js" defer></script>
 <script src="/js/shared.js"></script>
+<script src="/js/utils.js"></script>
 
 <!-- Referral welcome banner (shown when ?ref=CODE in URL) -->
 <div class="referral-banner hidden" id="referral-banner">
@@ -322,15 +323,6 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <script>
 (async () => {
-  // ── Toast ──────────────────────────────────────────────────────────────────
-  function showToast(msg, isError = false) {
-    const t = document.getElementById('toast');
-    t.textContent = msg;
-    t.className = isError ? 'error show' : 'show';
-    clearTimeout(t._tid);
-    t._tid = setTimeout(() => { t.className = ''; }, 3000);
-  }
-
   // ── Referral code from URL ─────────────────────────────────────────────────
   const params = new URLSearchParams(window.location.search);
   const urlRef = params.get('ref');

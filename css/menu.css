@@ -334,7 +334,7 @@ body {
 }
 
 /* ── Toast ───────────────────────────────────────────────── */
-#menu-toast {
+#toast {
   position: fixed; bottom: 1.5rem; left: 50%; transform: translateX(-50%) translateY(20px);
   background: var(--earth-brown);
   color: var(--farm-cream);
@@ -345,7 +345,7 @@ body {
   pointer-events: none; z-index: 10000;
   white-space: nowrap;
 }
-#menu-toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+#toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
 
 /* ── SEO Fallback (static content for crawlers, removed by JS) ── */
 #seo-fallback { padding: 1.5rem 0; }

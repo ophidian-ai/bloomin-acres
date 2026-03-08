@@ -72,6 +72,7 @@
 <div class="nav-overlay" id="nav-overlay" aria-hidden="true"></div>
 
 <script src="/js/shared.js"></script>
+<script src="/js/utils.js"></script>
 
 <!-- Loading overlay -->
 <div id="loading"><div class="spinner"></div></div>
@@ -377,18 +378,7 @@
   let isSigningUp = false;
 
   // ── Helpers ──────────────────────────────────────────────────────────────
-  function showToast(msg, isError = false) {
-    const t = document.getElementById('toast');
-    t.textContent = msg;
-    t.className = isError ? 'error show' : 'show';
-    clearTimeout(t._tid);
-    t._tid = setTimeout(() => { t.className = ''; }, 3000);
-  }
-
-  function fmt(unit_amount, currency = 'usd') {
-    if (unit_amount == null) return '—';
-    return new Intl.NumberFormat('en-US', { style: 'currency', currency }).format(unit_amount / 100);
-  }
+  const fmt = formatPrice;
 
   function setLoading(on) {
     document.getElementById('loading').classList.toggle('hidden', !on);

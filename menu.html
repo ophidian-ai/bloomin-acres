@@ -103,6 +103,7 @@
   <div class="nav-overlay" id="nav-overlay" aria-hidden="true"></div>
   <script src="js/topright-icons.js" defer></script>
   <script src="/js/shared.js"></script>
+  <script src="/js/utils.js"></script>
 
   <!-- Nav -->
   <nav class="site-nav">
@@ -110,7 +111,7 @@
       <img src="brand-assets/color-logo.png" alt="Bloomin' Acres" class="nav-logo" />
     </a>
   </nav>
-  <div id="menu-toast"></div>
+  <div id="toast"></div>
 
   <!-- Schedule banner (shown when admin has set a date range) -->
   <div id="schedule-banner" class="schedule-banner">
@@ -173,17 +174,6 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 
   <script>
-    function escHtml(str) {
-      return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-    }
-
-    function showToast(msg) {
-      const t = document.getElementById('menu-toast');
-      t.textContent = msg; t.className = 'show';
-      clearTimeout(t._tid);
-      t._tid = setTimeout(() => { t.className = ''; }, 2800);
-    }
-
     (async () => {
       const content = document.getElementById('menu-content');
       const skeleton = document.getElementById('skeleton');

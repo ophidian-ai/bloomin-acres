@@ -74,6 +74,7 @@
 <script src="js/topright-icons.js" defer></script>
 
 <script src="/js/shared.js"></script>
+<script src="/js/utils.js"></script>
 
   <nav class="site-nav">
     <a href="index.html">
@@ -124,20 +125,6 @@
     let productId = null;
     let stripeProduct = null;
     let productDetails = null;  // { description, image_url, variations }
-
-    function escHtml(s) {
-      return String(s)
-        .replace(/&/g,'&amp;').replace(/</g,'&lt;')
-        .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-    }
-
-    function showToast(msg, isError = false) {
-      const t = document.getElementById('toast');
-      t.textContent = msg;
-      t.className = isError ? 'error show' : 'show';
-      clearTimeout(t._tid);
-      t._tid = setTimeout(() => { t.className = ''; }, 3200);
-    }
 
     async function init() {
       // Get product ID from URL
@@ -207,10 +194,6 @@
       productDetails = detailsRes.data || null;
 
       renderProduct();
-    }
-
-    function formatPrice(cents, currency) {
-      return new Intl.NumberFormat('en-US', { style: 'currency', currency: currency || 'usd' }).format(cents / 100);
     }
 
     function getSelectedVariation() {
