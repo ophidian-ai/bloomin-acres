@@ -333,6 +333,7 @@
       // Guest checkout form submission
       guestCheckoutForm.addEventListener('submit', async (e) => {
         e.preventDefault();
+        if (!guestCheckoutForm.reportValidity()) return;
         const nameVal = document.getElementById('guest-name').value.trim();
         const emailVal = document.getElementById('guest-email').value.trim();
         if (!nameVal || !emailVal) return;
@@ -381,6 +382,7 @@
       if (_qp.get('order') === 'success') {
         cartClear();
         showToast('Order placed successfully!');
+        history.replaceState(null, '', 'menu.html');
       }
 
       // Initialize cart badge on load
