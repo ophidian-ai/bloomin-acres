@@ -28,8 +28,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,500;1,400&family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400;1,600&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="css/global.css" />
   <link rel="stylesheet" href="css/menu.css" />
-  <script src="https://cdn.tailwindcss.com/3.4.17"></script>
-  <script src="/js/tailwind-config.js"></script>
+  <link rel="stylesheet" href="/css/tailwind.css">
 </head>
 <body>
 <a href="#main-content" class="skip-to-content">Skip to content</a>
@@ -179,13 +178,22 @@
       const skeleton = document.getElementById('skeleton');
       const seoFallback = document.getElementById('seo-fallback');
 
-      // Swap static SEO content for loading skeleton
-      if (seoFallback) seoFallback.remove();
+      // Show skeleton alongside fallback (fallback only removed on successful data load)
       skeleton.style.display = '';
+
+      function removeFallback() {
+        if (seoFallback && seoFallback.parentNode) seoFallback.remove();
+      }
 
       function showError(msg) {
         skeleton.remove();
-        content.innerHTML = `<div class="load-error">${msg}</div>`;
+        // Keep SEO fallback visible for crawlers — only show error alongside it
+        if (!seoFallback || !seoFallback.parentNode) {
+          const errDiv = document.createElement('div');
+          errDiv.className = 'load-error';
+          errDiv.textContent = msg;
+          content.appendChild(errDiv);
+        }
       }
 
       // 1. Fetch server config
@@ -305,8 +313,7 @@
         if (secErr) { showError('Unable to load the menu right now.'); return; }
         if (!dbSections || dbSections.length === 0) {
           skeleton.remove();
-          content.insertAdjacentHTML('beforeend',
-            '<div class="load-error menu-coming-soon">The menu is coming soon — check back shortly!</div>');
+          // Keep SEO fallback for crawlers — don't replace with "coming soon"
           return;
         }
         sections = dbSections;
@@ -320,7 +327,8 @@
         });
       }
 
-      // 5. Render
+      // 5. Render — only now remove the SEO fallback (real data loaded successfully)
+      removeFallback();
       skeleton.remove();
 
       sections.forEach((section, idx) => {
