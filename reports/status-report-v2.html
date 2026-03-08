@@ -516,21 +516,24 @@
       <svg class="circle-score-svg" width="110" height="110" viewBox="0 0 110 110">
         <circle cx="55" cy="55" r="48" fill="none" stroke="#e2e8f0" stroke-width="8"/>
         <circle cx="55" cy="55" r="48" fill="none" stroke="#2DD4A8" stroke-width="8"
-          stroke-dasharray="241.3" stroke-dashoffset="12.1"
+          stroke-dasharray="301.6" stroke-dashoffset="96.5"
           stroke-linecap="round" transform="rotate(-90 55 55)"/>
-        <text x="55" y="52" text-anchor="middle" font-size="28" font-weight="700" fill="#1e293b">8.5</text>
+        <text x="55" y="52" text-anchor="middle" font-size="28" font-weight="700" fill="#1e293b">6.8</text>
         <text x="55" y="68" text-anchor="middle" font-size="10" fill="#94a3b8">out of 10</text>
       </svg>
       <div class="score-label">OVERALL SCORE</div>
     </div>
     <div class="score-items">
-      <div class="score-row"><span class="score-row-label">Visual Design</span><span class="score-row-value">9 / 10</span></div>
+      <div class="score-row"><span class="score-row-label">SEO</span><span class="score-row-value">8 / 10<span class="score-row-new">NEW</span></span></div>
       <div class="score-row"><span class="score-row-label">Navigation</span><span class="score-row-value">8 / 10</span></div>
-      <div class="score-row"><span class="score-row-label">Account Mgmt</span><span class="score-row-value">8 / 10</span></div>
-      <div class="score-row"><span class="score-row-label">Performance</span><span class="score-row-value">8 / 10<span class="score-row-new">NEW</span></span></div>
+      <div class="score-row"><span class="score-row-label">Visual Design</span><span class="score-row-value">7 / 10</span></div>
+      <div class="score-row"><span class="score-row-label">Account Mgmt</span><span class="score-row-value">7 / 10</span></div>
       <div class="score-row"><span class="score-row-label">Mobile</span><span class="score-row-value">7 / 10</span></div>
       <div class="score-row"><span class="score-row-label">User Journey</span><span class="score-row-value">7 / 10</span></div>
-      <div class="score-row"><span class="score-row-label">Checkout</span><span class="score-row-value">9 / 10<span class="score-row-improved">WAS 7</span></span></div>
+      <div class="score-row"><span class="score-row-label">Performance</span><span class="score-row-value">6 / 10<span class="score-row-new">NEW</span></span></div>
+      <div class="score-row"><span class="score-row-label">Checkout</span><span class="score-row-value">6 / 10</span></div>
+      <div class="score-row"><span class="score-row-label">Security</span><span class="score-row-value">6 / 10<span class="score-row-new">NEW</span></span></div>
+      <div class="score-row"><span class="score-row-label">Code Quality</span><span class="score-row-value">6 / 10<span class="score-row-new">NEW</span></span></div>
     </div>
   </div>
 
@@ -784,45 +787,60 @@
   <div class="section-title">Priority <span>Issues</span></div>
   <hr class="section-divider">
 
-  <div class="issue-item resolved">
-    <div class="issue-title">1. Checkout Variation Pricing Bug <span class="badge badge-green">RESOLVED</span></div>
-    <div class="issue-desc">Verified: <code>startCheckout()</code> passes <code>variation_delta</code> and <code>variation_name</code> to Stripe. <code>checkout.js</code> applies delta to <code>unit_amount</code> and appends variant label to product name.</div>
+  <h3>Open Issues</h3>
+
+  <div class="issue-item security">
+    <div class="issue-title">1. No Content-Security-Policy Headers <span class="badge badge-yellow">SECURITY</span></div>
+    <div class="issue-desc">No CSP headers on any page. All inline scripts run without restriction. Vulnerable to XSS injection if any user content is reflected unsanitized.</div>
   </div>
 
-  <div class="issue-item resolved">
-    <div class="issue-title">2. Cart Display Missing Variation Names <span class="badge badge-green">RESOLVED</span></div>
-    <div class="issue-desc">Verified: <code>renderCart()</code> builds <code>varLabel</code> from <code>variation_name</code> and appends it to the product name display.</div>
+  <div class="issue-item critical">
+    <div class="issue-title">2. Massive Inline Scripts <span class="badge badge-red">CODE QUALITY</span></div>
+    <div class="issue-desc"><code>account.html</code> has ~1,200 lines of inline JS. <code>menu.html</code> ~340 lines. Not cacheable, not minifiable, not testable. Blocks HTML parsing on every page load.</div>
   </div>
 
-  <div class="issue-item resolved">
-    <div class="issue-title">3. API CORS Headers Locked Down <span class="badge badge-green">RESOLVED</span></div>
-    <div class="issue-desc">All 4 API endpoints use <code>ALLOWED_ORIGIN</code> env var (not wildcard). Production set to <code>https://bloominacresmarket.com</code>. Webhook has no CORS (server-to-server).</div>
-  </div>
-
-  <div class="issue-item resolved">
-    <div class="issue-title">4. SEO Meta Tags Implemented <span class="badge badge-green">RESOLVED</span></div>
-    <div class="issue-desc">All pages have meta descriptions, Open Graph tags, Twitter cards, and JSON-LD structured data. <code>sitemap.xml</code> and <code>robots.txt</code> deployed.</div>
-  </div>
-
-  <div class="issue-item resolved">
-    <div class="issue-title">5. Checkout Back-Button Disabled <span class="badge badge-green">RESOLVED</span></div>
-    <div class="issue-desc">Previously: clicking checkout then using browser back left button permanently disabled. Fixed with <code>pageshow</code> event handler in <code>js/shared.js</code>.</div>
+  <div class="issue-item critical">
+    <div class="issue-title">3. No Order Review Before Payment <span class="badge badge-red">CHECKOUT</span></div>
+    <div class="issue-desc">Clicking checkout redirects straight to Stripe with no confirmation step. No order summary, no address review, no chance to catch mistakes.</div>
   </div>
 
   <div class="issue-item ux">
-    <div class="issue-title">6. Footer Nav Broken Link <span class="badge badge-orange">UX</span></div>
-    <div class="issue-desc"><code>index.html</code> footer has <code>href="#menu"</code> which doesn't exist. Should link to <code>menu.html</code>.</div>
+    <div class="issue-title">4. Product Pages Lack Dynamic SEO <span class="badge badge-orange">SEO</span></div>
+    <div class="issue-desc"><code>product.html</code> meta title/description is hardcoded as "Product -- Bloomin' Acres". Each product should have its own meta tags for search indexing. No canonical tags on any page.</div>
+  </div>
+
+  <div class="issue-item ux">
+    <div class="issue-title">5. Cart Has No Stock Validation <span class="badge badge-orange">UX</span></div>
+    <div class="issue-desc">Users can add unlimited quantities without stock checking. No limit enforcement client-side or visible stock indicator in the cart.</div>
+  </div>
+
+  <div class="issue-item ux">
+    <div class="issue-title">6. No Guest Checkout <span class="badge badge-orange">UX</span></div>
+    <div class="issue-desc">All purchases require account creation. No option for one-time buyers to check out without signing up. Potential conversion blocker.</div>
   </div>
 
   <div class="issue-item content">
-    <div class="issue-title">7. Social Media Placeholder Links <span class="badge badge-orange">CONTENT</span></div>
-    <div class="issue-desc">Instagram and Facebook icons link to <code>#</code>.</div>
+    <div class="issue-title">7. Footer Nav Broken Link <span class="badge badge-orange">UX</span></div>
+    <div class="issue-desc"><code>index.html</code> footer <code>href="#menu"</code> links to nonexistent anchor. Social media icons link to <code>#</code>.</div>
   </div>
 
-  <div class="issue-item polish">
-    <div class="issue-title">8. Footer Copyright Year Inconsistency <span class="badge badge-gray">POLISH</span></div>
-    <div class="issue-desc"><code>product.html</code> and <code>menu.html</code> show "2025" while others show "2026".</div>
+  <div class="issue-item ux">
+    <div class="issue-title">8. Undersized Touch Targets <span class="badge badge-orange">MOBILE</span></div>
+    <div class="issue-desc">Avatar button is 30x30px, below the WCAG 44x44px minimum. Form inputs lack adequate mobile padding.</div>
   </div>
+
+  <h3>Previously Resolved</h3>
+  <table>
+    <thead><tr><th>Issue</th><th>Status</th></tr></thead>
+    <tbody>
+      <tr><td>Checkout variation pricing bug</td><td><span class="badge badge-green">RESOLVED</span></td></tr>
+      <tr><td>Cart missing variation names</td><td><span class="badge badge-green">RESOLVED</span></td></tr>
+      <tr><td>CORS wildcard headers</td><td><span class="badge badge-green">RESOLVED</span></td></tr>
+      <tr><td>Missing SEO meta tags</td><td><span class="badge badge-green">RESOLVED</span></td></tr>
+      <tr><td>Checkout back-button disabled</td><td><span class="badge badge-green">RESOLVED</span></td></tr>
+      <tr><td>Copyright year inconsistency</td><td><span class="badge badge-green">RESOLVED</span></td></tr>
+    </tbody>
+  </table>
 
   <div class="page-footer">
     <span>OphidianAI -- Confidential</span>
@@ -840,13 +858,21 @@
   <div class="section-title">Optimization <span>Suggestions</span></div>
   <hr class="section-divider">
 
-  <h3>Performance</h3>
+  <h3>Performance (Score: 6/10)</h3>
+
+  <div class="opt-item">
+    <span class="impact impact-high">HIGH IMPACT</span>
+    <div class="opt-item-body">
+      <div class="opt-item-title">Extract Inline Scripts to External Modules</div>
+      <div class="opt-item-desc"><code>account.html</code> has ~1,200 lines of inline JS. External files are cacheable, minifiable, and testable. Biggest single performance win available.</div>
+    </div>
+  </div>
 
   <div class="opt-item">
     <span class="impact impact-high">HIGH IMPACT</span>
     <div class="opt-item-body">
       <div class="opt-item-title">Replace Tailwind CDN with Compiled Build</div>
-      <div class="opt-item-desc">CDN now pinned to v3.4.17 and config extracted. Full compilation deferred to future sprint.</div>
+      <div class="opt-item-desc">CDN loads ~350 KB per page. Compiling to used classes only would cut this to ~10-15 KB. Config already extracted to <code>tailwind-config.js</code>.</div>
     </div>
   </div>
 
@@ -859,54 +885,70 @@
   </div>
 
   <div class="opt-item">
-    <span class="impact impact-done">DONE</span>
+    <span class="impact impact-medium">MEDIUM IMPACT</span>
     <div class="opt-item-body">
-      <div class="opt-item-title">Image Optimization</div>
-      <div class="opt-item-desc">Completed. 42 MB &rarr; 2.4 MB. WebP conversion, source files relocated. Automated pipeline via <code>scripts/optimize-images.mjs</code>.</div>
+      <div class="opt-item-title">Static Asset Caching Headers</div>
+      <div class="opt-item-desc">No Cache-Control headers configured. Images, JS, and CSS re-downloaded on every visit. Add via <code>vercel.json</code> headers config.</div>
     </div>
   </div>
 
   <div class="opt-item">
-    <span class="impact impact-low">LOW IMPACT</span>
+    <span class="impact impact-done">DONE</span>
     <div class="opt-item-body">
-      <div class="opt-item-title">Static Asset Caching Headers</div>
-      <div class="opt-item-desc">Add Cache-Control headers for images and JS files via Vercel config. Currently no caching policy set.</div>
+      <div class="opt-item-title">Image Optimization</div>
+      <div class="opt-item-desc">42 MB &rarr; 2.4 MB (-94%). WebP conversion, source files relocated. Automated pipeline via <code>scripts/optimize-images.mjs</code>.</div>
     </div>
   </div>
 
-  <h3>Architecture</h3>
+  <h3>Architecture (Score: 6/10)</h3>
+
+  <div class="opt-item">
+    <span class="impact impact-high">HIGH IMPACT</span>
+    <div class="opt-item-body">
+      <div class="opt-item-title">Add Build Pipeline</div>
+      <div class="opt-item-desc">Raw HTML/CSS/JS served directly. No minification, bundling, or tree-shaking. An esbuild or Vite setup would improve load times and enable module imports.</div>
+    </div>
+  </div>
 
   <div class="opt-item">
     <span class="impact impact-partial">PARTIAL</span>
     <div class="opt-item-body">
       <div class="opt-item-title">Shared Nav Component</div>
-      <div class="opt-item-desc">Nav JS extracted to <code>shared.js</code>. Nav HTML still duplicated across 6 pages -- deferred to future sprint.</div>
+      <div class="opt-item-desc">Nav JS extracted to <code>shared.js</code>. Nav HTML still duplicated across 6 pages. Extract to a template or web component.</div>
     </div>
   </div>
-
-  <div class="opt-item">
-    <span class="impact impact-low">LOW IMPACT</span>
-    <div class="opt-item-body">
-      <div class="opt-item-title">Shared Utility Module</div>
-      <div class="opt-item-desc"><code>showToast</code>, <code>escHtml</code>, <code>formatPrice</code> still duplicated across pages. Extract into a shared utilities file.</div>
-    </div>
-  </div>
-
-  <h3>UX Improvements</h3>
 
   <div class="opt-item">
     <span class="impact impact-medium">MEDIUM IMPACT</span>
     <div class="opt-item-body">
-      <div class="opt-item-title">Product Price Live Update</div>
+      <div class="opt-item-title">Shared Utility Module</div>
+      <div class="opt-item-desc"><code>showToast</code>, <code>escHtml</code>, <code>formatPrice</code> duplicated across pages. Extract into a single <code>js/utils.js</code> file.</div>
+    </div>
+  </div>
+
+  <h3>UX (Score: 7/10)</h3>
+
+  <div class="opt-item">
+    <span class="impact impact-high">HIGH IMPACT</span>
+    <div class="opt-item-body">
+      <div class="opt-item-title">Order Review Step Before Payment</div>
+      <div class="opt-item-desc">Currently clicks straight to Stripe. Add a confirmation modal showing items, quantities, variation selections, and total before redirect.</div>
+    </div>
+  </div>
+
+  <div class="opt-item">
+    <span class="impact impact-medium">MEDIUM IMPACT</span>
+    <div class="opt-item-body">
+      <div class="opt-item-title">Product Price Live Update on Variation Select</div>
       <div class="opt-item-desc">When a customer selects a variation, update the displayed price in real time to reflect the delta.</div>
     </div>
   </div>
 
   <div class="opt-item">
-    <span class="impact impact-low">LOW IMPACT</span>
+    <span class="impact impact-medium">MEDIUM IMPACT</span>
     <div class="opt-item-body">
-      <div class="opt-item-title">Loading Timeout Fallback</div>
-      <div class="opt-item-desc">If Supabase or Stripe is slow, show a friendly timeout message instead of an infinite spinner.</div>
+      <div class="opt-item-title">Accessibility: Skip-to-Content and Touch Targets</div>
+      <div class="opt-item-desc">No skip-to-content link. Avatar touch target is 30px (WCAG minimum: 44px). Add skip link and increase interactive element sizes.</div>
     </div>
   </div>
 
@@ -1006,29 +1048,28 @@
   <div class="section-title">Code Quality <span>Assessment</span></div>
   <hr class="section-divider">
 
-  <h3>Strengths</h3>
+  <h3>Strengths (Score: 6/10)</h3>
   <ul class="checklist strengths">
-    <li><strong>Clean Supabase integration</strong> -- RLS policies on all tables, proper auth flow</li>
-    <li><strong>Stripe best practices</strong> -- Webhook verification, idempotent order creation</li>
+    <li><strong>Clean Supabase integration</strong> -- RLS policies on all tables, proper auth flow, parameterized queries</li>
+    <li><strong>Stripe best practices</strong> -- Webhook signature verification, idempotent order creation, PCI-compliant checkout</li>
     <li><strong>Admin/customer separation</strong> -- Role-based UI with admin-only sections properly gated</li>
-    <li><strong>Responsive design</strong> -- Tailwind utility classes with mobile-first approach</li>
     <li><strong>CMS-driven content</strong> -- Landing page and menu fully editable without code changes</li>
-    <li><strong>Shared configuration</strong> -- Tailwind config and nav logic extracted to single files <span class="badge badge-teal" style="margin-left:6px; font-size:9px;">NEW IN V2</span></li>
-    <li><strong>Image pipeline</strong> -- Automated optimization script for brand assets <span class="badge badge-teal" style="margin-left:6px; font-size:9px;">NEW IN V2</span></li>
-    <li><strong>Consistent font loading</strong> -- Single Google Fonts request across all pages <span class="badge badge-teal" style="margin-left:6px; font-size:9px;">NEW IN V2</span></li>
+    <li><strong>Modular API layer</strong> -- Separate files for checkout, subscribe, portal, products, webhook</li>
+    <li><strong>XSS prevention</strong> -- <code>escHtml()</code> used on user-facing product names and descriptions</li>
   </ul>
 
   <h3>Areas for Improvement</h3>
   <ul class="checklist improvements">
-    <li><strong>Code duplication</strong> -- Nav HTML still copied across 6 pages (JS extracted, HTML remains)</li>
+    <li><strong>Massive inline scripts</strong> -- <code>account.html</code> has ~1,200 lines of inline JS. Not cacheable, not testable, blocks parsing.</li>
     <li><strong>No build pipeline</strong> -- Raw HTML/CSS/JS served directly. No minification, bundling, or tree-shaking.</li>
-    <li><strong>Tailwind CDN</strong> -- Pinned but still CDN-loaded (~350 KB per page). Should compile to used classes only.</li>
-    <li><strong>Missing skip-to-content link</strong> -- Accessibility gap for keyboard and screen reader users</li>
-    <li><strong>CORS configuration</strong> -- <span class="badge badge-green" style="font-size:9px;">FIXED</span> Locked to production domain via <code>ALLOWED_ORIGIN</code> env var</li>
-    <li><strong>SEO foundation</strong> -- <span class="badge badge-green" style="font-size:9px;">FIXED</span> Sitemap, robots.txt, meta tags, OG tags, and JSON-LD deployed</li>
+    <li><strong>Tailwind CDN</strong> -- ~350 KB loaded per page. Should compile to used classes only (~10-15 KB).</li>
+    <li><strong>Variable naming inconsistency</strong> -- <code>sb</code> vs <code>supabase</code>, <code>currentUser</code> vs <code>session.user</code> across pages.</li>
+    <li><strong>Magic numbers</strong> -- Toast timeouts (3000ms, 2800ms), no centralized constants.</li>
+    <li><strong>No error boundaries</strong> -- Network failures in product/menu loads show no fallback UI.</li>
+    <li><strong>Duplicated fetch patterns</strong> -- <code>/api/config</code> fetched on every page without session caching.</li>
   </ul>
 
-  <h3>Security Posture</h3>
+  <h3>Security Posture (Score: 6/10)</h3>
   <table>
     <thead>
       <tr><th>Area</th><th>Status</th><th>Notes</th></tr>
@@ -1039,7 +1080,9 @@
       <tr><td>Payment Security</td><td><span class="badge badge-green">GOOD</span></td><td>Stripe Checkout handles PCI compliance. No card data touches the server.</td></tr>
       <tr><td>Webhook Verification</td><td><span class="badge badge-green">GOOD</span></td><td>Stripe webhook signature verified before processing.</td></tr>
       <tr><td>CORS Policy</td><td><span class="badge badge-green">GOOD</span></td><td>Locked to <code>ALLOWED_ORIGIN</code> env var. Production set to <code>bloominacresmarket.com</code>.</td></tr>
-      <tr><td>Input Sanitization</td><td><span class="badge badge-green">GOOD</span></td><td>Supabase parameterized queries prevent SQL injection.</td></tr>
+      <tr><td>Input Sanitization</td><td><span class="badge badge-green">GOOD</span></td><td>Supabase parameterized queries. <code>escHtml()</code> on rendered content.</td></tr>
+      <tr><td>Content-Security-Policy</td><td><span class="badge badge-red">MISSING</span></td><td>No CSP headers. Inline scripts unrestricted. Add via Vercel headers config.</td></tr>
+      <tr><td>HTTPS Enforcement</td><td><span class="badge badge-orange">PARTIAL</span></td><td>Vercel serves HTTPS but no explicit redirect or HSTS header configured.</td></tr>
     </tbody>
   </table>
 
