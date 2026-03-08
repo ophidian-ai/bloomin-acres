@@ -168,16 +168,16 @@
           <p class="product-ingredients" id="product-ingredients-display">${escHtml(ingredients)}</p>
           ${variationSelectorHtml}
           <div class="product-actions" id="product-actions">
+            <button class="btn-cart" id="btn-cart">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
+              Add to Cart
+            </button>
             ${currentUser
-              ? `<button class="btn-cart" id="btn-cart">
-                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
-                  Add to Cart
-                </button>
-                <button class="btn-fav" id="btn-fav">
+              ? `<button class="btn-fav" id="btn-fav">
                   <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
                   Save
                 </button>`
-              : `<a href="account.html" class="btn-cart">Sign In to Order</a>`
+              : ''
             }
           </div>
         </div>
@@ -237,11 +237,25 @@
         });
       });
 
-      // Wire up favorites
-      if (currentUser && productId) {
-        wireFavorite();
+      // Wire up cart (always available)
+      if (productId) {
         wireCart();
       }
+      // Wire up favorites (logged-in only)
+      if (currentUser && productId) {
+        wireFavorite();
+      }
+
+      // Cart badge
+      function updateCartBadge() {
+        const count = cartCount();
+        const btn = document.getElementById('floating-cart-btn');
+        const badge = document.getElementById('cart-badge');
+        if (btn) btn.style.display = count > 0 ? '' : 'none';
+        if (badge) badge.textContent = count;
+      }
+      window.addEventListener('cart-updated', updateCartBadge);
+      updateCartBadge();
 
       // Wire up admin save
       if (isAdmin) {
@@ -276,27 +290,31 @@
       btn.innerHTML = `<svg width="12" height="12" viewBox="0 0 24 24" fill="${isFav ? 'currentColor' : 'none'}" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg> ${isFav ? 'Saved' : 'Save'}`;
     }
 
-    async function wireCart() {
+    function wireCart() {
       const btn = document.getElementById('btn-cart');
       if (!btn) return;
       btn.addEventListener('click', async () => {
         const { name: varName, delta: varDelta } = getSelectedVariation();
-        const { data: existing } = await sb.from('user_cart')
-          .select('id, quantity')
-          .eq('user_id', currentUser.id)
-          .eq('stripe_product_id', productId)
-          .eq('variation_name', varName)
-          .maybeSingle();
-        if (existing) {
-          await sb.from('user_cart').update({ quantity: existing.quantity + 1 }).eq('id', existing.id);
-        } else {
-          await sb.from('user_cart').insert({
-            user_id: currentUser.id,
-            stripe_product_id: productId,
-            variation_name: varName,
-            variation_delta: varDelta,
-            quantity: 1,
-          });
+        cartAdd(productId, varName, varDelta);
+        // Sync to Supabase for logged-in users
+        if (currentUser) {
+          const { data: existing } = await sb.from('user_cart')
+            .select('id, quantity')
+            .eq('user_id', currentUser.id)
+            .eq('stripe_product_id', productId)
+            .eq('variation_name', varName)
+            .maybeSingle();
+          if (existing) {
+            await sb.from('user_cart').update({ quantity: existing.quantity + 1 }).eq('id', existing.id);
+          } else {
+            await sb.from('user_cart').insert({
+              user_id: currentUser.id,
+              stripe_product_id: productId,
+              variation_name: varName,
+              variation_delta: varDelta,
+              quantity: 1,
+            });
+          }
         }
         const label = varName ? `${stripeProduct?.name || 'Item'} (${varName})` : (stripeProduct?.name || 'Item');
         showToast(`${label} added to cart`);
