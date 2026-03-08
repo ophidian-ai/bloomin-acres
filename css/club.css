@@ -45,7 +45,7 @@ body::after {
   position: relative;
   min-height: 92vh;
   background-color: var(--earth-brown);
-  background-image: url('../brand-assets/farm-background.png');
+  background-image: url('../brand-assets/farm-background.webp');
   background-size: cover;
   background-position: center center;
   background-attachment: fixed;

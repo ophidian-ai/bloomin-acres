@@ -7,7 +7,7 @@
 body {
   font-family: var(--font-body);
   background-color: var(--earth-brown);
-  background-image: url('../brand-assets/farm-background.png');
+  background-image: url('../brand-assets/farm-background.webp');
   background-size: cover;
   background-position: center center;
   background-attachment: fixed;
@@ -143,7 +143,7 @@ body {
 .template-header,
 .template-footer { width: 100%; height: auto; display: block; }
 .template-body {
-  background-image: url('../brand-assets/menu-template-middle.png');
+  background-image: url('../brand-assets/menu-template-middle.webp');
   background-size: 100% auto;
   background-repeat: repeat-y;
   padding: 3% 13%;
@@ -162,7 +162,7 @@ body {
   flex: 1;
   min-width: 16px;
   height: 7px;
-  background-image: url('../brand-assets/brushstroke-left.png');
+  background-image: url('../brand-assets/brushstroke-left.webp');
   background-size: 100% 100%;
   background-repeat: no-repeat;
 }
@@ -171,7 +171,7 @@ body {
   flex: 1;
   min-width: 16px;
   height: 7px;
-  background-image: url('../brand-assets/brushstroke-right.png');
+  background-image: url('../brand-assets/brushstroke-right.webp');
   background-size: 100% 100%;
   background-repeat: no-repeat;
 }
