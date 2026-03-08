@@ -2,6 +2,7 @@ import Stripe from 'stripe';
 import { createClient } from '@supabase/supabase-js';
 
 export default async function handler(req, res) {
+  console.log('[checkout] handler invoked', req.method);
   const allowedOrigin = process.env.ALLOWED_ORIGIN || (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'http://localhost:3000');
   res.setHeader('Access-Control-Allow-Origin', allowedOrigin);
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
@@ -24,8 +25,26 @@ export default async function handler(req, res) {
       ? createClient(supabaseUrl, supabaseServiceKey)
       : null;
 
-    // Fetch Stripe products to get their default price IDs
+    // Validate stock before proceeding
     const productIds = items.map(i => i.stripe_product_id);
+    if (sb) {
+      const { data: detailsRows } = await sb.from('product_details').select('stripe_product_id, variations').in('stripe_product_id', productIds);
+      const stockMap = {};
+      (detailsRows || []).forEach(row => {
+        (row.variations || []).forEach(v => {
+          stockMap[row.stripe_product_id + '|' + (v.name || '')] = v.quantity;
+        });
+      });
+      for (const item of items) {
+        const key = item.stripe_product_id + '|' + (item.variation_name || '');
+        const available = stockMap[key];
+        if (available !== undefined && available !== null && item.quantity > available) {
+          return res.status(400).json({ error: available === 0 ? 'An item in your cart is sold out. Please update your cart.' : 'An item exceeds available stock. Please update your cart.' });
+        }
+      }
+    }
+
+    // Fetch Stripe products to get their default price IDs
     const products = await Promise.all(
       productIds.map(id => stripe.products.retrieve(id, { expand: ['default_price'] }))
     );
@@ -127,6 +146,7 @@ export default async function handler(req, res) {
     const session = await stripe.checkout.sessions.create(sessionParams);
     res.json({ url: session.url });
   } catch (err) {
+    console.error('[checkout] error:', err);
     res.status(500).json({ error: err.message });
   }
 }

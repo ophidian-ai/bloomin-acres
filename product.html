@@ -21,6 +21,7 @@
   <script src="/js/tailwind-config.js"></script>
 </head>
 <body>
+<a href="#main-content" class="skip-to-content">Skip to content</a>
 
 <!-- Hamburger toggle -->
 <button type="button" class="nav-toggle" id="nav-toggle" aria-label="Open navigation" aria-expanded="false" aria-controls="nav-sidebar">
@@ -92,7 +93,7 @@
 
   <div id="toast"></div>
 
-  <main class="page-wrap">
+  <main id="main-content" class="page-wrap">
     <div class="product-card" id="product-card">
       <!-- Skeleton while loading -->
       <div class="product-img-wrap skeleton skeleton-img" id="img-skeleton"></div>
@@ -342,6 +343,23 @@
           <button class="btn-save" id="btn-save">Save Changes</button>
         </div>` : ''}
       `;
+
+      // Update meta tags dynamically for SEO / social sharing
+      if (name && name !== 'Product') {
+        const fullTitle = name + ' \u2014 Bloomin\u2019 Acres Farmstand & Bakery';
+        document.title = fullTitle;
+        const metaDesc = description ? description.substring(0, 160) : 'Fresh from Bloomin\u2019 Acres Farmstand & Bakery in Hope, Indiana.';
+        const canonicalUrl = 'https://bloominacresmarket.com/product.html?id=' + encodeURIComponent(productId);
+        const ogImage = imageUrl || 'https://bloominacresmarket.com/brand-assets/color-logo.png';
+        document.querySelector('meta[name="description"]')?.setAttribute('content', metaDesc);
+        document.querySelector('meta[property="og:title"]')?.setAttribute('content', fullTitle);
+        document.querySelector('meta[property="og:description"]')?.setAttribute('content', metaDesc);
+        document.querySelector('meta[property="og:url"]')?.setAttribute('content', canonicalUrl);
+        document.querySelector('meta[property="og:image"]')?.setAttribute('content', ogImage);
+        let canonical = document.querySelector('link[rel="canonical"]');
+        if (!canonical) { canonical = document.createElement('link'); canonical.rel = 'canonical'; document.head.appendChild(canonical); }
+        canonical.href = canonicalUrl;
+      }
 
       // Variation pill selection
       document.querySelectorAll('.variation-option').forEach(lbl => {

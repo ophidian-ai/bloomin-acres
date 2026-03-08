@@ -209,7 +209,8 @@ body::after {
 }
 .field input {
   width: 100%;
-  padding: .65rem .85rem;
+  padding: .75rem .85rem;
+  min-height: 44px;
   border: 1.5px solid var(--cream-dark);
   border-radius: 8px;
   font-family: var(--font-body);
@@ -1096,3 +1097,77 @@ body::after {
   font-size: .72rem;
   color: rgba(250,240,230,.28);
 }
+
+/* ── Order Review Modal ──────────────────────────────────── */
+.order-review-overlay {
+  position: fixed; inset: 0; z-index: 9999;
+  background: rgba(0,0,0,.55);
+  display: flex; align-items: center; justify-content: center;
+  padding: 1rem;
+}
+.order-review-overlay.hidden { display: none; }
+.order-review-modal {
+  background: var(--farm-cream, #FAF0E6);
+  border-radius: 12px;
+  padding: 1.75rem 1.5rem;
+  max-width: 420px; width: 100%;
+  max-height: 80vh; overflow-y: auto;
+  box-shadow: 0 8px 32px rgba(0,0,0,.25);
+}
+.order-review-modal h3 {
+  font-family: var(--font-display);
+  font-size: 1.25rem; font-weight: 600;
+  color: var(--earth-brown, #3B2F20);
+  margin: 0 0 1rem;
+}
+.order-review-row {
+  display: flex; justify-content: space-between; align-items: baseline;
+  padding: .5rem 0;
+  border-bottom: 1px solid rgba(59,47,32,.1);
+  font-family: var(--font-body);
+  font-size: .9rem;
+  color: var(--earth-brown, #3B2F20);
+}
+.order-review-row:last-child { border-bottom: none; }
+.order-review-total {
+  font-family: var(--font-display);
+  font-size: 1.1rem; font-weight: 600;
+  color: var(--earth-brown, #3B2F20);
+  text-align: right;
+  padding: .75rem 0;
+  border-top: 2px solid var(--sage-dark, #4E6E64);
+  margin-top: .5rem;
+}
+.order-review-actions {
+  display: flex; gap: .75rem; margin-top: 1.25rem;
+}
+.order-review-btn-cancel {
+  flex: 1; padding: .65rem 1rem;
+  border: 1px solid var(--sage-dark, #4E6E64);
+  background: transparent;
+  color: var(--sage-dark, #4E6E64);
+  border-radius: 8px;
+  font-family: var(--font-body);
+  font-size: .9rem; font-weight: 500;
+  cursor: pointer;
+  transition: background .2s, color .2s;
+}
+.order-review-btn-cancel:hover {
+  background: var(--sage-dark, #4E6E64);
+  color: var(--farm-cream, #FAF0E6);
+}
+.order-review-btn-confirm {
+  flex: 1; padding: .65rem 1rem;
+  border: none;
+  background: var(--sage-dark, #4E6E64);
+  color: var(--farm-cream, #FAF0E6);
+  border-radius: 8px;
+  font-family: var(--font-body);
+  font-size: .9rem; font-weight: 600;
+  cursor: pointer;
+  transition: opacity .2s;
+}
+.order-review-btn-confirm:hover { opacity: .9; }
+.order-review-btn-confirm:disabled { opacity: .6; cursor: not-allowed; }
+.order-review-row.stock-warning { color: #b44; }
+.stock-warning-text { font-size: .8rem; font-style: italic; }

@@ -12,6 +12,7 @@
   <meta property="og:url" content="https://bloominacresmarket.com/menu.html" />
   <meta property="og:image" content="https://bloominacresmarket.com/brand-assets/color-logo.png" />
   <meta name="twitter:card" content="summary_large_image" />
+  <link rel="canonical" href="https://bloominacresmarket.com/menu.html" />
   <script type="application/ld+json">
   {
     "@context": "https://schema.org",
@@ -31,6 +32,7 @@
   <script src="/js/tailwind-config.js"></script>
 </head>
 <body>
+<a href="#main-content" class="skip-to-content">Skip to content</a>
 
   <!-- Admin preview bar — only visible when opened from admin -->
   <div id="preview-bar" class="preview-bar">
@@ -118,11 +120,25 @@
   </div>
 
   <!-- Menu card -->
-  <main class="page-wrap">
+  <main id="main-content" class="page-wrap">
     <div class="menu-card">
       <img src="brand-assets/menu-template-header.webp" class="template-header" alt="" aria-hidden="true" />
       <div class="template-body">
         <div id="menu-content">
+          <!-- Static SEO content — visible to crawlers, replaced when JS loads the live menu -->
+          <div id="seo-fallback">
+            <h1>Bloomin' Acres Menu</h1>
+            <p>Browse our weekly menu of handcrafted sourdough breads, artisan pastries, and fresh seasonal produce from Bloomin' Acres Farmstand &amp; Bakery in Hope, Indiana.</p>
+            <h2>What We Offer</h2>
+            <ul>
+              <li><strong>Sourdough Breads</strong> — Classic loaves, specialty flavors, and seasonal varieties baked fresh each week.</li>
+              <li><strong>Pastries &amp; Baked Goods</strong> — Handcrafted pastries, cookies, and treats made with quality ingredients.</li>
+              <li><strong>Fresh Produce</strong> — Seasonal fruits and vegetables grown locally at our farm.</li>
+              <li><strong>Specialty Items</strong> — Jams, preserves, and other farmstead goods.</li>
+            </ul>
+            <p>Our menu changes weekly based on what's in season and fresh from the oven. Check back often or visit us at the farmstand in Hope, IN.</p>
+            <p><a href="index.html">Back to Home</a> · <a href="index.html#visit">Visit Us</a></p>
+          </div>
           <div id="skeleton">
             <div class="skeleton-line skeleton-line-w40"></div>
             <div class="skeleton-line skeleton-line-w90"></div>
@@ -136,6 +152,13 @@
       </div>
       <img src="brand-assets/menu-template-footer.webp" class="template-footer" alt="" aria-hidden="true" />
     </div>
+
+    <noscript>
+      <div style="max-width:600px;margin:2rem auto;padding:1.5rem;text-align:center;">
+        <h2>Menu requires JavaScript</h2>
+        <p>Please enable JavaScript to browse our live menu with current items and prices. You can also visit us in person at our farmstand in Hope, Indiana.</p>
+      </div>
+    </noscript>
   </main>
 
   <footer class="site-footer">
@@ -164,6 +187,11 @@
     (async () => {
       const content = document.getElementById('menu-content');
       const skeleton = document.getElementById('skeleton');
+      const seoFallback = document.getElementById('seo-fallback');
+
+      // Swap static SEO content for loading skeleton
+      if (seoFallback) seoFallback.remove();
+      skeleton.style.display = '';
 
       function showError(msg) {
         skeleton.remove();

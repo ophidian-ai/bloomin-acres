@@ -13,6 +13,7 @@
   <meta property="og:image" content="https://bloominacresmarket.com/brand-assets/color-logo.png" />
   <meta name="twitter:card" content="summary_large_image" />
   <meta name="robots" content="noindex" />
+  <link rel="canonical" href="https://bloominacresmarket.com/account.html" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,500;1,400&family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400;1,600&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600&display=swap" rel="stylesheet" />
@@ -22,6 +23,7 @@
   <script src="/js/tailwind-config.js"></script>
 </head>
 <body>
+<a href="#main-content" class="skip-to-content">Skip to content</a>
 
 <!-- Hamburger toggle -->
 <button type="button" class="nav-toggle" id="nav-toggle" aria-label="Open navigation" aria-expanded="false" aria-controls="nav-sidebar">
@@ -114,6 +116,7 @@
   </div>
 </div>
 
+<main id="main-content">
 <!-- ─── Unauthenticated: auth card ──────────────────────────────────── -->
 <div id="auth-wrap" class="auth-wrap hidden">
   <div class="auth-card">
@@ -347,6 +350,19 @@
 </div>
 
 <div id="toast"></div>
+
+<!-- Order Review Modal -->
+<div id="order-review-overlay" class="order-review-overlay hidden">
+  <div class="order-review-modal">
+    <h3>Review Your Order</h3>
+    <div id="order-review-items"></div>
+    <div id="order-review-total" class="order-review-total"></div>
+    <div class="order-review-actions">
+      <button type="button" id="review-cancel-btn" class="order-review-btn-cancel">Go Back</button>
+      <button type="button" id="review-confirm-btn" class="order-review-btn-confirm">Confirm &amp; Pay</button>
+    </div>
+  </div>
+</div>
 
 <!-- Supabase -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
@@ -685,17 +701,77 @@
   }
 
   async function startCheckout() {
-    const btn = document.getElementById('checkout-btn');
-    btn.disabled = true; btn.textContent = 'Redirecting…';
+    const overlay = document.getElementById('order-review-overlay');
+    const itemsEl = document.getElementById('order-review-items');
+    const totalEl = document.getElementById('order-review-total');
+    const confirmBtn = document.getElementById('review-confirm-btn');
+
+    // Fetch current stock for all cart products
+    const productIds = [...new Set(cartItems.map(i => i.stripe_product_id))];
+    const { data: detailsRows } = await sb.from('product_details').select('stripe_product_id, variations').in('stripe_product_id', productIds);
+    const stockMap = {};
+    (detailsRows || []).forEach(row => {
+      (row.variations || []).forEach(v => {
+        stockMap[row.stripe_product_id + '|' + (v.name || '')] = v.quantity;
+      });
+    });
+
+    let total = 0;
+    let hasStockIssue = false;
+    const frag = document.createDocumentFragment();
+    cartItems.forEach(item => {
+      const pr = products[item.stripe_product_id];
+      const name = pr?.name || item.stripe_product_id;
+      const varLabel = item.variation_name ? ' \u2014 ' + item.variation_name : '';
+      const price = (pr?.unit_amount ?? 0) + (item.variation_delta || 0);
+      total += price * item.quantity;
+
+      const stockKey = item.stripe_product_id + '|' + (item.variation_name || '');
+      const available = stockMap[stockKey];
+      const overStock = available !== undefined && available !== null && item.quantity > available;
+      if (overStock) hasStockIssue = true;
+
+      const row = document.createElement('div');
+      row.className = 'order-review-row' + (overStock ? ' stock-warning' : '');
+      const nameSpan = document.createElement('span');
+      nameSpan.textContent = name + varLabel + (item.quantity > 1 ? ' \u00d7' + item.quantity : '');
+      if (overStock) {
+        const warn = document.createElement('span');
+        warn.className = 'stock-warning-text';
+        warn.textContent = available === 0 ? ' (sold out)' : ' (only ' + available + ' available)';
+        nameSpan.appendChild(warn);
+      }
+      const priceSpan = document.createElement('span');
+      priceSpan.textContent = fmt(price * item.quantity);
+      row.append(nameSpan, priceSpan);
+      frag.appendChild(row);
+    });
+
+    itemsEl.textContent = '';
+    itemsEl.appendChild(frag);
+    totalEl.textContent = 'Total: ' + fmt(total);
+    confirmBtn.disabled = hasStockIssue;
+    confirmBtn.textContent = hasStockIssue ? 'Fix Cart to Continue' : 'Confirm & Pay';
+    overlay.classList.remove('hidden');
+
+    document.getElementById('review-cancel-btn').onclick = () => overlay.classList.add('hidden');
+    confirmBtn.onclick = hasStockIssue ? null : confirmCheckout;
+    overlay.addEventListener('click', (e) => { if (e.target === overlay) overlay.classList.add('hidden'); });
+  }
+
+  async function confirmCheckout() {
+    const overlay = document.getElementById('order-review-overlay');
+    const btn = document.getElementById('review-confirm-btn');
+    btn.disabled = true; btn.textContent = 'Redirecting\u2026';
     const items = cartItems.map(i => ({ stripe_product_id: i.stripe_product_id, quantity: i.quantity, variation_name: i.variation_name || '', variation_delta: i.variation_delta || 0 }));
     const r = await fetch('/api/stripe/checkout', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ items, user_id: currentUser.id }),
     }).catch(() => null);
-    if (!r || !r.ok) { btn.disabled = false; btn.textContent = 'Proceed to Checkout →'; showToast('Checkout failed', true); return; }
+    if (!r || !r.ok) { btn.disabled = false; btn.textContent = 'Confirm & Pay'; overlay.classList.add('hidden'); showToast('Checkout failed', true); return; }
     const { url, error } = await r.json();
-    if (error || !url) { btn.disabled = false; btn.textContent = 'Proceed to Checkout →'; showToast(error || 'Checkout failed', true); return; }
+    if (error || !url) { btn.disabled = false; btn.textContent = 'Confirm & Pay'; overlay.classList.add('hidden'); showToast(error || 'Checkout failed', true); return; }
     window.location.href = url;
   }
 
@@ -1206,6 +1282,7 @@
   init();
 })();
 </script>
+</main>
 
 <footer class="site-footer">
   <p class="footer-copyright">&copy; 2026 Bloomin' Acres Farmstand &amp; Bakery. All rights reserved.</p>
