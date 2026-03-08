@@ -4,6 +4,7 @@
     let allProducts = [];   // Stripe products
     let sections = [];      // { id?, title, items: [{ id?, stripe_product_id }] }
     let savedMenus = [];    // { id, title, sections, created_at }
+    let loadedMenuId = null; // ID of the saved menu currently loaded in editor
 
     // ── Init ─────────────────────────────────────────────────────────────────
     async function init() {
@@ -420,7 +421,11 @@
         title: sec.title,
         items: (sec.items || []).map(i => ({ stripe_product_id: i.stripe_product_id }))
       }));
+      loadedMenuId = id;
       renderMenuEditor();
+      // Pre-fill the snapshot title and show update button
+      document.getElementById('save-menu-title').value = menu.title;
+      updateSaveMenuUI();
       // Switch to Menu Editor tab
       document.querySelectorAll('.tab-btn').forEach(b => { b.classList.remove('active'); b.setAttribute('aria-selected','false'); });
       document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
@@ -438,6 +443,15 @@
       else { showToast('Deleted'); await loadSavedMenus(); }
     }
 
+    function updateSaveMenuUI() {
+      const updateBtn = document.getElementById('btn-update-menu');
+      if (loadedMenuId) {
+        updateBtn.classList.remove('hidden');
+      } else {
+        updateBtn.classList.add('hidden');
+      }
+    }
+
     document.getElementById('btn-save-menu').addEventListener('click', async () => {
       const btn = document.getElementById('btn-save-menu');
       const title = document.getElementById('save-menu-title').value.trim();
@@ -452,6 +466,27 @@
       else {
         showToast(`"${title}" saved`);
         document.getElementById('save-menu-title').value = '';
+        loadedMenuId = null;
+        updateSaveMenuUI();
+        await loadSavedMenus();
+      }
+      btn.disabled = false;
+    });
+
+    document.getElementById('btn-update-menu').addEventListener('click', async () => {
+      if (!loadedMenuId) return;
+      const btn = document.getElementById('btn-update-menu');
+      const title = document.getElementById('save-menu-title').value.trim();
+      if (!title) { showToast('Enter a snapshot title first', true); return; }
+      btn.disabled = true;
+      const snapshot = sections.map(sec => ({
+        title: sec.title,
+        items: sec.items.map(i => ({ stripe_product_id: i.stripe_product_id }))
+      }));
+      const { error } = await sb.from('saved_menus').update({ title, sections: snapshot }).eq('id', loadedMenuId);
+      if (error) showToast('Update failed: ' + error.message, true);
+      else {
+        showToast(`"${title}" updated`);
         await loadSavedMenus();
       }
       btn.disabled = false;
