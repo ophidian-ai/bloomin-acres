@@ -1,0 +1,1053 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bloomin' Acres -- Status Report V2.0</title>
+<style>
+  @page {
+    size: letter;
+    margin: 0;
+  }
+
+  * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+    font-size: 14px;
+    line-height: 1.6;
+    color: #1a1a1a;
+    background: #fff;
+  }
+
+  /* ==================== COVER PAGE ==================== */
+  .cover-page {
+    width: 8.5in;
+    min-height: 11in;
+    background: #0F1729;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    page-break-after: always;
+    position: relative;
+    padding: 1in;
+  }
+
+  .cover-logo {
+    width: 160px;
+    height: auto;
+    margin-bottom: 48px;
+  }
+
+  .cover-title {
+    font-size: 42px;
+    font-weight: 700;
+    color: #ffffff;
+    letter-spacing: 2px;
+    margin-bottom: 12px;
+  }
+
+  .cover-subtitle {
+    font-size: 18px;
+    font-weight: 600;
+    color: #2DD4A8;
+    letter-spacing: 6px;
+    text-transform: uppercase;
+    margin-bottom: 40px;
+  }
+
+  .cover-meta {
+    font-size: 13px;
+    color: #8892a4;
+    line-height: 2;
+  }
+
+  .cover-tagline {
+    position: absolute;
+    bottom: 60px;
+    font-size: 12px;
+    color: #4a5568;
+    letter-spacing: 4px;
+    text-transform: uppercase;
+  }
+
+  /* ==================== CONTENT PAGES ==================== */
+  .content-page {
+    width: 8.5in;
+    min-height: 11in;
+    padding: 0.6in 0.75in 0.8in 0.75in;
+    page-break-after: always;
+    position: relative;
+  }
+
+  .content-page:last-child {
+    page-break-after: avoid;
+  }
+
+  /* Page header */
+  .page-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 32px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid #e2e8f0;
+  }
+
+  .page-header-logo {
+    width: 36px;
+    height: auto;
+  }
+
+  .page-header-text {
+    font-size: 10px;
+    color: #94a3b8;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    font-weight: 600;
+  }
+
+  /* Section headings */
+  .section-title {
+    font-size: 28px;
+    font-weight: 700;
+    color: #1a1a1a;
+    margin-bottom: 4px;
+  }
+
+  .section-title span {
+    color: #2DD4A8;
+  }
+
+  .section-subtitle {
+    font-size: 14px;
+    color: #64748b;
+    margin-bottom: 24px;
+  }
+
+  .section-divider {
+    width: 60px;
+    height: 3px;
+    background: #2DD4A8;
+    margin-bottom: 24px;
+    border: none;
+  }
+
+  /* Sub headings */
+  h3 {
+    font-size: 16px;
+    font-weight: 700;
+    color: #1e293b;
+    margin-top: 24px;
+    margin-bottom: 8px;
+  }
+
+  h3::after {
+    content: '';
+    display: block;
+    width: 40px;
+    height: 2px;
+    background: #2DD4A8;
+    margin-top: 4px;
+  }
+
+  /* Tables */
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 20px;
+    font-size: 12px;
+  }
+
+  table th {
+    background: #1E293B;
+    color: #ffffff;
+    text-align: left;
+    padding: 10px 12px;
+    font-weight: 600;
+    font-size: 11px;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+  }
+
+  table td {
+    padding: 9px 12px;
+    border-bottom: 1px solid #e2e8f0;
+  }
+
+  table tr:nth-child(even) td {
+    background: #f8fafc;
+  }
+
+  /* Status badges */
+  .badge {
+    display: inline-block;
+    padding: 2px 10px;
+    border-radius: 12px;
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  .badge-green { background: #dcfce7; color: #166534; }
+  .badge-red { background: #fecaca; color: #991b1b; }
+  .badge-orange { background: #fed7aa; color: #9a3412; }
+  .badge-yellow { background: #fef9c3; color: #854d0e; }
+  .badge-blue { background: #dbeafe; color: #1e40af; }
+  .badge-gray { background: #e2e8f0; color: #475569; }
+  .badge-teal { background: #ccfbf1; color: #115e59; }
+
+  /* Feature cards */
+  .feature-card {
+    background: #f8fafc;
+    border-left: 4px solid #2DD4A8;
+    padding: 14px 16px;
+    margin-bottom: 10px;
+    border-radius: 0 6px 6px 0;
+  }
+
+  .feature-card-title {
+    font-weight: 700;
+    font-size: 13px;
+    color: #1e293b;
+    margin-bottom: 3px;
+  }
+
+  .feature-card-desc {
+    font-size: 12px;
+    color: #64748b;
+    line-height: 1.5;
+  }
+
+  /* Impact labels */
+  .impact {
+    display: inline-block;
+    padding: 2px 8px;
+    font-family: 'Courier New', monospace;
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    border-radius: 3px;
+  }
+
+  .impact-high { background: #fecaca; color: #991b1b; }
+  .impact-medium { background: #fed7aa; color: #9a3412; }
+  .impact-low { background: #fef9c3; color: #854d0e; }
+  .impact-done { background: #dcfce7; color: #166534; }
+  .impact-partial { background: #dbeafe; color: #1e40af; }
+
+  /* Score card */
+  .score-section {
+    display: flex;
+    gap: 32px;
+    align-items: flex-start;
+    margin-bottom: 24px;
+  }
+
+  .score-circle-wrap {
+    flex-shrink: 0;
+    width: 120px;
+    text-align: center;
+  }
+
+  .score-circle {
+    width: 110px;
+    height: 110px;
+    position: relative;
+  }
+
+  .score-number {
+    font-size: 32px;
+    font-weight: 700;
+    color: #1e293b;
+  }
+
+  .score-label {
+    font-size: 11px;
+    color: #94a3b8;
+    margin-top: 4px;
+  }
+
+  .score-items {
+    flex: 1;
+  }
+
+  .score-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 5px 0;
+    border-bottom: 1px solid #f1f5f9;
+    font-size: 13px;
+  }
+
+  .score-row-label {
+    color: #475569;
+  }
+
+  .score-row-value {
+    font-weight: 700;
+    color: #1e293b;
+  }
+
+  .score-row-new {
+    font-size: 10px;
+    color: #2DD4A8;
+    font-weight: 600;
+    margin-left: 6px;
+  }
+
+  .score-row-improved {
+    font-size: 10px;
+    color: #f59e0b;
+    font-weight: 600;
+    margin-left: 6px;
+  }
+
+  /* Tech pills */
+  .pill-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 20px;
+  }
+
+  .pill {
+    display: inline-block;
+    background: #f1f5f9;
+    color: #475569;
+    padding: 4px 12px;
+    border-radius: 16px;
+    font-size: 11px;
+    font-weight: 600;
+  }
+
+  /* Footer */
+  .page-footer {
+    position: absolute;
+    bottom: 0.5in;
+    left: 0.75in;
+    right: 0.75in;
+    display: flex;
+    justify-content: space-between;
+    font-size: 9px;
+    color: #94a3b8;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    border-top: 1px solid #e2e8f0;
+    padding-top: 8px;
+  }
+
+  /* Cards grid */
+  .cards-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin-bottom: 20px;
+  }
+
+  .cards-grid-single {
+    grid-template-columns: 1fr;
+  }
+
+  /* Issue items */
+  .issue-item {
+    margin-bottom: 14px;
+    padding: 12px 14px;
+    background: #f8fafc;
+    border-radius: 6px;
+    border-left: 4px solid #e2e8f0;
+  }
+
+  .issue-item.critical { border-left-color: #ef4444; }
+  .issue-item.security { border-left-color: #eab308; }
+  .issue-item.resolved { border-left-color: #22c55e; }
+  .issue-item.ux { border-left-color: #f97316; }
+  .issue-item.content { border-left-color: #f97316; }
+  .issue-item.polish { border-left-color: #94a3b8; }
+  .issue-item.seo { border-left-color: #f97316; }
+
+  .issue-title {
+    font-weight: 700;
+    font-size: 13px;
+    color: #1e293b;
+    margin-bottom: 4px;
+  }
+
+  .issue-desc {
+    font-size: 12px;
+    color: #64748b;
+    line-height: 1.5;
+  }
+
+  /* Before/After card */
+  .comparison-card {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    padding: 16px;
+    margin-bottom: 16px;
+  }
+
+  .comparison-card h4 {
+    font-size: 14px;
+    font-weight: 700;
+    color: #1e293b;
+    margin-bottom: 10px;
+  }
+
+  /* Strengths / improvements */
+  .checklist {
+    list-style: none;
+    padding: 0;
+  }
+
+  .checklist li {
+    padding: 5px 0;
+    padding-left: 20px;
+    position: relative;
+    font-size: 12px;
+    color: #475569;
+    line-height: 1.5;
+  }
+
+  .checklist li::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 10px;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+  }
+
+  .checklist.strengths li::before { background: #2DD4A8; }
+  .checklist.improvements li::before { background: #f97316; }
+
+  .checklist li strong { color: #1e293b; }
+
+  /* Optimization row */
+  .opt-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    margin-bottom: 10px;
+    padding: 10px 12px;
+    background: #f8fafc;
+    border-radius: 6px;
+  }
+
+  .opt-item-body {
+    flex: 1;
+  }
+
+  .opt-item-title {
+    font-weight: 700;
+    font-size: 13px;
+    color: #1e293b;
+  }
+
+  .opt-item-desc {
+    font-size: 12px;
+    color: #64748b;
+    line-height: 1.4;
+  }
+
+  /* Files list */
+  .file-item {
+    font-family: 'Courier New', monospace;
+    font-size: 12px;
+    background: #1e293b;
+    color: #2DD4A8;
+    padding: 6px 12px;
+    border-radius: 4px;
+    margin-bottom: 6px;
+  }
+
+  .file-item-desc {
+    color: #94a3b8;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    margin-left: 8px;
+  }
+
+  /* SVG circle score */
+  .circle-score-svg {
+    display: block;
+    margin: 0 auto;
+  }
+</style>
+</head>
+<body>
+
+<!-- ==================== PAGE 1: COVER ==================== -->
+<div class="cover-page">
+  <img class="cover-logo" id="cover-logo" src="LOGO_PLACEHOLDER" alt="OphidianAI">
+  <div class="cover-title">Bloomin' Acres</div>
+  <div class="cover-subtitle">Project Status Report</div>
+  <div class="cover-meta">
+    Prepared by OphidianAI<br>
+    March 7, 2026<br>
+    Version 2.0
+  </div>
+  <div class="cover-tagline">Intelligence, Engineered.</div>
+</div>
+
+<!-- ==================== PAGE 2: EXECUTIVE SUMMARY ==================== -->
+<div class="content-page">
+  <div class="page-header">
+    <img class="page-header-logo" id="header-logo-2" src="LOGO_PLACEHOLDER" alt="OphidianAI">
+    <div class="page-header-text">Bloomin' Acres Status Report</div>
+  </div>
+
+  <div class="section-title">Executive <span>Summary</span></div>
+  <hr class="section-divider">
+  <p style="font-size:13px; color:#475569; margin-bottom:20px;">Full-stack e-commerce platform for a sourdough bakery and fresh produce business.</p>
+
+  <div class="score-section">
+    <div class="score-circle-wrap">
+      <svg class="circle-score-svg" width="110" height="110" viewBox="0 0 110 110">
+        <circle cx="55" cy="55" r="48" fill="none" stroke="#e2e8f0" stroke-width="8"/>
+        <circle cx="55" cy="55" r="48" fill="none" stroke="#2DD4A8" stroke-width="8"
+          stroke-dasharray="241.3" stroke-dashoffset="24.1"
+          stroke-linecap="round" transform="rotate(-90 55 55)"/>
+        <text x="55" y="52" text-anchor="middle" font-size="28" font-weight="700" fill="#1e293b">8.0</text>
+        <text x="55" y="68" text-anchor="middle" font-size="10" fill="#94a3b8">out of 10</text>
+      </svg>
+      <div class="score-label">OVERALL SCORE</div>
+    </div>
+    <div class="score-items">
+      <div class="score-row"><span class="score-row-label">Visual Design</span><span class="score-row-value">9 / 10</span></div>
+      <div class="score-row"><span class="score-row-label">Navigation</span><span class="score-row-value">8 / 10</span></div>
+      <div class="score-row"><span class="score-row-label">Account Mgmt</span><span class="score-row-value">8 / 10</span></div>
+      <div class="score-row"><span class="score-row-label">Performance</span><span class="score-row-value">8 / 10<span class="score-row-new">NEW</span></span></div>
+      <div class="score-row"><span class="score-row-label">Mobile</span><span class="score-row-value">7 / 10</span></div>
+      <div class="score-row"><span class="score-row-label">User Journey</span><span class="score-row-value">7 / 10</span></div>
+      <div class="score-row"><span class="score-row-label">Checkout</span><span class="score-row-value">7 / 10<span class="score-row-improved">WAS 6</span></span></div>
+    </div>
+  </div>
+
+  <h3>Tech Stack</h3>
+  <div class="pill-row">
+    <span class="pill">HTML / CSS / JS</span>
+    <span class="pill">Supabase</span>
+    <span class="pill">Stripe</span>
+    <span class="pill">Vercel</span>
+    <span class="pill">Supabase Auth</span>
+    <span class="pill">Supabase Storage</span>
+    <span class="pill">Stripe Checkout</span>
+    <span class="pill">Stripe Webhooks</span>
+  </div>
+
+  <h3>Project Status</h3>
+  <table>
+    <thead>
+      <tr><th>Area</th><th>Status</th><th>Notes</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Landing Page</td><td><span class="badge badge-green">LIVE</span></td><td>CMS-driven content, dynamic hero/cards/hours/contact</td></tr>
+      <tr><td>Public Menu</td><td><span class="badge badge-green">LIVE</span></td><td>Stripe product sync, section editor, draft preview</td></tr>
+      <tr><td>Product Pages</td><td><span class="badge badge-green">LIVE</span></td><td>Variations, stock tracking, inline admin editor</td></tr>
+      <tr><td>Customer Accounts</td><td><span class="badge badge-green">LIVE</span></td><td>Cart, favorites, orders, profile, club dashboard</td></tr>
+      <tr><td>Bread Box Club</td><td><span class="badge badge-green">LIVE</span></td><td>Subscriptions, box builder, referral rewards</td></tr>
+      <tr><td>Admin Dashboard</td><td><span class="badge badge-green">LIVE</span></td><td>7 tabs: catalogue, menu editor, saved menus, landing, orders, analytics, club</td></tr>
+      <tr><td>Checkout Flow</td><td><span class="badge badge-red">BUG</span></td><td>Variation price delta not passed to Stripe -- see Priority Issues</td></tr>
+      <tr><td>Performance</td><td><span class="badge badge-green">DONE</span></td><td>Images optimized (42 MB &rarr; 2.4 MB), shared JS extracted, fonts consolidated</td></tr>
+      <tr><td>SEO</td><td><span class="badge badge-orange">MISSING</span></td><td>No meta descriptions, Open Graph tags, or structured data</td></tr>
+    </tbody>
+  </table>
+
+  <div class="page-footer">
+    <span>OphidianAI -- Confidential</span>
+    <span>Page 2</span>
+  </div>
+</div>
+
+<!-- ==================== PAGE 3: WHAT CHANGED ==================== -->
+<div class="content-page">
+  <div class="page-header">
+    <img class="page-header-logo" id="header-logo-3" src="LOGO_PLACEHOLDER" alt="OphidianAI">
+    <div class="page-header-text">Bloomin' Acres Status Report</div>
+  </div>
+
+  <div class="section-title">What <span>Changed</span></div>
+  <div class="section-subtitle">Updates since Version 1.0 (March 6, 2026)</div>
+  <hr class="section-divider">
+
+  <h3>Fixes Shipped</h3>
+  <div class="feature-card">
+    <div class="feature-card-title">Checkout Back-Button Bug</div>
+    <div class="feature-card-desc">Clicking checkout, then using browser back, would leave the checkout button permanently disabled. Fixed with <code>pageshow</code> event handler.</div>
+  </div>
+  <div class="feature-card">
+    <div class="feature-card-title">Favicon Added</div>
+    <div class="feature-card-desc">All pages now show the Bloomin' Acres barn logo in the browser tab.</div>
+  </div>
+  <div class="feature-card">
+    <div class="feature-card-title">Basket Background 404</div>
+    <div class="feature-card-desc">Cart panel background image was returning 404 after optimization. Fixed with WebP conversion from source.</div>
+  </div>
+
+  <h3>Performance Optimization (Approach B)</h3>
+  <div class="comparison-card">
+    <h4>Before / After Comparison</h4>
+    <table>
+      <thead>
+        <tr><th>Metric</th><th>Before</th><th>After</th><th>Change</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>Brand assets size</td><td>42 MB</td><td>2.4 MB</td><td><strong style="color:#166534">-94%</strong></td></tr>
+        <tr><td>Image format</td><td>PNG only</td><td>WebP + PNG</td><td><strong style="color:#166534">Modern format</strong></td></tr>
+        <tr><td>Google Fonts requests</td><td>3 different</td><td>1 unified</td><td><strong style="color:#166534">-67%</strong></td></tr>
+        <tr><td>Duplicated JS (nav)</td><td>6 copies</td><td>1 shared file</td><td><strong style="color:#166534">-83%</strong></td></tr>
+        <tr><td>Duplicated JS (Tailwind config)</td><td>6 copies</td><td>1 shared file</td><td><strong style="color:#166534">-83%</strong></td></tr>
+        <tr><td>Tailwind CDN</td><td>Unpinned</td><td>Pinned v3.4.17</td><td><strong style="color:#166534">Cacheable</strong></td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3>Files Created</h3>
+  <div class="file-item">js/shared.js <span class="file-item-desc">-- Navigation toggle, pageshow handler (shared across all 6 pages)</span></div>
+  <div class="file-item">js/tailwind-config.js <span class="file-item-desc">-- Unified Tailwind color/font config (both naming schemes)</span></div>
+  <div class="file-item">scripts/optimize-images.mjs <span class="file-item-desc">-- Image optimization pipeline (sharp)</span></div>
+
+  <div class="page-footer">
+    <span>OphidianAI -- Confidential</span>
+    <span>Page 3</span>
+  </div>
+</div>
+
+<!-- ==================== PAGE 4: CURRENT FEATURES ==================== -->
+<div class="content-page">
+  <div class="page-header">
+    <img class="page-header-logo" id="header-logo-4" src="LOGO_PLACEHOLDER" alt="OphidianAI">
+    <div class="page-header-text">Bloomin' Acres Status Report</div>
+  </div>
+
+  <div class="section-title">Current <span>Features</span></div>
+  <hr class="section-divider">
+
+  <h3>Customer-Facing Pages</h3>
+  <div class="cards-grid">
+    <div class="feature-card">
+      <div class="feature-card-title">Landing Page (index.html)</div>
+      <div class="feature-card-desc">CMS-driven hero, product cards, hours, contact info. Admin-editable via landing tab.</div>
+    </div>
+    <div class="feature-card">
+      <div class="feature-card-title">Public Menu (menu.html)</div>
+      <div class="feature-card-desc">Auto-synced from Stripe products. Section editor, drag-and-drop ordering, draft preview.</div>
+    </div>
+    <div class="feature-card">
+      <div class="feature-card-title">Product Detail (product.html)</div>
+      <div class="feature-card-desc">Dynamic product pages with variation selector, stock badge, image gallery, admin inline editor.</div>
+    </div>
+    <div class="feature-card">
+      <div class="feature-card-title">Bread Box Club (club.html)</div>
+      <div class="feature-card-desc">Subscription landing page with tier comparison, box builder, referral program, and member dashboard.</div>
+    </div>
+  </div>
+
+  <h3>Account Dashboard</h3>
+  <div class="cards-grid">
+    <div class="feature-card">
+      <div class="feature-card-title">Cart &amp; Checkout</div>
+      <div class="feature-card-desc">Slide-out cart panel, quantity editing, Stripe Checkout redirect, order confirmation.</div>
+    </div>
+    <div class="feature-card">
+      <div class="feature-card-title">Favorites</div>
+      <div class="feature-card-desc">Heart-toggle on product cards, persistent favorites list on account page.</div>
+    </div>
+    <div class="feature-card">
+      <div class="feature-card-title">Order History</div>
+      <div class="feature-card-desc">Past orders with line items, totals, and status badges pulled from Stripe webhooks.</div>
+    </div>
+    <div class="feature-card">
+      <div class="feature-card-title">Profile Management</div>
+      <div class="feature-card-desc">Name, email, phone, address. Password change via Supabase Auth.</div>
+    </div>
+  </div>
+
+  <h3>Admin Dashboard</h3>
+  <div class="cards-grid">
+    <div class="feature-card">
+      <div class="feature-card-title">Catalogue Management</div>
+      <div class="feature-card-desc">CRUD for products, variations, images, stock levels. Syncs to Stripe.</div>
+    </div>
+    <div class="feature-card">
+      <div class="feature-card-title">Menu Editor</div>
+      <div class="feature-card-desc">Drag-and-drop section builder, product assignment, draft/publish workflow.</div>
+    </div>
+    <div class="feature-card">
+      <div class="feature-card-title">Landing Page Editor</div>
+      <div class="feature-card-desc">Edit hero text, featured products, hours, and contact info in real time.</div>
+    </div>
+    <div class="feature-card">
+      <div class="feature-card-title">Order Management</div>
+      <div class="feature-card-desc">View all orders, filter by status, mark as fulfilled.</div>
+    </div>
+    <div class="feature-card">
+      <div class="feature-card-title">Analytics</div>
+      <div class="feature-card-desc">Revenue chart, top products, order count, customer metrics.</div>
+    </div>
+    <div class="feature-card">
+      <div class="feature-card-title">Club Management</div>
+      <div class="feature-card-desc">Manage subscription tiers, view active subscribers, referral tracking.</div>
+    </div>
+    <div class="feature-card">
+      <div class="feature-card-title">Saved Menus</div>
+      <div class="feature-card-desc">Save and restore menu configurations for seasonal rotations.</div>
+    </div>
+  </div>
+
+  <div class="page-footer">
+    <span>OphidianAI -- Confidential</span>
+    <span>Page 4</span>
+  </div>
+</div>
+
+<!-- ==================== PAGE 5: BACKEND & INTEGRATIONS ==================== -->
+<div class="content-page">
+  <div class="page-header">
+    <img class="page-header-logo" id="header-logo-5" src="LOGO_PLACEHOLDER" alt="OphidianAI">
+    <div class="page-header-text">Bloomin' Acres Status Report</div>
+  </div>
+
+  <div class="section-title">Backend &amp; <span>Integrations</span></div>
+  <hr class="section-divider">
+
+  <h3>Supabase Database</h3>
+  <table>
+    <thead>
+      <tr><th>Table</th><th>Purpose</th><th>RLS</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>profiles</td><td>User profile data (name, phone, address)</td><td><span class="badge badge-green">ON</span></td></tr>
+      <tr><td>products</td><td>Product catalogue with Stripe sync</td><td><span class="badge badge-green">ON</span></td></tr>
+      <tr><td>product_variations</td><td>Size/type variations with price deltas</td><td><span class="badge badge-green">ON</span></td></tr>
+      <tr><td>orders</td><td>Order records from Stripe webhooks</td><td><span class="badge badge-green">ON</span></td></tr>
+      <tr><td>order_items</td><td>Line items for each order</td><td><span class="badge badge-green">ON</span></td></tr>
+      <tr><td>favorites</td><td>User product favorites</td><td><span class="badge badge-green">ON</span></td></tr>
+      <tr><td>cart_items</td><td>Persistent cart storage</td><td><span class="badge badge-green">ON</span></td></tr>
+      <tr><td>menu_sections</td><td>Menu layout configuration</td><td><span class="badge badge-green">ON</span></td></tr>
+      <tr><td>menu_section_products</td><td>Product-to-section assignments</td><td><span class="badge badge-green">ON</span></td></tr>
+      <tr><td>saved_menus</td><td>Saved menu configurations</td><td><span class="badge badge-green">ON</span></td></tr>
+      <tr><td>landing_content</td><td>CMS content for landing page</td><td><span class="badge badge-green">ON</span></td></tr>
+      <tr><td>subscriptions</td><td>Bread Box Club subscription records</td><td><span class="badge badge-green">ON</span></td></tr>
+      <tr><td>referrals</td><td>Referral tracking for club members</td><td><span class="badge badge-green">ON</span></td></tr>
+    </tbody>
+  </table>
+
+  <h3>Stripe Integration</h3>
+  <table>
+    <thead>
+      <tr><th>Endpoint</th><th>Purpose</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>/api/stripe/checkout</td><td>Create Checkout Session for cart items</td></tr>
+      <tr><td>/api/stripe/subscribe</td><td>Create subscription checkout for Bread Box Club</td></tr>
+      <tr><td>/api/stripe/webhook</td><td>Handle payment confirmation, order creation</td></tr>
+      <tr><td>/api/stripe/config</td><td>Expose publishable key to frontend</td></tr>
+    </tbody>
+  </table>
+
+  <h3>Storage Buckets</h3>
+  <table>
+    <thead>
+      <tr><th>Bucket</th><th>Purpose</th><th>Public</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>product-images</td><td>Product photos uploaded by admin</td><td><span class="badge badge-green">YES</span></td></tr>
+      <tr><td>brand-assets</td><td>Logo, hero images, background textures</td><td><span class="badge badge-green">YES</span></td></tr>
+    </tbody>
+  </table>
+
+  <div class="page-footer">
+    <span>OphidianAI -- Confidential</span>
+    <span>Page 5</span>
+  </div>
+</div>
+
+<!-- ==================== PAGE 6: PRIORITY ISSUES ==================== -->
+<div class="content-page">
+  <div class="page-header">
+    <img class="page-header-logo" id="header-logo-6" src="LOGO_PLACEHOLDER" alt="OphidianAI">
+    <div class="page-header-text">Bloomin' Acres Status Report</div>
+  </div>
+
+  <div class="section-title">Priority <span>Issues</span></div>
+  <hr class="section-divider">
+
+  <div class="issue-item critical">
+    <div class="issue-title">1. Checkout Variation Pricing Bug <span class="badge badge-red">CRITICAL</span></div>
+    <div class="issue-desc"><code>account.html</code>: <code>variation_delta</code> and <code>variation_name</code> are not passed to <code>/api/stripe/checkout</code>. Revenue leakage risk.</div>
+  </div>
+
+  <div class="issue-item critical">
+    <div class="issue-title">2. Cart Display Missing Variation Names <span class="badge badge-red">CRITICAL</span></div>
+    <div class="issue-desc"><code>renderCart()</code> shows product name only. Customers cannot tell which variant is in their cart.</div>
+  </div>
+
+  <div class="issue-item security">
+    <div class="issue-title">3. API CORS Headers Too Permissive <span class="badge badge-yellow">SECURITY</span></div>
+    <div class="issue-desc"><code>Access-Control-Allow-Origin: *</code> on checkout, subscribe, and config endpoints. Lock to production domain before launch.</div>
+  </div>
+
+  <div class="issue-item seo">
+    <div class="issue-title">4. Missing SEO Meta Tags <span class="badge badge-orange">SEO</span></div>
+    <div class="issue-desc">No meta descriptions on menu/club/product/admin pages. <code>index.html</code> has them but others don't. No JSON-LD structured data.</div>
+  </div>
+
+  <div class="issue-item resolved">
+    <div class="issue-title">5. Checkout Back-Button Disabled <span class="badge badge-green">RESOLVED</span></div>
+    <div class="issue-desc">Previously: clicking checkout then using browser back left button permanently disabled. Fixed with <code>pageshow</code> event handler in <code>js/shared.js</code>.</div>
+  </div>
+
+  <div class="issue-item ux">
+    <div class="issue-title">6. Footer Nav Broken Link <span class="badge badge-orange">UX</span></div>
+    <div class="issue-desc"><code>index.html</code> footer has <code>href="#menu"</code> which doesn't exist. Should link to <code>menu.html</code>.</div>
+  </div>
+
+  <div class="issue-item content">
+    <div class="issue-title">7. Social Media Placeholder Links <span class="badge badge-orange">CONTENT</span></div>
+    <div class="issue-desc">Instagram and Facebook icons link to <code>#</code>.</div>
+  </div>
+
+  <div class="issue-item polish">
+    <div class="issue-title">8. Footer Copyright Year Inconsistency <span class="badge badge-gray">POLISH</span></div>
+    <div class="issue-desc"><code>product.html</code> and <code>menu.html</code> show "2025" while others show "2026".</div>
+  </div>
+
+  <div class="page-footer">
+    <span>OphidianAI -- Confidential</span>
+    <span>Page 6</span>
+  </div>
+</div>
+
+<!-- ==================== PAGE 7: OPTIMIZATION SUGGESTIONS ==================== -->
+<div class="content-page">
+  <div class="page-header">
+    <img class="page-header-logo" id="header-logo-7" src="LOGO_PLACEHOLDER" alt="OphidianAI">
+    <div class="page-header-text">Bloomin' Acres Status Report</div>
+  </div>
+
+  <div class="section-title">Optimization <span>Suggestions</span></div>
+  <hr class="section-divider">
+
+  <h3>Performance</h3>
+
+  <div class="opt-item">
+    <span class="impact impact-high">HIGH IMPACT</span>
+    <div class="opt-item-body">
+      <div class="opt-item-title">Replace Tailwind CDN with Compiled Build</div>
+      <div class="opt-item-desc">CDN now pinned to v3.4.17 and config extracted. Full compilation deferred to future sprint.</div>
+    </div>
+  </div>
+
+  <div class="opt-item">
+    <span class="impact impact-medium">MEDIUM IMPACT</span>
+    <div class="opt-item-body">
+      <div class="opt-item-title">Cache Stripe API Responses</div>
+      <div class="opt-item-desc">Menu page fetches all Stripe products on every load. Add a short TTL cache or edge function cache to reduce latency and API calls.</div>
+    </div>
+  </div>
+
+  <div class="opt-item">
+    <span class="impact impact-done">DONE</span>
+    <div class="opt-item-body">
+      <div class="opt-item-title">Image Optimization</div>
+      <div class="opt-item-desc">Completed. 42 MB &rarr; 2.4 MB. WebP conversion, source files relocated. Automated pipeline via <code>scripts/optimize-images.mjs</code>.</div>
+    </div>
+  </div>
+
+  <div class="opt-item">
+    <span class="impact impact-low">LOW IMPACT</span>
+    <div class="opt-item-body">
+      <div class="opt-item-title">Static Asset Caching Headers</div>
+      <div class="opt-item-desc">Add Cache-Control headers for images and JS files via Vercel config. Currently no caching policy set.</div>
+    </div>
+  </div>
+
+  <h3>Architecture</h3>
+
+  <div class="opt-item">
+    <span class="impact impact-partial">PARTIAL</span>
+    <div class="opt-item-body">
+      <div class="opt-item-title">Shared Nav Component</div>
+      <div class="opt-item-desc">Nav JS extracted to <code>shared.js</code>. Nav HTML still duplicated across 6 pages -- deferred to future sprint.</div>
+    </div>
+  </div>
+
+  <div class="opt-item">
+    <span class="impact impact-low">LOW IMPACT</span>
+    <div class="opt-item-body">
+      <div class="opt-item-title">Shared Utility Module</div>
+      <div class="opt-item-desc"><code>showToast</code>, <code>escHtml</code>, <code>formatPrice</code> still duplicated across pages. Extract into a shared utilities file.</div>
+    </div>
+  </div>
+
+  <h3>UX Improvements</h3>
+
+  <div class="opt-item">
+    <span class="impact impact-medium">MEDIUM IMPACT</span>
+    <div class="opt-item-body">
+      <div class="opt-item-title">Product Price Live Update</div>
+      <div class="opt-item-desc">When a customer selects a variation, update the displayed price in real time to reflect the delta.</div>
+    </div>
+  </div>
+
+  <div class="opt-item">
+    <span class="impact impact-low">LOW IMPACT</span>
+    <div class="opt-item-body">
+      <div class="opt-item-title">Loading Timeout Fallback</div>
+      <div class="opt-item-desc">If Supabase or Stripe is slow, show a friendly timeout message instead of an infinite spinner.</div>
+    </div>
+  </div>
+
+  <div class="page-footer">
+    <span>OphidianAI -- Confidential</span>
+    <span>Page 7</span>
+  </div>
+</div>
+
+<!-- ==================== PAGE 8: SUGGESTED FEATURES ==================== -->
+<div class="content-page">
+  <div class="page-header">
+    <img class="page-header-logo" id="header-logo-8" src="LOGO_PLACEHOLDER" alt="OphidianAI">
+    <div class="page-header-text">Bloomin' Acres Status Report</div>
+  </div>
+
+  <div class="section-title">Suggested <span>Features</span></div>
+  <hr class="section-divider">
+
+  <h3>E-Commerce &amp; Ordering</h3>
+  <div class="cards-grid">
+    <div class="feature-card">
+      <div class="feature-card-title">Pickup Time Slots</div>
+      <div class="feature-card-desc">Let customers choose a pickup window at checkout. Reduces crowding and improves the experience.</div>
+    </div>
+    <div class="feature-card">
+      <div class="feature-card-title">Order-Ahead / Pre-Order</div>
+      <div class="feature-card-desc">Accept orders for items baked on specific days. Sourdough schedules could drive pre-order demand.</div>
+    </div>
+    <div class="feature-card">
+      <div class="feature-card-title">Discount / Promo Codes</div>
+      <div class="feature-card-desc">Stripe Coupons integration for seasonal promotions, first-time buyer discounts, and referral rewards.</div>
+    </div>
+  </div>
+
+  <h3>Customer Engagement</h3>
+  <div class="cards-grid">
+    <div class="feature-card">
+      <div class="feature-card-title">Email Notifications</div>
+      <div class="feature-card-desc">Order confirmation, shipping/pickup ready, and weekly menu announcements via transactional email.</div>
+    </div>
+    <div class="feature-card">
+      <div class="feature-card-title">Product Reviews</div>
+      <div class="feature-card-desc">Star ratings and text reviews on product pages. Builds trust and provides social proof.</div>
+    </div>
+  </div>
+
+  <h3>SEO &amp; Discoverability</h3>
+  <div class="cards-grid">
+    <div class="feature-card">
+      <div class="feature-card-title">Structured Data (JSON-LD)</div>
+      <div class="feature-card-desc">LocalBusiness, Product, and BreadcrumbList schema for rich search results.</div>
+    </div>
+    <div class="feature-card">
+      <div class="feature-card-title">Sitemap &amp; Robots.txt</div>
+      <div class="feature-card-desc">Auto-generated sitemap for product and menu pages. Proper robots.txt to guide crawlers.</div>
+    </div>
+  </div>
+
+  <h3>Admin &amp; Operations</h3>
+  <div class="cards-grid">
+    <div class="feature-card">
+      <div class="feature-card-title">Inventory Alerts</div>
+      <div class="feature-card-desc">Notify admin when stock falls below threshold. Prevents overselling.</div>
+    </div>
+    <div class="feature-card">
+      <div class="feature-card-title">Sales Export</div>
+      <div class="feature-card-desc">CSV export of orders and revenue for bookkeeping and tax prep.</div>
+    </div>
+  </div>
+
+  <h3>Content</h3>
+  <div class="cards-grid">
+    <div class="feature-card">
+      <div class="feature-card-title">Blog / Recipes</div>
+      <div class="feature-card-desc">Simple blog for sourdough tips, farm updates, and recipes. Drives organic traffic and engagement.</div>
+    </div>
+    <div class="feature-card">
+      <div class="feature-card-title">About Page</div>
+      <div class="feature-card-desc">Farm story, team photos, mission statement. Builds emotional connection with customers.</div>
+    </div>
+  </div>
+
+  <div class="page-footer">
+    <span>OphidianAI -- Confidential</span>
+    <span>Page 8</span>
+  </div>
+</div>
+
+<!-- ==================== PAGE 9: CODE QUALITY ==================== -->
+<div class="content-page">
+  <div class="page-header">
+    <img class="page-header-logo" id="header-logo-9" src="LOGO_PLACEHOLDER" alt="OphidianAI">
+    <div class="page-header-text">Bloomin' Acres Status Report</div>
+  </div>
+
+  <div class="section-title">Code Quality <span>Assessment</span></div>
+  <hr class="section-divider">
+
+  <h3>Strengths</h3>
+  <ul class="checklist strengths">
+    <li><strong>Clean Supabase integration</strong> -- RLS policies on all tables, proper auth flow</li>
+    <li><strong>Stripe best practices</strong> -- Webhook verification, idempotent order creation</li>
+    <li><strong>Admin/customer separation</strong> -- Role-based UI with admin-only sections properly gated</li>
+    <li><strong>Responsive design</strong> -- Tailwind utility classes with mobile-first approach</li>
+    <li><strong>CMS-driven content</strong> -- Landing page and menu fully editable without code changes</li>
+    <li><strong>Shared configuration</strong> -- Tailwind config and nav logic extracted to single files <span class="badge badge-teal" style="margin-left:6px; font-size:9px;">NEW IN V2</span></li>
+    <li><strong>Image pipeline</strong> -- Automated optimization script for brand assets <span class="badge badge-teal" style="margin-left:6px; font-size:9px;">NEW IN V2</span></li>
+    <li><strong>Consistent font loading</strong> -- Single Google Fonts request across all pages <span class="badge badge-teal" style="margin-left:6px; font-size:9px;">NEW IN V2</span></li>
+  </ul>
+
+  <h3>Areas for Improvement</h3>
+  <ul class="checklist improvements">
+    <li><strong>Code duplication</strong> -- Nav HTML still copied across 6 pages (JS extracted, HTML remains)</li>
+    <li><strong>No build pipeline</strong> -- Raw HTML/CSS/JS served directly. No minification, bundling, or tree-shaking.</li>
+    <li><strong>Tailwind CDN</strong> -- Pinned but still CDN-loaded (~350 KB per page). Should compile to used classes only.</li>
+    <li><strong>Missing skip-to-content link</strong> -- Accessibility gap for keyboard and screen reader users</li>
+    <li><strong>CORS configuration</strong> -- Wildcard origin on API endpoints. Must lock before production launch.</li>
+    <li><strong>No sitemap or robots.txt</strong> -- Search engines cannot efficiently discover or index pages</li>
+  </ul>
+
+  <h3>Security Posture</h3>
+  <table>
+    <thead>
+      <tr><th>Area</th><th>Status</th><th>Notes</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Authentication</td><td><span class="badge badge-green">GOOD</span></td><td>Supabase Auth with email/password. Session management handled by SDK.</td></tr>
+      <tr><td>Row-Level Security</td><td><span class="badge badge-green">GOOD</span></td><td>RLS enabled on all tables. Policies restrict access by user ID and role.</td></tr>
+      <tr><td>Payment Security</td><td><span class="badge badge-green">GOOD</span></td><td>Stripe Checkout handles PCI compliance. No card data touches the server.</td></tr>
+      <tr><td>Webhook Verification</td><td><span class="badge badge-green">GOOD</span></td><td>Stripe webhook signature verified before processing.</td></tr>
+      <tr><td>CORS Policy</td><td><span class="badge badge-red">NEEDS FIX</span></td><td>Wildcard origin on API routes. Must restrict to production domain.</td></tr>
+      <tr><td>Input Sanitization</td><td><span class="badge badge-green">GOOD</span></td><td>Supabase parameterized queries prevent SQL injection.</td></tr>
+    </tbody>
+  </table>
+
+  <div class="page-footer">
+    <span>OphidianAI -- Confidential</span>
+    <span>Page 9</span>
+  </div>
+</div>
+
+</body>
+</html>
