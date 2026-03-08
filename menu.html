@@ -89,6 +89,7 @@
   </div>
   <div class="nav-overlay" id="nav-overlay" aria-hidden="true"></div>
   <script src="js/topright-icons.js" defer></script>
+  <script src="/js/shared.js"></script>
 
   <!-- Nav -->
   <nav class="site-nav">
@@ -129,39 +130,6 @@
   <footer class="site-footer">
     <p class="footer-copy">&copy; 2026 Bloomin' Acres Farmstand &amp; Bakery &mdash; Hope, IN</p>
   </footer>
-
-  <!-- Sidebar JS -->
-  <script>
-  (function() {
-    const toggle  = document.getElementById('nav-toggle');
-    const sidebar = document.getElementById('nav-sidebar');
-    const overlay = document.getElementById('nav-overlay');
-
-    function openNav() {
-      sidebar.classList.add('open');
-      overlay.classList.add('open');
-      toggle.classList.add('open');
-      toggle.setAttribute('aria-expanded', 'true');
-    }
-    function closeNav() {
-      sidebar.classList.remove('open');
-      overlay.classList.remove('open');
-      toggle.classList.remove('open');
-      toggle.setAttribute('aria-expanded', 'false');
-    }
-    toggle.addEventListener('click', () => sidebar.classList.contains('open') ? closeNav() : openNav());
-    overlay.addEventListener('click', closeNav);
-    document.addEventListener('keydown', e => { if (e.key === 'Escape') closeNav(); });
-
-    // My Account submenu toggle
-    const acctToggle = document.getElementById('menu-sidebar-account-toggle');
-    const acctItem   = document.getElementById('menu-sidebar-account-item');
-    acctToggle.addEventListener('click', () => {
-      const open = acctItem.classList.toggle('open');
-      acctToggle.setAttribute('aria-expanded', open);
-    });
-  })();
-  </script>
 
   <!-- Supabase CDN -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>

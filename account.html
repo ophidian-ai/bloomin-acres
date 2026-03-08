@@ -63,41 +63,7 @@
 <!-- Backdrop -->
 <div class="nav-overlay" id="nav-overlay" aria-hidden="true"></div>
 
-<script>
-  (() => {
-    const toggle  = document.getElementById('nav-toggle');
-    const sidebar = document.getElementById('nav-sidebar');
-    const overlay = document.getElementById('nav-overlay');
-
-    function openNav() {
-      sidebar.classList.add('open');
-      overlay.classList.add('open');
-      toggle.classList.add('open');
-      toggle.setAttribute('aria-expanded', 'true');
-    }
-    function closeNav() {
-      sidebar.classList.remove('open');
-      overlay.classList.remove('open');
-      toggle.classList.remove('open');
-      toggle.setAttribute('aria-expanded', 'false');
-    }
-
-    toggle.addEventListener('click', () => sidebar.classList.contains('open') ? closeNav() : openNav());
-    overlay.addEventListener('click', closeNav);
-    sidebar.querySelectorAll('.nav-sidebar-link').forEach(link => {
-      link.addEventListener('click', closeNav);
-    });
-
-    const acctToggle = document.getElementById('sidebar-account-toggle');
-    const acctItem   = document.getElementById('sidebar-account-item');
-    acctToggle.addEventListener('click', () => {
-      const open = acctItem.classList.toggle('open');
-      acctToggle.setAttribute('aria-expanded', open);
-    });
-
-    document.addEventListener('keydown', e => { if (e.key === 'Escape') closeNav(); });
-  })();
-</script>
+<script src="/js/shared.js"></script>
 
 <!-- Loading overlay -->
 <div id="loading"><div class="spinner"></div></div>
@@ -726,16 +692,6 @@
     if (error || !url) { btn.disabled = false; btn.textContent = 'Proceed to Checkout →'; showToast(error || 'Checkout failed', true); return; }
     window.location.href = url;
   }
-
-  // Re-enable checkout buttons when returning via back/forward cache
-  window.addEventListener('pageshow', function(e) {
-    if (e.persisted) {
-      const ckBtn = document.getElementById('checkout-btn');
-      if (ckBtn) { ckBtn.disabled = false; ckBtn.textContent = 'Checkout'; }
-      const clubBtn = document.getElementById('join-club-btn');
-      if (clubBtn) { clubBtn.disabled = false; clubBtn.textContent = 'Join the Club'; }
-    }
-  });
 
   // ── Favorites ─────────────────────────────────────────────────────────────
   async function loadFavorites() {

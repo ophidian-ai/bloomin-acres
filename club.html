@@ -70,6 +70,7 @@
 <!-- Backdrop -->
 <div class="nav-overlay" id="nav-overlay" aria-hidden="true"></div>
 <script src="js/topright-icons.js" defer></script>
+<script src="/js/shared.js"></script>
 
 <!-- Referral welcome banner (shown when ?ref=CODE in URL) -->
 <div class="referral-banner hidden" id="referral-banner">
@@ -300,43 +301,6 @@
 
 <div id="toast"></div>
 
-<!-- Nav sidebar JS -->
-<script>
-  (() => {
-    const toggle  = document.getElementById('nav-toggle');
-    const sidebar = document.getElementById('nav-sidebar');
-    const overlay = document.getElementById('nav-overlay');
-
-    function openNav() {
-      sidebar.classList.add('open');
-      overlay.classList.add('open');
-      toggle.classList.add('open');
-      toggle.setAttribute('aria-expanded', 'true');
-    }
-    function closeNav() {
-      sidebar.classList.remove('open');
-      overlay.classList.remove('open');
-      toggle.classList.remove('open');
-      toggle.setAttribute('aria-expanded', 'false');
-    }
-
-    toggle.addEventListener('click', () => sidebar.classList.contains('open') ? closeNav() : openNav());
-    overlay.addEventListener('click', closeNav);
-    sidebar.querySelectorAll('.nav-sidebar-link').forEach(link => {
-      link.addEventListener('click', closeNav);
-    });
-
-    const acctToggle = document.getElementById('sidebar-account-toggle');
-    const acctItem   = document.getElementById('sidebar-account-item');
-    acctToggle.addEventListener('click', () => {
-      const open = acctItem.classList.toggle('open');
-      acctToggle.setAttribute('aria-expanded', open);
-    });
-
-    document.addEventListener('keydown', e => { if (e.key === 'Escape') closeNav(); });
-  })();
-</script>
-
 <!-- Supabase + page logic -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <script>
@@ -485,17 +449,6 @@
     }
     window.location.href = url;
   }
-
-  // Re-enable join buttons when returning via back/forward cache
-  window.addEventListener('pageshow', function(e) {
-    if (e.persisted) {
-      var origTexts = { 'join-btn': 'Join the Club', 'join-btn-2': 'Join the Club', 'join-btn-3': 'Join to Get Your Code' };
-      Object.keys(origTexts).forEach(function(id) {
-        var btn = document.getElementById(id);
-        if (btn) { btn.disabled = false; btn.textContent = origTexts[id]; }
-      });
-    }
-  });
 
   ['join-btn', 'join-btn-2', 'join-btn-3'].forEach(id => {
     document.getElementById(id)?.addEventListener('click', handleJoin);
