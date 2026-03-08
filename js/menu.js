@@ -482,7 +482,7 @@
             <div class="menu-item-actions">
               <a class="btn-view" href="product.html?id=${encodeURIComponent(pid)}">View</a>
               ${availableVariations.length > 0
-                ? `<button class="btn-options" data-pid="${escHtml(pid)}">Options &#9662;</button>`
+                ? `<button class="btn-options" data-pid="${escHtml(pid)}">Variations &#9662;</button>`
                 : ''}
               ${currentUser ? `<button class="btn-fav${isFav ? ' active' : ''}" data-pid="${escHtml(pid)}" aria-label="Save to favorites">
                 <svg width="11" height="11" viewBox="0 0 24 24" fill="${isFav ? 'currentColor' : 'none'}" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
@@ -500,7 +500,7 @@
               const dd = row.querySelector('.variation-dropdown');
               const open = dd.classList.toggle('open');
               optBtn.classList.toggle('open', open);
-              optBtn.innerHTML = `Options ${open ? '&#9652;' : '&#9662;'}`;
+              optBtn.innerHTML = `Variations ${open ? '&#9652;' : '&#9662;'}`;
             });
 
             // Variation row — cart buttons (always rendered)
