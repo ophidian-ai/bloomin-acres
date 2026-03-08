@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Bloomin' Acres -- Status Report V3.0</title>
+<title>Bloomin' Acres -- Status Report V4.0</title>
 <style>
   @page {
     size: letter;
@@ -494,8 +494,8 @@
   <div class="cover-subtitle">Project Status Report</div>
   <div class="cover-meta">
     Prepared by OphidianAI<br>
-    March 7, 2026<br>
-    Version 3.0
+    March 8, 2026<br>
+    Version 4.0
   </div>
   <div class="cover-tagline">Intelligence, Engineered.</div>
 </div>
@@ -516,9 +516,9 @@
       <svg class="circle-score-svg" width="110" height="110" viewBox="0 0 110 110">
         <circle cx="55" cy="55" r="48" fill="none" stroke="#e2e8f0" stroke-width="8"/>
         <circle cx="55" cy="55" r="48" fill="none" stroke="#2DD4A8" stroke-width="8"
-          stroke-dasharray="301.6" stroke-dashoffset="66.4"
+          stroke-dasharray="301.6" stroke-dashoffset="63.3"
           stroke-linecap="round" transform="rotate(-90 55 55)"/>
-        <text x="55" y="52" text-anchor="middle" font-size="28" font-weight="700" fill="#1e293b">7.8</text>
+        <text x="55" y="52" text-anchor="middle" font-size="28" font-weight="700" fill="#1e293b">7.9</text>
         <text x="55" y="68" text-anchor="middle" font-size="10" fill="#94a3b8">out of 10</text>
       </svg>
       <div class="score-label">OVERALL SCORE</div>
@@ -530,9 +530,9 @@
       <div class="score-row"><span class="score-row-label">Navigation</span><span class="score-row-value">8 / 10</span></div>
       <div class="score-row"><span class="score-row-label">Accessibility</span><span class="score-row-value">8 / 10<span class="score-row-new">NEW</span></span></div>
       <div class="score-row"><span class="score-row-label">Mobile</span><span class="score-row-value">8 / 10<span class="score-row-new">&uarr;</span></span></div>
-      <div class="score-row"><span class="score-row-label">Performance</span><span class="score-row-value">7.5 / 10<span class="score-row-new">&uarr;</span></span></div>
+      <div class="score-row"><span class="score-row-label">Performance</span><span class="score-row-value">8.5 / 10<span class="score-row-new">&uarr;</span></span></div>
       <div class="score-row"><span class="score-row-label">Visual Design</span><span class="score-row-value">7 / 10</span></div>
-      <div class="score-row"><span class="score-row-label">Code Quality</span><span class="score-row-value">7 / 10<span class="score-row-new">&uarr;</span></span></div>
+      <div class="score-row"><span class="score-row-label">Code Quality</span><span class="score-row-value">7.5 / 10<span class="score-row-new">&uarr;</span></span></div>
       <div class="score-row"><span class="score-row-label">User Journey</span><span class="score-row-value">7 / 10</span></div>
     </div>
   </div>
@@ -540,6 +540,7 @@
   <h3>Tech Stack</h3>
   <div class="pill-row">
     <span class="pill">HTML / CSS / JS</span>
+    <span class="pill">Tailwind CSS (compiled)</span>
     <span class="pill">Supabase</span>
     <span class="pill">Stripe</span>
     <span class="pill">Vercel</span>
@@ -562,7 +563,7 @@
       <tr><td>Bread Box Club</td><td><span class="badge badge-green">LIVE</span></td><td>Subscriptions, box builder, referral rewards</td></tr>
       <tr><td>Admin Dashboard</td><td><span class="badge badge-green">LIVE</span></td><td>7 tabs: catalogue, menu editor, saved menus, landing, orders, analytics, club</td></tr>
       <tr><td>Checkout Flow</td><td><span class="badge badge-green">LIVE</span></td><td>Order review modal, stock validation, variation pricing. CORS locked to production.</td></tr>
-      <tr><td>Performance</td><td><span class="badge badge-green">DONE</span></td><td>Images optimized (42 MB &rarr; 2.4 MB), shared JS extracted, caching headers configured</td></tr>
+      <tr><td>Performance</td><td><span class="badge badge-green">DONE</span></td><td>Images optimized (-94%), Tailwind compiled (350 KB &rarr; 5.5 KB), shared JS extracted, caching headers, build pipeline</td></tr>
       <tr><td>SEO</td><td><span class="badge badge-green">DONE</span></td><td>Meta tags, Open Graph, JSON-LD, canonical tags, sitemap.xml, robots.txt deployed</td></tr>
       <tr><td>Security</td><td><span class="badge badge-green">DONE</span></td><td>CSP, HSTS, X-Frame-Options, nosniff, Referrer-Policy, Permissions-Policy</td></tr>
       <tr><td>Accessibility</td><td><span class="badge badge-green">DONE</span></td><td>Skip-to-content links, 44px touch targets, focus indicators, ARIA labels</td></tr>
@@ -583,45 +584,33 @@
   </div>
 
   <div class="section-title">What <span>Changed</span></div>
-  <div class="section-subtitle">Updates since Version 2.0 (March 7, 2026)</div>
+  <div class="section-subtitle">Updates since Version 3.0 (March 7, 2026)</div>
   <hr class="section-divider">
 
-  <h3>Security Hardening</h3>
+  <h3>Performance Optimization</h3>
   <div class="feature-card">
-    <div class="feature-card-title">Content-Security-Policy &amp; Security Headers</div>
-    <div class="feature-card-desc">Full CSP with whitelisted sources (Tailwind CDN, Supabase, Google Fonts, jsdelivr). HSTS with 2-year max-age + preload. X-Frame-Options: DENY, nosniff, Referrer-Policy, Permissions-Policy. All configured via <code>vercel.json</code>.</div>
+    <div class="feature-card-title">Tailwind CDN Replaced with Compiled Build</div>
+    <div class="feature-card-desc">Removed ~350 KB Tailwind CDN script from all 6 pages. Replaced with a compiled, minified CSS file containing only used classes. Result: <strong>5.5 KB</strong> total CSS. Tailwind CLI builds automatically on Vercel deploy via <code>npm run build</code>.</div>
   </div>
   <div class="feature-card">
-    <div class="feature-card-title">Static Asset Caching Headers</div>
-    <div class="feature-card-desc">Brand assets: 1-year immutable cache. CSS/JS: 1-day cache with 7-day stale-while-revalidate. Configured via <code>vercel.json</code> headers.</div>
-  </div>
-
-  <h3>Checkout &amp; UX Improvements</h3>
-  <div class="feature-card">
-    <div class="feature-card-title">Order Review Modal</div>
-    <div class="feature-card-desc">Customers now see a confirmation modal with itemized order summary (names, quantities, variations, total) before being redirected to Stripe. Cancel button returns to cart.</div>
-  </div>
-  <div class="feature-card">
-    <div class="feature-card-title">Cart Stock Validation (Client + Server)</div>
-    <div class="feature-card-desc">Review modal checks current stock levels from Supabase. Over-stock items highlighted in red with availability info. Confirm button disabled if stock insufficient. Server-side validation in <code>/api/stripe/checkout</code> prevents overselling.</div>
+    <div class="feature-card-title">Build Pipeline Added</div>
+    <div class="feature-card-desc">Introduced Tailwind CLI build step via <code>package.json</code> and <code>vercel.json buildCommand</code>. Generates optimized CSS at deploy time. Foundation for future JS bundling and minification.</div>
   </div>
 
-  <h3>SEO &amp; Accessibility</h3>
+  <h3>Code Quality</h3>
   <div class="feature-card">
-    <div class="feature-card-title">Dynamic Product Meta Tags</div>
-    <div class="feature-card-desc">Product pages now update <code>&lt;title&gt;</code>, <code>og:title</code>, <code>og:description</code>, <code>og:image</code>, <code>og:url</code>, and <code>&lt;link rel="canonical"&gt;</code> dynamically based on the loaded product.</div>
+    <div class="feature-card-title">Shared Utility Module (js/utils.js)</div>
+    <div class="feature-card-desc">Extracted <code>showToast()</code>, <code>escHtml()</code>, and <code>formatPrice()</code> from 5 HTML files into a single shared module. Standardized toast element IDs and timeout values across all pages.</div>
   </div>
   <div class="feature-card">
-    <div class="feature-card-title">Canonical Tags on All Pages</div>
-    <div class="feature-card-desc">Added <code>&lt;link rel="canonical"&gt;</code> to index, menu, club, and account pages. Product pages generate canonical URLs dynamically.</div>
+    <div class="feature-card-title">CSP Tightened</div>
+    <div class="feature-card-desc">Removed Tailwind CDN from Content-Security-Policy whitelist (no longer needed). Tighter <code>script-src</code> and <code>style-src</code> directives.</div>
   </div>
+
+  <h3>Bug Fixes</h3>
   <div class="feature-card">
-    <div class="feature-card-title">Accessibility: Skip Links &amp; Touch Targets</div>
-    <div class="feature-card-desc">Skip-to-content link on all 5 public pages (visually hidden, visible on focus). Avatar touch target increased from 30px to 44px (WCAG 2.5.5). Form inputs set to 44px min-height.</div>
-  </div>
-  <div class="feature-card">
-    <div class="feature-card-title">Facebook Social Link Updated</div>
-    <div class="feature-card-desc">Footer Facebook icon now links to the actual business page (<code>facebook.com/bloominoven</code>).</div>
+    <div class="feature-card-title">Production API Crash Fix (ALLOWED_ORIGIN)</div>
+    <div class="feature-card-desc">All Vercel serverless functions were returning 500 due to a trailing newline in the <code>ALLOWED_ORIGIN</code> environment variable. Node.js rejects newlines in HTTP header values. Added <code>.trim()</code> to all 5 API endpoints as a defensive measure.</div>
   </div>
 
   <div class="page-footer">
@@ -802,9 +791,9 @@
     <div class="issue-desc">All purchases require account creation. No option for one-time buyers to check out without signing up. Potential conversion blocker.</div>
   </div>
 
-  <div class="issue-item ux">
-    <div class="issue-title">3. Duplicated Utility Functions <span class="badge badge-orange">CODE QUALITY</span></div>
-    <div class="issue-desc"><code>showToast()</code>, <code>escHtml()</code>, <code>formatPrice()</code> defined independently in 3 pages with inconsistent toast durations (2.8s, 3.0s, 3.2s). Should extract to shared <code>js/utils.js</code>.</div>
+  <div class="issue-item resolved">
+    <div class="issue-title">3. Duplicated Utility Functions <span class="badge badge-green">RESOLVED</span></div>
+    <div class="issue-desc">Extracted <code>showToast()</code>, <code>escHtml()</code>, <code>formatPrice()</code> into shared <code>js/utils.js</code>. Standardized toast timeouts to 3000ms across all pages.</div>
   </div>
 
   <div class="issue-item ux">
@@ -830,6 +819,10 @@
       <tr><td>Missing SEO meta tags</td><td><span class="badge badge-green">RESOLVED</span></td></tr>
       <tr><td>Checkout back-button disabled</td><td><span class="badge badge-green">RESOLVED</span></td></tr>
       <tr><td>Copyright year inconsistency</td><td><span class="badge badge-green">RESOLVED</span></td></tr>
+      <tr><td>Tailwind CDN (~350 KB per page)</td><td><span class="badge badge-green">RESOLVED</span></td></tr>
+      <tr><td>No build pipeline</td><td><span class="badge badge-green">RESOLVED</span></td></tr>
+      <tr><td>Duplicated utility functions</td><td><span class="badge badge-green">RESOLVED</span></td></tr>
+      <tr><td>Production API crash (ALLOWED_ORIGIN newline)</td><td><span class="badge badge-green">RESOLVED</span></td></tr>
     </tbody>
   </table>
 
@@ -849,7 +842,7 @@
   <div class="section-title">Optimization <span>Suggestions</span></div>
   <hr class="section-divider">
 
-  <h3>Performance (Score: 7.5/10)</h3>
+  <h3>Performance (Score: 8.5/10)</h3>
 
   <div class="opt-item">
     <span class="impact impact-high">HIGH IMPACT</span>
@@ -860,10 +853,10 @@
   </div>
 
   <div class="opt-item">
-    <span class="impact impact-high">HIGH IMPACT</span>
+    <span class="impact impact-done">DONE</span>
     <div class="opt-item-body">
       <div class="opt-item-title">Replace Tailwind CDN with Compiled Build</div>
-      <div class="opt-item-desc">CDN loads ~350 KB per page. Compiling to used classes only would cut this to ~10-15 KB. Config already extracted to <code>tailwind-config.js</code>.</div>
+      <div class="opt-item-desc">CDN (~350 KB) replaced with compiled, minified CSS (5.5 KB). Tailwind CLI build runs automatically on deploy.</div>
     </div>
   </div>
 
@@ -891,13 +884,13 @@
     </div>
   </div>
 
-  <h3>Architecture (Score: 7/10)</h3>
+  <h3>Architecture (Score: 7.5/10)</h3>
 
   <div class="opt-item">
-    <span class="impact impact-high">HIGH IMPACT</span>
+    <span class="impact impact-done">DONE</span>
     <div class="opt-item-body">
       <div class="opt-item-title">Add Build Pipeline</div>
-      <div class="opt-item-desc">Raw HTML/CSS/JS served directly. No minification, bundling, or tree-shaking. An esbuild or Vite setup would improve load times and enable module imports.</div>
+      <div class="opt-item-desc">Tailwind CLI build step added via <code>npm run build</code>. Vercel runs it automatically on deploy. Foundation for future JS bundling.</div>
     </div>
   </div>
 
@@ -910,10 +903,10 @@
   </div>
 
   <div class="opt-item">
-    <span class="impact impact-medium">MEDIUM IMPACT</span>
+    <span class="impact impact-done">DONE</span>
     <div class="opt-item-body">
       <div class="opt-item-title">Shared Utility Module</div>
-      <div class="opt-item-desc"><code>showToast</code>, <code>escHtml</code>, <code>formatPrice</code> duplicated across pages. Extract into a single <code>js/utils.js</code> file.</div>
+      <div class="opt-item-desc"><code>showToast</code>, <code>escHtml</code>, <code>formatPrice</code> extracted into <code>js/utils.js</code>. Removed duplicates from 5 HTML files.</div>
     </div>
   </div>
 
@@ -1039,7 +1032,7 @@
   <div class="section-title">Code Quality <span>Assessment</span></div>
   <hr class="section-divider">
 
-  <h3>Strengths (Score: 7/10)</h3>
+  <h3>Strengths (Score: 7.5/10)</h3>
   <ul class="checklist strengths">
     <li><strong>Clean Supabase integration</strong> -- RLS policies on all tables, proper auth flow, parameterized queries</li>
     <li><strong>Stripe best practices</strong> -- Webhook signature verification, idempotent order creation, PCI-compliant checkout</li>
@@ -1049,15 +1042,16 @@
     <li><strong>XSS prevention</strong> -- <code>escHtml()</code> used on user-facing product names and descriptions</li>
     <li><strong>Stock validation</strong> -- Dual client + server validation prevents overselling at checkout</li>
     <li><strong>Security headers</strong> -- CSP, HSTS, X-Frame-Options, nosniff, Referrer-Policy configured</li>
+    <li><strong>Shared utilities</strong> -- <code>showToast</code>, <code>escHtml</code>, <code>formatPrice</code> centralized in <code>js/utils.js</code></li>
+    <li><strong>Build pipeline</strong> -- Tailwind CLI compiles CSS automatically on deploy via <code>vercel.json buildCommand</code></li>
   </ul>
 
   <h3>Areas for Improvement</h3>
   <ul class="checklist improvements">
     <li><strong>Massive inline scripts</strong> -- <code>account.html</code> has ~1,200 lines of inline JS. Not cacheable, not testable, blocks parsing.</li>
-    <li><strong>No build pipeline</strong> -- Raw HTML/CSS/JS served directly. No minification, bundling, or tree-shaking.</li>
-    <li><strong>Tailwind CDN</strong> -- ~350 KB loaded per page. Should compile to used classes only (~10-15 KB).</li>
+    <li><strong>Build pipeline (basic)</strong> -- Tailwind CLI compiles CSS. JS still served raw. Future: add esbuild for bundling and minification.</li>
     <li><strong>Variable naming inconsistency</strong> -- <code>sb</code> vs <code>supabase</code>, <code>currentUser</code> vs <code>session.user</code> across pages.</li>
-    <li><strong>Magic numbers</strong> -- Toast timeouts (3000ms, 2800ms), no centralized constants.</li>
+    <li><strong>Magic numbers</strong> -- Toast timeout now standardized (3000ms) but other constants still scattered.</li>
     <li><strong>No error boundaries</strong> -- Network failures in product/menu loads show no fallback UI.</li>
     <li><strong>Duplicated fetch patterns</strong> -- <code>/api/config</code> fetched on every page without session caching.</li>
   </ul>
@@ -1074,7 +1068,7 @@
       <tr><td>Webhook Verification</td><td><span class="badge badge-green">GOOD</span></td><td>Stripe webhook signature verified before processing.</td></tr>
       <tr><td>CORS Policy</td><td><span class="badge badge-green">GOOD</span></td><td>Locked to <code>ALLOWED_ORIGIN</code> env var. Production set to <code>bloominacresmarket.com</code>.</td></tr>
       <tr><td>Input Sanitization</td><td><span class="badge badge-green">GOOD</span></td><td>Supabase parameterized queries. <code>escHtml()</code> on rendered content.</td></tr>
-      <tr><td>Content-Security-Policy</td><td><span class="badge badge-green">GOOD</span></td><td>Full CSP with whitelisted sources. <code>unsafe-inline</code> required until scripts extracted.</td></tr>
+      <tr><td>Content-Security-Policy</td><td><span class="badge badge-green">GOOD</span></td><td>Full CSP with tightened whitelist (CDN sources removed). <code>unsafe-inline</code> required until scripts extracted.</td></tr>
       <tr><td>HTTPS Enforcement</td><td><span class="badge badge-green">GOOD</span></td><td>HSTS configured with 2-year max-age, includeSubDomains, and preload directive.</td></tr>
       <tr><td>Stock Validation</td><td><span class="badge badge-green">GOOD</span></td><td>Client-side check in review modal + server-side enforcement in checkout API.</td></tr>
     </tbody>
