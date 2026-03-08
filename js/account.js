@@ -106,6 +106,24 @@
     const { data: adminRow } = await sb.from('admins').select('user_id').eq('user_id', user.id).maybeSingle();
 
     currentUser = user;
+
+    // Merge any localStorage guest cart into Supabase
+    if (typeof cartGet === 'function') {
+      const localCart = cartGet();
+      if (localCart.length > 0) {
+        for (const item of localCart) {
+          await sb.from('user_cart').upsert({
+            user_id: user.id,
+            stripe_product_id: item.stripe_product_id,
+            variation_name: item.variation_name || '',
+            variation_delta: item.variation_delta || 0,
+            quantity: item.quantity,
+          }, { onConflict: 'user_id,stripe_product_id,variation_name' });
+        }
+        cartClear();
+      }
+    }
+
     document.getElementById('auth-wrap').classList.add('hidden');
     document.getElementById('dashboard').classList.remove('hidden');
     document.getElementById('profile-email').textContent = user.email;
