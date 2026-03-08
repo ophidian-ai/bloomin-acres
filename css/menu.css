@@ -103,22 +103,17 @@ body {
   letter-spacing: .04em;
 }
 
-/* ── Schedule Banner ─────────────────────────────────────── */
-.schedule-banner {
-  display: none;
+/* ── Schedule Date (inside menu card) ───────────────────── */
+.menu-schedule-date {
   text-align: center;
-  padding: .55rem 1.5rem;
-  background: rgba(237,163,57,.07);
-  border-bottom: 1px solid rgba(237,163,57,.1);
-}
-.schedule-banner-text {
+  padding: .5rem 0 .25rem;
   font-family: var(--font-body);
-  font-size: .75rem;
+  font-size: .8rem;
   font-weight: 600;
-  letter-spacing: .12em;
+  letter-spacing: .1em;
   text-transform: uppercase;
-  color: var(--cream-warm);
-  opacity: .8;
+  color: var(--earth-brown);
+  opacity: .65;
 }
 
 /* ── Page Wrapper ────────────────────────────────────────── */

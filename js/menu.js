@@ -103,20 +103,18 @@
         } catch { /* non-fatal */ }
       }
       (detailsRes.data || []).forEach(d => { detailsMap[d.stripe_product_id] = d; });
-      // Show schedule banner if dates are set
+      // Build schedule text (rendered inside menu card later)
       const sched = scheduleRes.data;
+      let scheduleRangeText = '';
       if (sched && (sched.start_date || sched.end_date)) {
         const fmtDate = d => {
           const [y, m, day] = d.split('-');
           return new Date(y, parseInt(m) - 1, parseInt(day))
             .toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
         };
-        let rangeText = '';
-        if (sched.start_date && sched.end_date) rangeText = `${fmtDate(sched.start_date)} – ${fmtDate(sched.end_date)}`;
-        else if (sched.start_date) rangeText = `starting ${fmtDate(sched.start_date)}`;
-        else rangeText = `through ${fmtDate(sched.end_date)}`;
-        document.getElementById('schedule-range-text').textContent = rangeText;
-        document.getElementById('schedule-banner').style.display = 'block';
+        if (sched.start_date && sched.end_date) scheduleRangeText = `Available ${fmtDate(sched.start_date)} – ${fmtDate(sched.end_date)}`;
+        else if (sched.start_date) scheduleRangeText = `Available starting ${fmtDate(sched.start_date)}`;
+        else scheduleRangeText = `Available through ${fmtDate(sched.end_date)}`;
       }
 
       // 4. Fetch menu — from sessionStorage draft or Supabase
@@ -418,6 +416,14 @@
       // 5. Render — only now remove the SEO fallback (real data loaded successfully)
       removeFallback();
       skeleton.remove();
+
+      // Insert schedule dates inside menu card
+      if (scheduleRangeText) {
+        const schedEl = document.createElement('div');
+        schedEl.className = 'menu-schedule-date';
+        schedEl.textContent = scheduleRangeText;
+        content.appendChild(schedEl);
+      }
 
       sections.forEach((section, idx) => {
         const items = itemsBySectionId[section.id] || [];
