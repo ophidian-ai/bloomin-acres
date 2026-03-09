@@ -166,20 +166,45 @@
         <!-- Schedule -->
         <div class="schedule-panel">
           <div class="sub-heading">Menu Availability (shown on public menu page)</div>
-          <div class="schedule-row">
-            <div class="schedule-field">
-              <label class="field-label" for="schedule-start">Start Date</label>
-              <input type="date" id="schedule-start" class="date-input" />
+          <!-- Hidden native inputs (used by JS for data) -->
+          <input type="hidden" id="schedule-start" />
+          <input type="hidden" id="schedule-end" />
+          <div class="schedule-calendar-wrap">
+            <div class="schedule-calendar" id="schedule-calendar">
+              <div class="cal-header">
+                <button type="button" class="cal-nav" id="cal-prev" aria-label="Previous month">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+                </button>
+                <span class="cal-month-label" id="cal-month-label"></span>
+                <button type="button" class="cal-nav" id="cal-next" aria-label="Next month">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+                </button>
+              </div>
+              <div class="cal-weekdays">
+                <span>Su</span><span>Mo</span><span>Tu</span><span>We</span><span>Th</span><span>Fr</span><span>Sa</span>
+              </div>
+              <div class="cal-grid" id="cal-grid"></div>
             </div>
-            <span class="schedule-dash">–</span>
-            <div class="schedule-field">
-              <label class="field-label" for="schedule-end">End Date</label>
-              <input type="date" id="schedule-end" class="date-input" />
+            <div class="schedule-range-info">
+              <div class="range-display">
+                <div class="range-item">
+                  <span class="field-label">Start</span>
+                  <span class="range-date" id="range-start-display">Not set</span>
+                </div>
+                <span class="schedule-dash">&ndash;</span>
+                <div class="range-item">
+                  <span class="field-label">End</span>
+                  <span class="range-date" id="range-end-display">Not set</span>
+                </div>
+              </div>
+              <div class="schedule-actions">
+                <button type="button" class="btn-ghost-sm" id="cal-clear-btn">Clear</button>
+                <button id="btn-save-schedule" class="btn-secondary" type="button">
+                  <svg width="11" height="11" viewBox="0 0 14 14" fill="none" aria-hidden="true"><path d="M2 7l3.5 3.5L12 3" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                  Save Schedule
+                </button>
+              </div>
             </div>
-            <button id="btn-save-schedule" class="btn-secondary" type="button">
-              <svg width="11" height="11" viewBox="0 0 14 14" fill="none" aria-hidden="true"><path d="M2 7l3.5 3.5L12 3" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
-              Save Schedule
-            </button>
           </div>
         </div>
 
@@ -665,6 +690,7 @@
   <!-- Supabase CDN -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 
+<script src="/js/schedule-calendar.js"></script>
 <script src="/js/admin.js"></script>
 <script>
 // ── Sidebar collapse/expand + mobile toggle ──

@@ -372,6 +372,8 @@
         document.getElementById('schedule-start').value = data.start_date || '';
         document.getElementById('schedule-end').value = data.end_date || '';
       }
+      // Sync calendar UI with loaded data
+      if (typeof initScheduleCalendar === 'function') initScheduleCalendar();
     }
 
     document.getElementById('btn-save-schedule').addEventListener('click', async () => {
