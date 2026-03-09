@@ -15,25 +15,6 @@
 </head>
 <body>
 
-<!-- Hamburger toggle -->
-<button type="button" class="nav-toggle" id="nav-toggle" aria-label="Open navigation" aria-expanded="false" aria-controls="nav-sidebar">
-  <span></span><span></span><span></span>
-</button>
-
-<!-- Sidebar drawer -->
-<div class="nav-sidebar" id="nav-sidebar" role="dialog" aria-modal="true" aria-label="Site navigation">
-  <img src="brand-assets/color-logo.png" alt="Bloomin' Acres" class="nav-sidebar-logo" />
-  <nav>
-    <a href="index.html"   class="nav-sidebar-link">Home</a>
-    <a href="menu.html"    class="nav-sidebar-link accent">Menu</a>
-    <a href="club.html"    class="nav-sidebar-link">The Club</a>
-    <a href="admin.html"   class="nav-sidebar-link">Dashboard</a>
-  </nav>
-</div>
-
-<!-- Backdrop -->
-<div class="nav-overlay" id="nav-overlay" aria-hidden="true"></div>
-
 <script src="/js/shared.js"></script>
 <script src="/js/utils.js"></script>
 
@@ -42,82 +23,113 @@
   <!-- ===== DASHBOARD ===== -->
   <div id="dashboard">
 
-    <!-- Top bar -->
-    <header class="topbar">
-      <div class="topbar-left">
-        <img src="brand-assets/color-logo.png" alt="Bloomin' Acres" class="topbar-logo" />
-        <span class="topbar-badge">Admin</span>
+    <!-- ── Glass Sidebar ── -->
+    <aside class="admin-sidebar" id="admin-sidebar">
+      <div class="sidebar-header">
+        <img src="brand-assets/color-logo.png" alt="Bloomin' Acres" class="sidebar-logo" />
+        <div class="sidebar-brand-wrap">
+          <span class="sidebar-brand">Bloomin' Acres</span>
+          <span class="sidebar-badge">Admin</span>
+        </div>
       </div>
-      <div class="topbar-right">
-        <span class="topbar-user" id="topbar-user-email"></span>
-        <a href="index.html" class="btn-ghost">View Site</a>
-        <button id="logout-btn" class="btn-ghost">Sign Out</button>
-      </div>
-    </header>
 
-    <!-- Account banner -->
-    <div class="account-banner">
-      <div class="account-avatar" id="account-avatar">B</div>
-      <div>
-        <div class="account-name">Bloomin' Acres</div>
-        <div class="account-email" id="account-email-display"></div>
-      </div>
-    </div>
+      <nav class="sidebar-nav" role="tablist">
+        <button class="tab-btn active" role="tab" aria-selected="true" data-tab="catalogue">
+          <svg width="18" height="18" viewBox="0 0 14 14" fill="none" aria-hidden="true">
+            <rect x="1" y="1" width="5" height="5" rx="1" fill="currentColor" opacity=".7"/>
+            <rect x="8" y="1" width="5" height="5" rx="1" fill="currentColor" opacity=".7"/>
+            <rect x="1" y="8" width="5" height="5" rx="1" fill="currentColor" opacity=".7"/>
+            <rect x="8" y="8" width="5" height="5" rx="1" fill="currentColor" opacity=".7"/>
+          </svg>
+          <span class="sidebar-label">Catalogue</span>
+        </button>
+        <button class="tab-btn" role="tab" aria-selected="false" data-tab="menu">
+          <svg width="18" height="18" viewBox="0 0 14 14" fill="none" aria-hidden="true">
+            <line x1="2" y1="4" x2="12" y2="4" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
+            <line x1="2" y1="7" x2="12" y2="7" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
+            <line x1="2" y1="10" x2="8" y2="10" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
+          </svg>
+          <span class="sidebar-label">Menu Editor</span>
+        </button>
+        <button class="tab-btn" role="tab" aria-selected="false" data-tab="saved">
+          <svg width="18" height="18" viewBox="0 0 14 14" fill="none" aria-hidden="true">
+            <rect x="2" y="1" width="10" height="12" rx="1.5" stroke="currentColor" stroke-width="1.4"/>
+            <line x1="4.5" y1="5" x2="9.5" y2="5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/>
+            <line x1="4.5" y1="7.5" x2="9.5" y2="7.5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/>
+            <line x1="4.5" y1="10" x2="7.5" y2="10" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/>
+          </svg>
+          <span class="sidebar-label">Saved Menus</span>
+        </button>
+        <button type="button" class="tab-btn" role="tab" aria-selected="false" data-tab="landing">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+            <rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5" fill="currentColor" stroke="none"/>
+            <polyline points="21 15 16 10 5 21"/>
+          </svg>
+          <span class="sidebar-label">Landing Page</span>
+        </button>
+        <button type="button" class="tab-btn" role="tab" aria-selected="false" data-tab="orders">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+            <path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>
+          </svg>
+          <span class="sidebar-label">Orders</span>
+        </button>
+        <button type="button" class="tab-btn" role="tab" aria-selected="false" data-tab="analytics">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+            <line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/>
+          </svg>
+          <span class="sidebar-label">Analytics</span>
+        </button>
+        <button type="button" class="tab-btn" role="tab" aria-selected="false" data-tab="club">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+            <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/>
+          </svg>
+          <span class="sidebar-label">Club</span>
+        </button>
+      </nav>
 
-    <!-- Tab bar -->
-    <nav class="tab-bar" role="tablist">
-      <button class="tab-btn active" role="tab" aria-selected="true" data-tab="catalogue">
-        <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
-          <rect x="1" y="1" width="5" height="5" rx="1" fill="currentColor" opacity=".7"/>
-          <rect x="8" y="1" width="5" height="5" rx="1" fill="currentColor" opacity=".7"/>
-          <rect x="1" y="8" width="5" height="5" rx="1" fill="currentColor" opacity=".7"/>
-          <rect x="8" y="8" width="5" height="5" rx="1" fill="currentColor" opacity=".7"/>
+      <div class="sidebar-footer">
+        <div class="sidebar-user-row">
+          <div class="sidebar-avatar" id="account-avatar">B</div>
+          <div class="sidebar-user-info">
+            <span class="sidebar-user-name">Admin</span>
+            <span class="sidebar-user-email" id="topbar-user-email"></span>
+            <span class="hidden" id="account-email-display"></span>
+          </div>
+        </div>
+        <div class="sidebar-footer-links">
+          <a href="index.html" class="sidebar-link">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+              <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/>
+            </svg>
+            <span class="sidebar-label">View Site</span>
+          </a>
+          <button id="logout-btn" class="sidebar-link">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+              <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/>
+            </svg>
+            <span class="sidebar-label">Sign Out</span>
+          </button>
+        </div>
+      </div>
+
+      <button class="sidebar-collapse-btn" id="sidebar-collapse-btn" aria-label="Toggle sidebar">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+          <polyline points="11 17 6 12 11 7"/><polyline points="18 17 13 12 18 7"/>
         </svg>
-        Stripe Catalogue
+        <span class="sidebar-label">Collapse</span>
       </button>
-      <button class="tab-btn" role="tab" aria-selected="false" data-tab="menu">
-        <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
-          <line x1="2" y1="4" x2="12" y2="4" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
-          <line x1="2" y1="7" x2="12" y2="7" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
-          <line x1="2" y1="10" x2="8" y2="10" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
-        </svg>
-        Menu Editor
-      </button>
-      <button class="tab-btn" role="tab" aria-selected="false" data-tab="saved">
-        <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
-          <rect x="2" y="1" width="10" height="12" rx="1.5" stroke="currentColor" stroke-width="1.4"/>
-          <line x1="4.5" y1="5" x2="9.5" y2="5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/>
-          <line x1="4.5" y1="7.5" x2="9.5" y2="7.5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/>
-          <line x1="4.5" y1="10" x2="7.5" y2="10" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/>
-        </svg>
-        Saved Menus
-      </button>
-      <button type="button" class="tab-btn" role="tab" aria-selected="false" data-tab="landing">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
-          <rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5" fill="currentColor" stroke="none"/>
-          <polyline points="21 15 16 10 5 21"/>
-        </svg>
-        Landing Page
-      </button>
-      <button type="button" class="tab-btn" role="tab" aria-selected="false" data-tab="orders">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
-          <path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>
-        </svg>
-        Orders
-      </button>
-      <button type="button" class="tab-btn" role="tab" aria-selected="false" data-tab="analytics">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
-          <line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/>
-        </svg>
-        Analytics
-      </button>
-      <button type="button" class="tab-btn" role="tab" aria-selected="false" data-tab="club">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
-          <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/>
-        </svg>
-        Club
-      </button>
-    </nav>
+    </aside>
+
+    <!-- Mobile sidebar toggle -->
+    <button class="mobile-sidebar-toggle" id="mobile-sidebar-toggle" aria-label="Open dashboard menu">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/>
+      </svg>
+    </button>
+    <div class="sidebar-overlay" id="sidebar-overlay"></div>
+
+    <!-- ── Content Area ── -->
+    <main class="dashboard-content">
 
     <!-- Tab: Stripe Catalogue -->
     <div id="tab-catalogue" class="tab-panel active">
@@ -399,7 +411,7 @@
         </div>
       </div>
 
-    </div>
+    </div><!-- /tab-landing -->
 
     <!-- Tab: Club -->
     <div id="tab-club" class="tab-panel">
@@ -552,7 +564,7 @@
           <button type="button" class="btn-secondary" id="print-go">Print</button>
         </div>
       </div>
-    </div>
+    </div><!-- /print-modal -->
 
     <!-- Hidden print container -->
     <div id="print-area" class="print-area"></div>
@@ -645,6 +657,7 @@
       </div>
     </div>
 
+    </main><!-- /dashboard-content -->
   </div><!-- /dashboard -->
 
   <div id="toast"></div>
@@ -653,5 +666,50 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 
 <script src="/js/admin.js"></script>
+<script>
+// ── Sidebar collapse/expand + mobile toggle ──
+(() => {
+  const sidebar = document.getElementById('admin-sidebar');
+  const collapseBtn = document.getElementById('sidebar-collapse-btn');
+  const mobileToggle = document.getElementById('mobile-sidebar-toggle');
+  const overlay = document.getElementById('sidebar-overlay');
+
+  if (collapseBtn) {
+    collapseBtn.addEventListener('click', () => {
+      sidebar.classList.toggle('collapsed');
+      const icon = collapseBtn.querySelector('svg');
+      if (sidebar.classList.contains('collapsed')) {
+        icon.style.transform = 'rotate(180deg)';
+      } else {
+        icon.style.transform = '';
+      }
+    });
+  }
+
+  if (mobileToggle) {
+    mobileToggle.addEventListener('click', () => {
+      sidebar.classList.add('mobile-open');
+      overlay.classList.add('visible');
+    });
+  }
+
+  if (overlay) {
+    overlay.addEventListener('click', () => {
+      sidebar.classList.remove('mobile-open');
+      overlay.classList.remove('visible');
+    });
+  }
+
+  // Close mobile sidebar on tab click
+  document.querySelectorAll('.sidebar-nav .tab-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      if (window.innerWidth <= 768) {
+        sidebar.classList.remove('mobile-open');
+        overlay.classList.remove('visible');
+      }
+    });
+  });
+})();
+</script>
 </body>
 </html>

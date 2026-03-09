@@ -8,6 +8,15 @@
 
     // ── Init ─────────────────────────────────────────────────────────────────
     async function init() {
+      // Preview mode: admin.html?preview — shows dashboard without auth
+      if (new URLSearchParams(window.location.search).has('preview')) {
+        document.getElementById('dashboard').classList.add('visible');
+        document.getElementById('topbar-user-email').textContent = 'preview@bloominacres.com';
+        document.getElementById('account-email-display').textContent = 'preview@bloominacres.com';
+        document.getElementById('account-avatar').textContent = 'P';
+        return;
+      }
+
       const r = await fetch('/api/config').catch(() => null);
       if (!r || !r.ok) { alert('Cannot reach server. Is node serve.mjs running?'); return; }
       const cfg = await r.json();

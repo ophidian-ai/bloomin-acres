@@ -311,12 +311,11 @@ img { display: block; max-width: 100%; }
 .site-attribution {
   display: flex;
   align-items: center;
-  justify-content: center;
-  gap: .35rem;
-  margin-top: .5rem;
-  font-size: .62rem;
+  gap: .3rem;
+  font-size: .6rem;
   color: rgba(250,240,230,.3);
   letter-spacing: .04em;
+  white-space: nowrap;
 }
 .site-attribution img {
   width: 14px;
