@@ -230,7 +230,12 @@ body::after {
 /* ── Benefits ───────────────────────────────────────────── */
 .club-benefits-outer {
   padding: 5rem 1.5rem;
-  background: var(--earth-brown);
+  background: var(--glass-bg);
+  -webkit-backdrop-filter: blur(24px) saturate(1.2);
+  backdrop-filter: blur(24px) saturate(1.2);
+  border-top: var(--glass-border);
+  border-bottom: var(--glass-border);
+  box-shadow: var(--glass-shadow);
   position: relative;
   overflow: hidden;
 }
@@ -330,14 +335,17 @@ body::after {
 
 /* Milestone table */
 .milestone-table {
-  background: var(--earth-brown);
+  background: var(--glass-bg);
+  -webkit-backdrop-filter: blur(24px) saturate(1.2);
+  backdrop-filter: blur(24px) saturate(1.2);
+  border: var(--glass-border);
   border-radius: 16px;
   overflow: hidden;
   margin-bottom: 3rem;
-  box-shadow: var(--shadow-card);
+  box-shadow: var(--glass-shadow);
 }
 .milestone-header {
-  background: var(--earth-mid);
+  background: linear-gradient(135deg, rgba(61,42,26,.6) 0%, rgba(42,30,20,.5) 100%);
   padding: .85rem 1.75rem;
   font-size: .72rem;
   font-weight: 700;
@@ -439,9 +447,12 @@ body::after {
 
 /* ── Footer ─────────────────────────────────────────────── */
 .club-footer {
-  background: var(--earth-brown);
+  background: var(--glass-bg);
+  -webkit-backdrop-filter: blur(24px) saturate(1.2);
+  backdrop-filter: blur(24px) saturate(1.2);
   padding: 3.5rem 1.5rem 2.5rem;
-  border-top: 1px solid rgba(250,240,230,.08);
+  border-top: var(--glass-border);
+  box-shadow: var(--glass-shadow);
 }
 .club-footer-inner {
   max-width: 640px;
@@ -491,12 +502,15 @@ body::after {
   position: fixed;
   bottom: 1.5rem; left: 50%;
   transform: translateX(-50%) translateY(10px);
-  background: var(--earth-brown);
+  background: var(--glass-bg);
+  -webkit-backdrop-filter: blur(24px) saturate(1.2);
+  backdrop-filter: blur(24px) saturate(1.2);
+  border: var(--glass-border);
   color: var(--farm-cream);
   padding: .65rem 1.4rem;
   border-radius: 8px;
   font-size: .82rem; font-weight: 500;
-  box-shadow: 0 8px 24px rgba(0,0,0,.25);
+  box-shadow: var(--glass-shadow);
   opacity: 0;
   transition: opacity .25s, transform .25s;
   pointer-events: none;

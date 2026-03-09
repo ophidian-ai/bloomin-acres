@@ -95,8 +95,11 @@ body {
 }
 .preview-bar-back:hover { color: #EDA339; }
 .preview-bar-draft {
-  background: linear-gradient(135deg, #6B4C35, #4A3322);
+  background: var(--glass-bg);
+  -webkit-backdrop-filter: blur(24px) saturate(1.2);
+  backdrop-filter: blur(24px) saturate(1.2);
   border-bottom-color: rgba(200,90,58,.4);
+  box-shadow: var(--glass-shadow);
 }
 .preview-bar-draft .preview-bar-label {
   color: #C85A3A;
@@ -331,10 +334,14 @@ body {
 /* ── Toast ───────────────────────────────────────────────── */
 #toast {
   position: fixed; bottom: 1.5rem; left: 50%; transform: translateX(-50%) translateY(20px);
-  background: var(--earth-brown);
+  background: var(--glass-bg);
+  -webkit-backdrop-filter: blur(24px) saturate(1.2);
+  backdrop-filter: blur(24px) saturate(1.2);
+  border: var(--glass-border);
   color: var(--farm-cream);
   padding: .6rem 1.3rem; border-radius: 99px;
   font-size: .8rem; font-weight: 500;
+  box-shadow: var(--glass-shadow);
   opacity: 0;
   transition: opacity .25s, transform .25s;
   pointer-events: none; z-index: 10000;

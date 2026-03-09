@@ -145,7 +145,11 @@ body {
   flex: 1;
   min-width: 120px;
   padding: .65rem 1.25rem;
-  background: var(--earth-brown);
+  background: var(--glass-bg);
+  -webkit-backdrop-filter: blur(24px) saturate(1.2);
+  backdrop-filter: blur(24px) saturate(1.2);
+  border: var(--glass-border);
+  box-shadow: var(--glass-shadow);
   color: var(--farm-cream);
   border: none;
   border-radius: 5px;
@@ -159,7 +163,7 @@ body {
   transition: background .2s, transform .1s;
   display: flex; align-items: center; justify-content: center; gap: .4rem;
 }
-.btn-cart:hover { background: var(--earth-mid); }
+.btn-cart:hover { background: linear-gradient(135deg, rgba(61,42,26,.9) 0%, rgba(74,51,34,.85) 50%, rgba(61,42,26,.9) 100%); }
 .btn-cart:active { transform: scale(.98); }
 .btn-fav {
   padding: .65rem 1.1rem;
@@ -423,10 +427,14 @@ body {
 /* ── Toast ───────────────────────────────────────────────── */
 #toast {
   position: fixed; bottom: 1.5rem; left: 50%; transform: translateX(-50%);
-  background: var(--earth-brown); color: var(--farm-cream);
+  background: var(--glass-bg);
+  -webkit-backdrop-filter: blur(24px) saturate(1.2);
+  backdrop-filter: blur(24px) saturate(1.2);
+  border: var(--glass-border);
+  color: var(--farm-cream);
   padding: .6rem 1.4rem; border-radius: 99px;
   font-family: var(--font-body); font-size: .82rem; font-weight: 500;
-  box-shadow: 0 4px 20px rgba(0,0,0,.25);
+  box-shadow: var(--glass-shadow);
   opacity: 0; pointer-events: none;
   transition: opacity .25s;
   z-index: 1000;

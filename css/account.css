@@ -32,7 +32,11 @@ body::after {
 
 /* ── Top Bar ─────────────────────────────────────────────── */
 .topbar {
-  background: var(--earth-brown);
+  background: var(--glass-bg);
+  -webkit-backdrop-filter: blur(24px) saturate(1.2);
+  backdrop-filter: blur(24px) saturate(1.2);
+  border-bottom: var(--glass-border);
+  box-shadow: var(--glass-shadow);
   padding: .75rem 1.5rem;
   display: flex; align-items: center; justify-content: space-between;
 }
@@ -337,7 +341,11 @@ body::after {
 /* dashboard starts hidden via .hidden class in HTML; enterDashboard() removes it */
 
 .dash-header {
-  background: var(--earth-brown);
+  background: var(--glass-bg);
+  -webkit-backdrop-filter: blur(24px) saturate(1.2);
+  backdrop-filter: blur(24px) saturate(1.2);
+  border-bottom: var(--glass-border);
+  box-shadow: var(--glass-shadow);
   padding: 1rem 1.5rem .85rem;
 }
 .dash-header-inner {
@@ -373,7 +381,9 @@ body::after {
 }
 
 .dash-tabs-bar {
-  background: var(--earth-mid);
+  background: linear-gradient(135deg, rgba(61,42,26,.6) 0%, rgba(42,30,20,.5) 100%);
+  -webkit-backdrop-filter: blur(24px) saturate(1.2);
+  backdrop-filter: blur(24px) saturate(1.2);
   padding: 0 1.5rem;
   display: flex; gap: 0;
   overflow-x: auto;
@@ -767,10 +777,14 @@ body::after {
 /* ── Toast ───────────────────────────────────────────────── */
 #toast {
   position: fixed; bottom: 1.5rem; left: 50%; transform: translateX(-50%) translateY(20px);
-  background: var(--earth-brown);
+  background: var(--glass-bg);
+  -webkit-backdrop-filter: blur(24px) saturate(1.2);
+  backdrop-filter: blur(24px) saturate(1.2);
+  border: var(--glass-border);
   color: var(--farm-cream);
   padding: .65rem 1.4rem; border-radius: 99px;
   font-size: .82rem; font-weight: 500;
+  box-shadow: var(--glass-shadow);
   opacity: 0;
   transition: opacity .25s, transform .25s cubic-bezier(.22,1,.36,1);
   pointer-events: none; z-index: 10000;
@@ -817,11 +831,14 @@ body::after {
   justify-content: space-between;
   gap: 1rem;
   flex-wrap: wrap;
-  background: var(--earth-brown);
+  background: var(--glass-bg);
+  -webkit-backdrop-filter: blur(24px) saturate(1.2);
+  backdrop-filter: blur(24px) saturate(1.2);
+  border: var(--glass-border);
   border-radius: 14px;
   padding: 1.5rem 1.75rem;
   margin-bottom: 1.75rem;
-  box-shadow: var(--shadow-card);
+  box-shadow: var(--glass-shadow);
 }
 .club-status-left {
   display: flex;
