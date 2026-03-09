@@ -339,18 +339,18 @@ img { display: block; max-width: 100%; }
   width: 100%; padding: .6rem 1.1rem;
   font-family: var(--font-body);
   font-size: .82rem; font-weight: 500;
-  color: var(--earth-brown);
+  color: var(--farm-cream);
   text-decoration: none;
   background: none; border: none; cursor: pointer;
   transition: background .15s;
   text-align: left;
 }
 .topright-account-menu a:hover,
-.topright-account-menu button:hover { background: rgba(122,155,142,.08); }
-.topright-account-menu svg { color: rgba(74,51,34,.4); flex-shrink: 0; }
+.topright-account-menu button:hover { background: rgba(250,240,230,.08); }
+.topright-account-menu svg { color: rgba(250,240,230,.45); flex-shrink: 0; }
 .topright-menu-divider {
   height: 1px;
-  background: var(--cream-dark);
+  background: rgba(237,163,57,.12);
   margin: .35rem .75rem;
 }
 .topright-menu-signout { color: var(--berry-red) !important; }

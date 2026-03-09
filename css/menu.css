@@ -63,49 +63,6 @@ body {
 /* ── Sidebar hidden elements ─────────────────────────────── */
 .menu-sidebar-hidden { display: none; }
 
-/* ── Preview Bar ─────────────────────────────────────────── */
-.preview-bar {
-  display: none;
-  align-items: center;
-  justify-content: space-between;
-  background: #2A1E14;
-  color: rgba(250,240,230,.75);
-  padding: .6rem 1.5rem;
-  font-family: var(--font-body);
-  font-size: .8rem;
-  letter-spacing: .06em;
-  position: sticky;
-  top: 0;
-  z-index: 200;
-  border-bottom: 1px solid rgba(237,163,57,.2);
-}
-.preview-bar-label {
-  color: rgba(237,163,57,.7);
-  text-transform: uppercase;
-  font-weight: 600;
-}
-.preview-bar-back {
-  display: inline-flex;
-  align-items: center;
-  gap: .4rem;
-  color: rgba(250,240,230,.85);
-  text-decoration: none;
-  font-weight: 500;
-  transition: color 0.2s ease;
-}
-.preview-bar-back:hover { color: #EDA339; }
-.preview-bar-draft {
-  background: var(--glass-bg);
-  -webkit-backdrop-filter: blur(24px) saturate(1.2);
-  backdrop-filter: blur(24px) saturate(1.2);
-  border-bottom-color: rgba(200,90,58,.4);
-  box-shadow: var(--glass-shadow);
-}
-.preview-bar-draft .preview-bar-label {
-  color: #C85A3A;
-  letter-spacing: .04em;
-}
-
 /* ── Schedule Date (inside menu card) ───────────────────── */
 .menu-schedule-date {
   text-align: center;

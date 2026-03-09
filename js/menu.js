@@ -2,10 +2,13 @@
     const _isDraft = _qp.get('preview') === 'draft';
     if (_qp.get('from') === 'admin' || _isDraft) {
       const bar = document.getElementById('preview-bar');
-      bar.style.display = 'flex';
-      if (_isDraft) {
-        document.getElementById('preview-bar-label').textContent = 'Draft Preview — Unsaved Changes';
-        bar.classList.add('preview-bar-draft');
+      if (bar) {
+        bar.style.display = 'flex';
+        if (_isDraft) {
+          const label = document.getElementById('preview-bar-label');
+          if (label) label.textContent = 'Draft Preview — Unsaved Changes';
+          bar.classList.add('preview-bar-draft');
+        }
       }
     }
     (async () => {
