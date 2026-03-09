@@ -383,15 +383,4 @@ body {
 }
 .load-error.menu-coming-soon { padding: 2rem 0; }
 
-/* ── Footer ──────────────────────────────────────────────── */
-.site-footer {
-  text-align: center;
-  padding: 2.5rem 1rem;
-  background-color: var(--earth-brown);
-  border-top: 1px solid rgba(237,163,57,.1);
-}
-.footer-copy {
-  font-size: .75rem;
-  color: rgba(250,240,230,.35);
-  letter-spacing: .06em;
-}
+/* ── Footer (uses global.css glass footer) ─────────────── */

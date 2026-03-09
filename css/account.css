@@ -1138,17 +1138,7 @@ body::after {
 }
 .milestone-chip.done .milestone-chip-status { color: var(--sage-dark); }
 
-/* ── Footer ──────────────────────────────────────────────── */
-.site-footer {
-  text-align: center;
-  padding: 1.5rem 1rem .75rem;
-  background: var(--earth-brown);
-  border-top: 1px solid rgba(237,163,57,.1);
-}
-.site-footer .footer-copyright {
-  font-size: .72rem;
-  color: rgba(250,240,230,.28);
-}
+/* ── Footer (uses global.css glass footer) ─────────────── */
 
 /* ── Order Review Modal ──────────────────────────────────── */
 .order-review-overlay {

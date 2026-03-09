@@ -327,12 +327,24 @@ body::after {
   background: transparent;
   padding: .75rem 1.5rem .6rem;
   color: rgba(250,240,230,.65);
+  border-top: none;
+  box-shadow: none;
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
 }
 .footer-inner {
   max-width: 100%; margin: 0 auto; text-align: center;
-  background-color: var(--earth-brown);
-  background-image: radial-gradient(ellipse 65% 45% at 50% 105%, rgba(200,90,58,.1) 0%, transparent 60%);
-  border-radius: 8px; padding: .75rem 2rem .6rem;
+  background:
+    linear-gradient(135deg, rgba(42,30,20,.85) 0%, rgba(58,42,30,.78) 50%, rgba(42,30,20,.88) 100%);
+  background-image: radial-gradient(ellipse 65% 45% at 50% 105%, rgba(200,90,58,.08) 0%, transparent 60%),
+    linear-gradient(135deg, rgba(42,30,20,.85) 0%, rgba(58,42,30,.78) 50%, rgba(42,30,20,.88) 100%);
+  -webkit-backdrop-filter: blur(18px) saturate(1.1);
+  backdrop-filter: blur(18px) saturate(1.1);
+  border: 1px solid rgba(250,240,230,.06);
+  border-radius: 10px; padding: .75rem 2rem .6rem;
+  box-shadow:
+    inset 0 1px 0 rgba(250,240,230,.04),
+    0 4px 24px rgba(0,0,0,.25);
 }
 .footer-logo {
   width: 90px; margin: 0 auto .2rem; opacity: .9;
@@ -348,7 +360,7 @@ body::after {
   font-family: var(--font-display); font-style: italic;
   font-size: .72rem; letter-spacing: .08em;
   color: rgba(250,240,230,.35); white-space: nowrap;
-  background: var(--earth-brown);
+  background: rgba(42,30,20,.9);
   padding: 0 .75rem;
 }
 .footer-bottom {
