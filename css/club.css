@@ -10,7 +10,10 @@ body {
   color: var(--earth-brown);
   line-height: 1.7;
   min-height: 100vh;
+  display: flex;
+  flex-direction: column;
 }
+.club-footer { margin-top: auto; }
 h1, h2, h3 { font-family: var(--font-display); letter-spacing: -0.03em; line-height: 1.15; }
 img { display: block; max-width: 100%; }
 :focus-visible { outline: 2px solid var(--burnt-orange); outline-offset: 3px; border-radius: 2px; }
