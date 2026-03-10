@@ -79,13 +79,13 @@ body {
 /* ── Page Wrapper ────────────────────────────────────────── */
 .page-wrap {
   max-width: 780px;
-  margin: 3rem auto 4rem;
+  margin: 10rem auto 4rem;
   padding: 0 1.5rem;
 }
 
 /* ── Menu Card ───────────────────────────────────────────── */
 .menu-card {
-  border-radius: 6px;
+  border-radius: 16px;
   overflow: hidden;
   box-shadow:
     0 2px 4px rgba(74,51,34,.25),
@@ -347,4 +347,6 @@ body {
 }
 .load-error.menu-coming-soon { padding: 2rem 0; }
 
-/* ── Footer (uses global.css glass footer) ─────────────── */
+/* ── Footer — push to viewport bottom ─────────────────── */
+.site-footer { margin-top: auto; }
+.page-wrap { flex: 1 0 auto; }
