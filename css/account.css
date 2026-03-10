@@ -19,6 +19,7 @@ body {
   display: flex;
   flex-direction: column;
 }
+#main-content { flex: 1 0 auto; }
 .site-footer { margin-top: auto; }
 h1, h2, h3 { font-family: var(--font-display); letter-spacing: -0.03em; line-height: 1.15; }
 img { display: block; max-width: 100%; }
