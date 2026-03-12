@@ -34,14 +34,6 @@
         currentUser = session.user;
         const { data: adminRow } = await sb.from('admins').select('user_id').eq('user_id', currentUser.id).maybeSingle();
         isAdmin = !!adminRow;
-        const navLink = document.getElementById('nav-account');
-        navLink.removeAttribute('href');
-        document.getElementById('nav-account-label').textContent = 'Sign Out';
-        navLink.addEventListener('click', async (e) => {
-          e.preventDefault();
-          await sb.auth.signOut();
-          window.location.href = 'index.html';
-        });
 
         // Sidebar: hide sign-in, show account submenu or dashboard link
         signinLink.classList.add('hidden');
@@ -206,6 +198,10 @@
           </div>
           ${adminVariationsHtml}
           <button class="btn-save" id="btn-save">Save Changes</button>
+          <a href="menu.html" class="btn-back-to-menu">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><polyline points="15 18 9 12 15 6"/></svg>
+            Back to Menu
+          </a>
         </div>` : ''}
       `;
 

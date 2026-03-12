@@ -124,14 +124,18 @@
     }).catch(() => null);
 
     if (!res || !res.ok) {
+      let errMsg = 'Something went wrong. Please try again.';
+      try { const body = await res.json(); if (body.error) errMsg = body.error; } catch {}
       if (btn) { btn.disabled = false; btn.textContent = origText; }
-      showToast('Something went wrong. Please try again.', true);
+      showToast(errMsg, true);
+      console.error('Subscribe error:', errMsg);
       return;
     }
     const { url, error } = await res.json();
     if (error || !url) {
       if (btn) { btn.disabled = false; btn.textContent = origText; }
       showToast(error || 'Checkout failed', true);
+      console.error('Subscribe error:', error);
       return;
     }
     window.location.href = url;

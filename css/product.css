@@ -284,6 +284,19 @@ body {
 .btn-save:active { transform: scale(.98); }
 .btn-save:disabled { opacity: .55; cursor: default; }
 
+.btn-back-to-menu {
+  display: inline-flex;
+  align-items: center;
+  gap: .35rem;
+  margin-top: .75rem;
+  font-size: .82rem;
+  color: var(--sage-dark);
+  text-decoration: none;
+  opacity: .8;
+  transition: opacity .15s;
+}
+.btn-back-to-menu:hover { opacity: 1; text-decoration: underline; }
+
 /* ── Variation Selector (customer) ──────────────────────── */
 .variation-selector { margin-bottom: 1.25rem; }
 .variation-selector-label {
