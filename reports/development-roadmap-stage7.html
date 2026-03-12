@@ -1,0 +1,499 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Development Roadmap - Bloomin' Acres Market</title>
+<style>
+  @page {
+    size: letter;
+    margin: 0;
+  }
+  * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
+  body {
+    font-family: Arial, Helvetica, sans-serif;
+    color: #1a1a1a;
+    background: #ffffff;
+    font-size: 13px;
+    line-height: 1.5;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  /* Header */
+  .header {
+    background: linear-gradient(135deg, #0D1B2A 0%, #1B3A4B 100%);
+    padding: 28px 48px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .header-left {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+  .header-logo {
+    width: 40px;
+    height: 40px;
+  }
+  .header-title {
+    color: #ffffff;
+    font-size: 22px;
+    font-weight: 700;
+    letter-spacing: -0.3px;
+  }
+  .header-right {
+    text-align: right;
+    color: #a0b4c8;
+    font-size: 13px;
+    line-height: 1.6;
+  }
+  .header-client {
+    color: #ffffff;
+    font-size: 15px;
+    font-weight: 600;
+  }
+
+  /* Content area */
+  .content {
+    padding: 24px 48px;
+  }
+
+  /* Section headers */
+  .section-title {
+    font-size: 15px;
+    font-weight: 700;
+    color: #0D1B2A;
+    margin-bottom: 16px;
+    padding-bottom: 6px;
+    border-bottom: 2px solid #0DB1B2;
+    display: inline-block;
+  }
+  .section {
+    margin-bottom: 20px;
+  }
+
+  /* Score boxes */
+  .scores {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 16px;
+  }
+  .score-box {
+    flex: 1;
+    background: #f5f7fa;
+    border-radius: 8px;
+    padding: 12px 10px;
+    text-align: center;
+    border-top: 3px solid #ccc;
+  }
+  .score-box.green { border-top-color: #0DB1B2; }
+  .score-box.teal { border-top-color: #0DB1B2; }
+  .score-label {
+    font-size: 11px;
+    font-weight: 600;
+    color: #556677;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+    margin-bottom: 8px;
+  }
+  .score-value {
+    font-size: 28px;
+    font-weight: 700;
+    color: #0D1B2A;
+  }
+  .score-value span {
+    font-size: 14px;
+    font-weight: 400;
+    color: #889aab;
+  }
+  .score-arrow {
+    font-size: 16px;
+    color: #0DB1B2;
+    font-weight: 700;
+  }
+
+  /* Executive summary */
+  .summary-text {
+    font-size: 13px;
+    color: #2a2a2a;
+    line-height: 1.6;
+    margin-bottom: 14px;
+  }
+
+  /* Phase cards */
+  .phase-card {
+    background: #f5f7fa;
+    border-radius: 10px;
+    padding: 18px 24px;
+    margin-bottom: 16px;
+    border-left: 4px solid #0DB1B2;
+    page-break-inside: avoid;
+  }
+  .phase-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+  }
+  .phase-name {
+    font-size: 16px;
+    font-weight: 700;
+    color: #0D1B2A;
+  }
+  .phase-badge {
+    display: inline-block;
+    padding: 3px 12px;
+    border-radius: 10px;
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.2px;
+  }
+  .badge-high {
+    background: #0DB1B2;
+    color: #ffffff;
+  }
+  .badge-medium {
+    background: #FFB800;
+    color: #1a1a1a;
+  }
+  .badge-large {
+    background: #4A6CF7;
+    color: #ffffff;
+  }
+  .phase-desc {
+    font-size: 13px;
+    color: #556677;
+    margin-bottom: 10px;
+    font-style: italic;
+  }
+  .phase-features {
+    list-style: none;
+    padding: 0;
+  }
+  .phase-features li {
+    padding: 4px 0;
+    padding-left: 18px;
+    position: relative;
+    font-size: 13px;
+    color: #2a2a2a;
+    line-height: 1.5;
+  }
+  .phase-features li::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 13px;
+    width: 8px;
+    height: 8px;
+    background: #0DB1B2;
+    border-radius: 50%;
+  }
+  .feature-detail {
+    color: #556677;
+    font-size: 12px;
+  }
+
+  /* Timeline table */
+  .timeline-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 12px;
+    margin-top: 8px;
+  }
+  .timeline-table th {
+    background: #0D1B2A;
+    color: #ffffff;
+    padding: 10px 14px;
+    text-align: left;
+    font-weight: 600;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+  }
+  .timeline-table th:first-child { border-radius: 6px 0 0 0; }
+  .timeline-table th:last-child { border-radius: 0 6px 0 0; }
+  .timeline-table td {
+    padding: 10px 14px;
+    border-bottom: 1px solid #e8ecf0;
+    vertical-align: top;
+  }
+  .timeline-table tr:nth-child(even) td {
+    background: #f9fafb;
+  }
+  .impact-high {
+    display: inline-block;
+    padding: 2px 10px;
+    border-radius: 10px;
+    font-size: 11px;
+    font-weight: 600;
+    background: #0DB1B2;
+    color: #ffffff;
+  }
+  .impact-medium {
+    display: inline-block;
+    padding: 2px 10px;
+    border-radius: 10px;
+    font-size: 11px;
+    font-weight: 600;
+    background: #FFB800;
+    color: #1a1a1a;
+  }
+
+  /* What's next callout */
+  .callout-box {
+    background: #f5f7fa;
+    border-left: 4px solid #0DB1B2;
+    border-radius: 0 8px 8px 0;
+    padding: 20px 24px;
+  }
+  .callout-box ul {
+    list-style: none;
+    padding: 0;
+  }
+  .callout-box li {
+    padding: 5px 0;
+    padding-left: 18px;
+    position: relative;
+    font-size: 13px;
+    color: #2a2a2a;
+  }
+  .callout-box li::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 12px;
+    width: 8px;
+    height: 8px;
+    background: #0DB1B2;
+    border-radius: 50%;
+  }
+
+  /* Footer */
+  .footer {
+    background: linear-gradient(135deg, #0D1B2A 0%, #1B3A4B 100%);
+    padding: 24px 48px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 8px;
+  }
+  .footer-left {
+    color: #a0b4c8;
+    font-size: 12px;
+  }
+  .footer-left strong {
+    color: #ffffff;
+  }
+  .footer-right {
+    color: #a0b4c8;
+    font-size: 12px;
+    text-align: right;
+  }
+  .footer-right a {
+    color: #0DB1B2;
+    text-decoration: none;
+  }
+
+  /* Page break */
+  .page-break {
+    page-break-before: always;
+  }
+</style>
+</head>
+<body>
+
+<!-- Header -->
+<div class="header">
+  <div class="header-left">
+    <img src="LOGO_PLACEHOLDER" alt="OphidianAI" class="header-logo">
+    <div class="header-title">Development Roadmap</div>
+  </div>
+  <div class="header-right">
+    <div class="header-client">Bloomin' Acres Market</div>
+    <div>Stage 7 &mdash; March 2026</div>
+  </div>
+</div>
+
+<!-- Content -->
+<div class="content">
+
+  <!-- Score Summary -->
+  <div class="section">
+    <div class="section-title">Project Health</div>
+    <div class="scores">
+      <div class="score-box green">
+        <div class="score-label">Current Score</div>
+        <div class="score-value">8.6 <span>/ 10</span></div>
+      </div>
+      <div class="score-box green">
+        <div class="score-label">Target Score</div>
+        <div class="score-value">9.2 <span>/ 10</span></div>
+      </div>
+      <div class="score-box green">
+        <div class="score-label">Phases</div>
+        <div class="score-value">4</div>
+      </div>
+      <div class="score-box green">
+        <div class="score-label">Status</div>
+        <div class="score-value" style="font-size: 18px;">Active</div>
+      </div>
+    </div>
+    <p class="summary-text">
+      Your website is scoring <strong>8.6 out of 10</strong> across security, performance, design, and usability. The next stage of development focuses on closing the gap to <strong>9.2</strong> through visual polish, mobile shopping improvements, a pickup scheduling system, and code quality upgrades. Here's what's coming.
+    </p>
+  </div>
+
+  <!-- Phase 1 -->
+  <div class="section">
+    <div class="section-title">What's Coming Next</div>
+
+    <div class="phase-card">
+      <div class="phase-header">
+        <div class="phase-name">Phase 1: Visual Design Upgrade</div>
+        <span class="phase-badge badge-high">High Impact</span>
+      </div>
+      <div class="phase-desc">Making the site feel richer and more polished &mdash; the biggest visual jump yet.</div>
+      <ul class="phase-features">
+        <li><strong>Product page enrichment</strong> &mdash; Texture overlays, ingredient tags, and an image gallery for browsing product photos<br><span class="feature-detail">Customers see a more immersive, appetizing product experience</span></li>
+        <li><strong>Micro-interactions</strong> &mdash; Smooth button animations, heart pulse when favoriting, card lift effects on the menu<br><span class="feature-detail">Small touches that make the site feel premium and responsive</span></li>
+        <li><strong>Image optimization</strong> &mdash; Responsive images that load the right size for each device, lazy loading for faster pages<br><span class="feature-detail">Faster load times, especially on mobile data connections</span></li>
+      </ul>
+    </div>
+
+    <div class="phase-card">
+      <div class="phase-header">
+        <div class="phase-name">Phase 2: Mobile Shopping Experience</div>
+        <span class="phase-badge badge-high">High Impact</span>
+      </div>
+      <div class="phase-desc">Optimizing the cart and checkout flow for phone users &mdash; where most of your customers browse.</div>
+      <ul class="phase-features">
+        <li><strong>Full-screen mobile cart</strong> &mdash; Cart panel takes the full width on phones with larger tap targets and a sticky checkout button<br><span class="feature-detail">No more pinching or missing buttons on small screens</span></li>
+        <li><strong>Touch-friendly menu</strong> &mdash; Larger action buttons, sticky category navigation, native dropdowns on mobile<br><span class="feature-detail">Smoother browsing through your menu on any device</span></li>
+        <li><strong>Cart thumbnails &amp; subtotals</strong> &mdash; Product images and running totals right in the cart<br><span class="feature-detail">Customers always know exactly what they're ordering</span></li>
+      </ul>
+    </div>
+  </div>
+
+</div>
+
+<!-- Page 2 -->
+<div class="page-break"></div>
+
+<div class="header">
+  <div class="header-left">
+    <img src="LOGO_PLACEHOLDER" alt="OphidianAI" class="header-logo">
+    <div class="header-title">Development Roadmap</div>
+  </div>
+  <div class="header-right">
+    <div class="header-client">Bloomin' Acres Market</div>
+    <div>Stage 7 &mdash; March 2026</div>
+  </div>
+</div>
+
+<div class="content">
+
+  <div class="section">
+    <div class="phase-card">
+      <div class="phase-header">
+        <div class="phase-name">Phase 3: Pickup Time Slots</div>
+        <span class="phase-badge badge-large">New Feature</span>
+      </div>
+      <div class="phase-desc">A pickup scheduling system so customers choose when to pick up and you know what to expect.</div>
+      <ul class="phase-features">
+        <li><strong>Customer pickup selector</strong> &mdash; During checkout, customers pick an available time slot for their order<br><span class="feature-detail">Works for both guest checkout and logged-in customers</span></li>
+        <li><strong>Admin time slot manager</strong> &mdash; Set your available pickup windows from the admin dashboard (days, times, capacity)<br><span class="feature-detail">Full control over when and how many orders you can handle</span></li>
+        <li><strong>Capacity limits</strong> &mdash; Optional max orders per slot, automatically tracked as orders come in<br><span class="feature-detail">No more guessing how many pickups to prepare for</span></li>
+      </ul>
+    </div>
+
+    <div class="phase-card">
+      <div class="phase-header">
+        <div class="phase-name">Phase 4: Under-the-Hood Improvements</div>
+        <span class="phase-badge badge-medium">Quality</span>
+      </div>
+      <div class="phase-desc">Code cleanup and reliability upgrades &mdash; not visible to customers, but keeps things running smoothly.</div>
+      <ul class="phase-features">
+        <li><strong>Better error handling</strong> &mdash; Graceful recovery when network issues occur instead of silent failures<br><span class="feature-detail">Customers see helpful messages instead of blank screens</span></li>
+        <li><strong>Code consolidation</strong> &mdash; Reducing duplicated code for faster future updates and fewer bugs<br><span class="feature-detail">Makes adding new features quicker and more reliable</span></li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- Summary Table -->
+  <div class="section">
+    <div class="section-title">At a Glance</div>
+    <table class="timeline-table">
+      <thead>
+        <tr>
+          <th style="width: 30%;">Phase</th>
+          <th style="width: 25%;">What It Does</th>
+          <th style="width: 20%;">Customer Impact</th>
+          <th style="width: 25%;">Score Impact</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>1. Visual Design</strong></td>
+          <td>Richer product pages, animations, faster images</td>
+          <td><span class="impact-high">High</span></td>
+          <td>Visual: 7 &rarr; 9</td>
+        </tr>
+        <tr>
+          <td><strong>2. Mobile Shopping</strong></td>
+          <td>Better cart, touch targets, sticky nav</td>
+          <td><span class="impact-high">High</span></td>
+          <td>Navigation &amp; Accessibility up</td>
+        </tr>
+        <tr>
+          <td><strong>3. Pickup Slots</strong></td>
+          <td>Schedule-based order fulfillment</td>
+          <td><span class="impact-high">High</span></td>
+          <td>New business feature</td>
+        </tr>
+        <tr>
+          <td><strong>4. Code Quality</strong></td>
+          <td>Error handling, code cleanup</td>
+          <td><span class="impact-medium">Low</span></td>
+          <td>Code Quality: 8.5 &rarr; 9.5</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- What's Already Done -->
+  <div class="section">
+    <div class="section-title">Recently Completed</div>
+    <div class="callout-box">
+      <ul>
+        <li>Guest checkout (no account required to order)</li>
+        <li>Admin product variant management (drag-and-drop reorder, availability toggles, inventory tracking)</li>
+        <li>Content Security Policy hardening</li>
+        <li>Glass morphism design treatment across all pages</li>
+        <li>Visual calendar for menu schedule management</li>
+        <li>CSS cache busting for instant style updates on deploy</li>
+      </ul>
+    </div>
+  </div>
+
+</div>
+
+<!-- Footer -->
+<div class="footer">
+  <div class="footer-left">
+    <strong>Prepared by OphidianAI</strong><br>
+    eric.lefler@ophidianai.com
+  </div>
+  <div class="footer-right">
+    <a href="https://ophidianai.com">ophidianai.com</a>
+  </div>
+</div>
+
+</body>
+</html>
