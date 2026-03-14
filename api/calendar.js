@@ -11,8 +11,8 @@ export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', allowedOrigin);
   res.setHeader('Cache-Control', 'public, s-maxage=300, stale-while-revalidate=600');
 
-  const apiKey = process.env.GOOGLE_CALENDAR_API_KEY;
-  const calendarId = process.env.GOOGLE_CALENDAR_ID;
+  const apiKey = (process.env.GOOGLE_CALENDAR_API_KEY || '').trim();
+  const calendarId = (process.env.GOOGLE_CALENDAR_ID || '').trim();
 
   if (!apiKey || !calendarId) {
     return res.status(500).json({ error: 'Calendar not configured' });
@@ -38,8 +38,6 @@ export default async function handler(req, res) {
   });
 
   const url = `https://www.googleapis.com/calendar/v3/calendars/${encodeURIComponent(calendarId)}/events?${params}`;
-  console.log('Calendar API URL:', url);
-
   try {
     const response = await fetch(url);
     const text = await response.text();
