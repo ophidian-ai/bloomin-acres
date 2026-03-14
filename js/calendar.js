@@ -1,97 +1,72 @@
 /* ============================================================
    js/calendar.js — Bloomin' Acres Market Schedule Calendar
-   Vanilla JS port of Point of Hope Church EventsSection
+   Fetches events from Christina's Google Calendar via /api/calendar
    ============================================================ */
 (function () {
   'use strict';
 
   var FARMSTAND_ADDRESS = '3650 N State Road 9, Hope, IN 47246';
-  var DAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
   var today = new Date();
   var currentMonth = today.getMonth();
   var currentYear = today.getFullYear();
   var selectedDay = null;
+  var eventsCache = {}; // keyed by 'YYYY-M' → { dayNum: [event, …] }
 
-  /* ── Event generator ──────────────────────────────────── */
-  function getEventsForDate(date) {
-    var events = [];
-    var day = date.getDay(); // 0=Sun … 6=Sat
-
-    // Tues, Wed, Thu — Farmstand Open 10a–6p
-    if (day >= 2 && day <= 4) {
-      events.push({
-        name: 'Farmstand Open',
-        startTime: '10:00 AM',
-        endTime: '6:00 PM',
-        description: 'Stop by for fresh sourdough, seasonal produce, and baked goods straight from our kitchen and garden.',
-        color: 'sage',
-      });
-    }
-
-    // Friday — shorter hours 2p–6p
-    if (day === 5) {
-      events.push({
-        name: 'Friday Hours',
-        startTime: '2:00 PM',
-        endTime: '6:00 PM',
-        description: 'We open a little later on Fridays — swing by after lunch for fresh bread and weekend provisions.',
-        color: 'wheat',
-      });
-    }
-
-    // Saturday — Market Day 4p–6p (market season: Apr–Oct)
-    if (day === 6) {
-      var month = date.getMonth();
-      if (month >= 3 && month <= 9) {
-        events.push({
-          name: 'Market Day',
-          startTime: '4:00 PM',
-          endTime: '6:00 PM',
-          description: 'Saturday market hours during growing season. Grab the best of the week before it\'s gone!',
-          color: 'orange',
-        });
-      }
-    }
-
-    return events;
+  /* ── Google Calendar color ID → brand color ─────────── */
+  var COLOR_MAP = {
+    '2': 'sage', '10': 'sage',       // Sage, Basil
+    '5': 'wheat', '6': 'wheat',      // Banana, Tangerine
+    '4': 'orange', '11': 'orange',   // Flamingo, Tomato
+  };
+  function mapColor(colorId) {
+    return COLOR_MAP[colorId] || 'sage';
   }
 
-  /* ── Google Calendar URL builder ───────────────────────── */
-  function googleCalendarUrl(date, event) {
+  /* ── Time formatting ────────────────────────────────── */
+  function formatTime(isoStr) {
+    var d = new Date(isoStr);
+    var h = d.getHours();
+    var m = d.getMinutes();
+    var ampm = h >= 12 ? 'PM' : 'AM';
+    h = h % 12 || 12;
+    return h + ':' + String(m).padStart(2, '0') + ' ' + ampm;
+  }
+
+  /* ── Google Calendar URL builder ───────────────────── */
+  function googleCalendarUrl(event) {
     function pad(n) { return String(n).padStart(2, '0'); }
-    function parseTime(str) {
-      var parts = str.split(' ');
-      var hm = parts[0].split(':');
-      var h = parseInt(hm[0], 10);
-      var m = parseInt(hm[1], 10);
-      if (parts[1] === 'PM' && h !== 12) h += 12;
-      if (parts[1] === 'AM' && h === 12) h = 0;
-      return { h: h, m: m };
+
+    if (event.allDay) {
+      var sd = new Date(event.startDate + 'T00:00:00');
+      var ed = new Date(event.endDate + 'T00:00:00');
+      var dtStart = sd.getFullYear() + pad(sd.getMonth() + 1) + pad(sd.getDate());
+      var dtEnd = ed.getFullYear() + pad(ed.getMonth() + 1) + pad(ed.getDate());
+    } else {
+      var s = new Date(event.startDate);
+      var e = new Date(event.endDate);
+      var dtStart = s.getFullYear() + pad(s.getMonth() + 1) + pad(s.getDate()) +
+        'T' + pad(s.getHours()) + pad(s.getMinutes()) + '00';
+      var dtEnd = e.getFullYear() + pad(e.getMonth() + 1) + pad(e.getDate()) +
+        'T' + pad(e.getHours()) + pad(e.getMinutes()) + '00';
     }
-    var s = parseTime(event.startTime);
-    var e = parseTime(event.endTime);
-    var y = date.getFullYear();
-    var mo = pad(date.getMonth() + 1);
-    var d = pad(date.getDate());
-    var dtStart = y + mo + d + 'T' + pad(s.h) + pad(s.m) + '00';
-    var dtEnd   = y + mo + d + 'T' + pad(e.h) + pad(e.m) + '00';
+
     var params = new URLSearchParams({
       action: 'TEMPLATE',
-      text: event.name + ' — Bloomin\' Acres',
+      text: event.name + ' \u2014 Bloomin\' Acres',
       dates: dtStart + '/' + dtEnd,
-      details: event.description,
-      location: FARMSTAND_ADDRESS,
+      details: event.description || '',
+      location: event.location || FARMSTAND_ADDRESS,
       ctz: 'America/Indiana/Indianapolis',
     });
     return 'https://calendar.google.com/calendar/render?' + params.toString();
   }
 
-  /* ── Color helpers ────────────────────────────────────── */
+  /* ── Color helpers ──────────────────────────────────── */
   function dotClass(color) { return 'cal-dot cal-dot-' + color; }
   function badgeClass(color) { return 'cal-event-badge cal-badge-' + color; }
 
-  /* ── DOM references ───────────────────────────────────── */
+  /* ── DOM references ─────────────────────────────────── */
   var monthLabel = document.getElementById('cal-month-label');
   var grid = document.getElementById('cal-grid');
   var gridWrap = document.getElementById('cal-grid-wrap');
@@ -100,21 +75,66 @@
   var prevBtn = document.getElementById('cal-prev');
   var nextBtn = document.getElementById('cal-next');
 
-  if (!monthLabel || !grid) return; // calendar section not on page
+  if (!monthLabel || !grid) return;
 
-  /* ── Render month label ───────────────────────────────── */
+  /* ── Fetch events from API ──────────────────────────── */
+  function fetchEvents(year, month, callback) {
+    var cacheKey = year + '-' + month;
+    if (eventsCache[cacheKey]) {
+      callback(eventsCache[cacheKey]);
+      return;
+    }
+
+    fetch('/api/calendar?year=' + year + '&month=' + month)
+      .then(function (res) { return res.json(); })
+      .then(function (data) {
+        var byDay = {};
+        (data.events || []).forEach(function (ev) {
+          var dateStr = ev.allDay ? ev.startDate : ev.startDate;
+          var d = new Date(dateStr);
+          var dayNum = d.getDate();
+          // Only include events that actually fall in the requested month
+          if (d.getMonth() !== month || d.getFullYear() !== year) return;
+          if (!byDay[dayNum]) byDay[dayNum] = [];
+          byDay[dayNum].push({
+            name: ev.name,
+            startTime: ev.allDay ? 'All Day' : formatTime(ev.startDate),
+            endTime: ev.allDay ? '' : formatTime(ev.endDate),
+            description: ev.description,
+            location: ev.location,
+            color: mapColor(ev.color),
+            allDay: ev.allDay,
+            startDate: ev.startDate,
+            endDate: ev.endDate,
+          });
+        });
+        eventsCache[cacheKey] = byDay;
+        callback(byDay);
+      })
+      .catch(function () {
+        callback({});
+      });
+  }
+
+  /* ── Get events for a day from cache ────────────────── */
+  function getEventsForDay(dayNum) {
+    var cacheKey = currentYear + '-' + currentMonth;
+    var byDay = eventsCache[cacheKey] || {};
+    return byDay[dayNum] || [];
+  }
+
+  /* ── Render month label ─────────────────────────────── */
   function updateLabel() {
     var d = new Date(currentYear, currentMonth);
     monthLabel.textContent = d.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
   }
 
-  /* ── Render desktop grid ──────────────────────────────── */
+  /* ── Render desktop grid ────────────────────────────── */
   function renderGrid() {
     grid.textContent = '';
     var firstDay = new Date(currentYear, currentMonth, 1).getDay();
     var daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
 
-    // Empty cells before first day
     for (var i = 0; i < firstDay; i++) {
       var empty = document.createElement('div');
       empty.className = 'cal-cell cal-cell-empty';
@@ -122,15 +142,13 @@
     }
 
     for (var d = 1; d <= daysInMonth; d++) {
-      var date = new Date(currentYear, currentMonth, d);
-      var events = getEventsForDate(date);
+      var events = getEventsForDay(d);
       var cell = document.createElement('button');
       cell.type = 'button';
       cell.className = 'cal-cell';
       if (events.length > 0) cell.classList.add('cal-cell-has-events');
       if (d === selectedDay) cell.classList.add('cal-cell-selected');
 
-      // Day number
       var numEl = document.createElement('span');
       numEl.className = 'cal-day-num';
       if (today.getFullYear() === currentYear && today.getMonth() === currentMonth && today.getDate() === d) {
@@ -139,7 +157,6 @@
       numEl.textContent = d;
       cell.appendChild(numEl);
 
-      // Event dots
       if (events.length > 0) {
         var dotsWrap = document.createElement('div');
         dotsWrap.className = 'cal-dots';
@@ -152,10 +169,9 @@
         cell.appendChild(dotsWrap);
       }
 
-      // Click handler
       (function (day) {
         cell.addEventListener('click', function () {
-          if (getEventsForDate(new Date(currentYear, currentMonth, day)).length === 0) return;
+          if (getEventsForDay(day).length === 0) return;
           selectedDay = selectedDay === day ? null : day;
           renderGrid();
           renderEventDetail();
@@ -165,7 +181,6 @@
       grid.appendChild(cell);
     }
 
-    // Pad remaining cells to complete row
     var totalCells = firstDay + daysInMonth;
     var remainder = totalCells % 7;
     if (remainder > 0) {
@@ -177,15 +192,14 @@
     }
   }
 
-  /* ── Render event detail cards ─────────────────────────── */
+  /* ── Render event detail cards ──────────────────────── */
   function renderEventDetail() {
     eventDetail.textContent = '';
     if (selectedDay === null) {
       eventDetail.classList.add('cal-hidden');
       return;
     }
-    var date = new Date(currentYear, currentMonth, selectedDay);
-    var events = getEventsForDate(date);
+    var events = getEventsForDay(selectedDay);
     if (events.length === 0) {
       eventDetail.classList.add('cal-hidden');
       return;
@@ -246,7 +260,7 @@
       hand1.setAttribute('points', '12 6 12 12 16 14');
       clockSvg.append(circle, hand1);
       var timeText = document.createElement('span');
-      timeText.textContent = ev.startTime + ' \u2013 ' + ev.endTime;
+      timeText.textContent = ev.allDay ? 'All Day' : (ev.startTime + ' \u2013 ' + ev.endTime);
       timeRow.append(clockSvg, timeText);
 
       var locRow = document.createElement('div');
@@ -261,22 +275,24 @@
       pinCircle.setAttribute('cx', '12'); pinCircle.setAttribute('cy', '10'); pinCircle.setAttribute('r', '3');
       pinSvg.append(path1, pinCircle);
       var locText = document.createElement('span');
-      locText.textContent = FARMSTAND_ADDRESS;
+      locText.textContent = ev.location || FARMSTAND_ADDRESS;
       locRow.append(pinSvg, locText);
 
       meta.append(timeRow, locRow);
       card.appendChild(meta);
 
       // Description
-      var desc = document.createElement('p');
-      desc.className = 'cal-event-desc';
-      desc.textContent = ev.description;
-      card.appendChild(desc);
+      if (ev.description) {
+        var desc = document.createElement('p');
+        desc.className = 'cal-event-desc';
+        desc.textContent = ev.description;
+        card.appendChild(desc);
+      }
 
       // Add to Google Calendar link
       var gcalLink = document.createElement('a');
       gcalLink.className = 'cal-event-gcal';
-      gcalLink.href = googleCalendarUrl(date, ev);
+      gcalLink.href = googleCalendarUrl(ev);
       gcalLink.target = '_blank';
       gcalLink.rel = 'noopener noreferrer';
       var calSvg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
@@ -305,18 +321,18 @@
     });
   }
 
-  /* ── Render mobile list ───────────────────────────────── */
+  /* ── Render mobile list ─────────────────────────────── */
   function renderMobileList() {
     mobileList.textContent = '';
     var daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
 
     var hasDays = false;
     for (var d = 1; d <= daysInMonth; d++) {
-      var date = new Date(currentYear, currentMonth, d);
-      var events = getEventsForDate(date);
+      var events = getEventsForDay(d);
       if (events.length === 0) continue;
       hasDays = true;
 
+      var date = new Date(currentYear, currentMonth, d);
       var dayEl = document.createElement('div');
       dayEl.className = 'cal-mobile-day';
 
@@ -345,7 +361,6 @@
       btn.append(dots, label, count);
       dayEl.appendChild(btn);
 
-      // Expandable events
       var eventsWrap = document.createElement('div');
       eventsWrap.className = 'cal-mobile-events';
 
@@ -360,20 +375,22 @@
         timeLine.style.marginTop = '.35rem';
         timeLine.style.fontSize = '.82rem';
         timeLine.style.color = '#6B4C35';
-        timeLine.textContent = ev.startTime + ' \u2013 ' + ev.endTime;
+        timeLine.textContent = ev.allDay ? 'All Day' : (ev.startTime + ' \u2013 ' + ev.endTime);
         eventsWrap.appendChild(timeLine);
 
-        var descP = document.createElement('p');
-        descP.className = 'cal-event-desc';
-        descP.style.marginTop = '.25rem';
-        descP.textContent = ev.description;
-        eventsWrap.appendChild(descP);
+        if (ev.description) {
+          var descP = document.createElement('p');
+          descP.className = 'cal-event-desc';
+          descP.style.marginTop = '.25rem';
+          descP.textContent = ev.description;
+          eventsWrap.appendChild(descP);
+        }
 
         var gcal = document.createElement('a');
         gcal.className = 'cal-event-gcal';
         gcal.style.marginTop = '.5rem';
         gcal.style.marginBottom = '.75rem';
-        gcal.href = googleCalendarUrl(date, ev);
+        gcal.href = googleCalendarUrl(ev);
         gcal.target = '_blank';
         gcal.rel = 'noopener noreferrer';
         gcal.textContent = 'Add to Calendar';
@@ -382,7 +399,6 @@
 
       dayEl.appendChild(eventsWrap);
 
-      // Toggle accordion
       btn.addEventListener('click', (function (el) {
         return function () { el.classList.toggle('open'); };
       })(dayEl));
@@ -396,21 +412,23 @@
       none.style.padding = '2rem 0';
       none.style.color = '#6B4C35';
       none.style.fontStyle = 'italic';
-      none.textContent = 'No market days this month.';
+      none.textContent = 'No events this month.';
       mobileList.appendChild(none);
     }
   }
 
-  /* ── Full render ──────────────────────────────────────── */
+  /* ── Full render (fetch then draw) ──────────────────── */
   function render() {
     updateLabel();
     selectedDay = null;
-    renderGrid();
-    renderEventDetail();
-    renderMobileList();
+    fetchEvents(currentYear, currentMonth, function () {
+      renderGrid();
+      renderEventDetail();
+      renderMobileList();
+    });
   }
 
-  /* ── Month navigation ─────────────────────────────────── */
+  /* ── Month navigation ───────────────────────────────── */
   prevBtn.addEventListener('click', function () {
     var d = new Date(currentYear, currentMonth - 1, 1);
     currentMonth = d.getMonth();
@@ -424,6 +442,6 @@
     render();
   });
 
-  /* ── Initial render ───────────────────────────────────── */
+  /* ── Initial render ─────────────────────────────────── */
   render();
 })();
