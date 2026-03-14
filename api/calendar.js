@@ -38,24 +38,18 @@ export default async function handler(req, res) {
   });
 
   const url = `https://www.googleapis.com/calendar/v3/calendars/${encodeURIComponent(calendarId)}/events?${params}`;
+  console.log('Calendar API URL:', url);
 
   try {
-    const https = await import('https');
-    const data = await new Promise((resolve, reject) => {
-      https.default.get(url, (resp) => {
-        let body = '';
-        resp.on('data', (chunk) => { body += chunk; });
-        resp.on('end', () => {
-          if (resp.statusCode !== 200) {
-            reject(new Error('Google API returned ' + resp.statusCode + ': ' + body));
-            return;
-          }
-          try { resolve(JSON.parse(body)); }
-          catch (e) { reject(e); }
-        });
-      }).on('error', reject);
-    });
+    const response = await fetch(url);
+    const text = await response.text();
 
+    if (!response.ok) {
+      console.error('Google Calendar API error:', response.status, text);
+      return res.status(502).json({ error: 'Google API error', status: response.status, detail: text });
+    }
+
+    const data = JSON.parse(text);
     const events = (data.items || []).map((item) => {
       const isAllDay = !!item.start.date;
       return {
