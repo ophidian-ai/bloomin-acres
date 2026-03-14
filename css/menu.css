@@ -350,3 +350,84 @@ body {
 /* ── Footer — push to viewport bottom ─────────────────── */
 .site-footer { margin-top: auto; }
 .page-wrap { flex: 1 0 auto; }
+
+/* ══════════════════════════════════════════════════════════
+   Print Mode — menu.html?mode=print
+   Clean menu for PDF / image export (no interactive chrome)
+   ══════════════════════════════════════════════════════════ */
+
+/* ── Download toolbar (fixed at top) ─────────────────── */
+.print-toolbar {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 9999;
+  display: flex; justify-content: center; gap: .75rem;
+  padding: .75rem 1rem;
+  background: rgba(44,24,16,.92);
+  -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid rgba(237,163,57,.25);
+}
+.print-toolbar-btn {
+  display: inline-flex; align-items: center; gap: .4rem;
+  padding: .5rem 1.25rem;
+  background: rgba(237,163,57,.15);
+  border: 1px solid rgba(237,163,57,.4);
+  border-radius: 6px;
+  color: var(--farm-cream, #faf0e6);
+  font-family: 'DM Sans', sans-serif;
+  font-size: .82rem; font-weight: 600;
+  letter-spacing: .04em;
+  cursor: pointer;
+  transition: background .2s, border-color .2s;
+}
+.print-toolbar-btn:hover {
+  background: rgba(237,163,57,.25);
+  border-color: rgba(237,163,57,.6);
+}
+.print-toolbar-btn:disabled {
+  opacity: .5; cursor: wait;
+}
+
+/* ── Print mode body adjustments ──────────────────────── */
+body.print-mode .page-wrap {
+  margin-top: 5rem; /* make room for fixed toolbar */
+}
+body.print-mode .nav-toggle,
+body.print-mode .nav-sidebar,
+body.print-mode .nav-overlay,
+body.print-mode .site-footer,
+body.print-mode .floating-cart-btn,
+body.print-mode .cart-panel,
+body.print-mode .cart-overlay,
+body.print-mode .guest-modal-overlay,
+body.print-mode #toast { display: none !important; }
+
+/* ── Print mode: variations expanded inline ───────────── */
+body.print-mode .print-item-parent .item-name {
+  font-weight: 700;
+}
+body.print-mode .print-variation-row {
+  padding-left: 1.25rem;
+}
+body.print-mode .print-variation-row .item-name {
+  font-size: .82rem;
+}
+
+/* ── Print mode: @media print hides toolbar ───────────── */
+@media print {
+  .print-toolbar { display: none !important; }
+  body.print-mode .page-wrap { margin-top: 0; }
+  body.print-mode {
+    background-image: none;
+    background-color: #fff;
+  }
+  .menu-card {
+    box-shadow: none;
+    border-radius: 0;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+  .template-body {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+}

@@ -1,5 +1,19 @@
     const _qp = new URLSearchParams(window.location.search);
     const _isDraft = _qp.get('preview') === 'draft';
+    const _isPrintMode = _qp.get('mode') === 'print';
+
+    // Print mode: hide all interactive chrome immediately
+    if (_isPrintMode) {
+      document.body.classList.add('print-mode');
+      ['nav-toggle', 'nav-sidebar', 'nav-overlay', 'floating-cart-btn',
+       'cart-panel', 'cart-overlay', 'guest-modal-overlay'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.style.display = 'none';
+      });
+      const footer = document.querySelector('.site-footer');
+      if (footer) footer.style.display = 'none';
+    }
+
     if (_qp.get('from') === 'admin' || _isDraft) {
       const bar = document.getElementById('preview-bar');
       if (bar) {
@@ -460,6 +474,60 @@
           const currency = product?.currency || 'usd';
           const fmtPrice = cents => new Intl.NumberFormat('en-US', { style: 'currency', currency }).format(cents / 100);
 
+          // ── Print mode: clean rows, variations expanded inline, no buttons ──
+          if (_isPrintMode) {
+            if (availableVariations.length === 0) {
+              const row = document.createElement('div');
+              row.className = 'menu-item';
+              const itemRow = document.createElement('div');
+              itemRow.className = 'menu-item-row';
+              const nameEl = document.createElement('span');
+              nameEl.className = 'item-name';
+              nameEl.textContent = name;
+              const dotsEl = document.createElement('span');
+              dotsEl.className = 'item-dots';
+              dotsEl.setAttribute('aria-hidden', 'true');
+              const priceEl = document.createElement('span');
+              priceEl.className = 'item-price';
+              priceEl.textContent = price;
+              itemRow.append(nameEl, dotsEl, priceEl);
+              row.appendChild(itemRow);
+              content.appendChild(row);
+            } else {
+              const parentRow = document.createElement('div');
+              parentRow.className = 'menu-item print-item-parent';
+              const parentItemRow = document.createElement('div');
+              parentItemRow.className = 'menu-item-row';
+              const parentName = document.createElement('span');
+              parentName.className = 'item-name';
+              parentName.textContent = name;
+              parentItemRow.appendChild(parentName);
+              parentRow.appendChild(parentItemRow);
+              content.appendChild(parentRow);
+              availableVariations.forEach(v => {
+                const total = (baseAmount || 0) + (v.price_delta || 0);
+                const vRow = document.createElement('div');
+                vRow.className = 'menu-item print-variation-row';
+                const vItemRow = document.createElement('div');
+                vItemRow.className = 'menu-item-row';
+                const vNameEl = document.createElement('span');
+                vNameEl.className = 'item-name';
+                vNameEl.textContent = v.name;
+                const vDots = document.createElement('span');
+                vDots.className = 'item-dots';
+                vDots.setAttribute('aria-hidden', 'true');
+                const vPriceEl = document.createElement('span');
+                vPriceEl.className = 'item-price';
+                vPriceEl.textContent = fmtPrice(total);
+                vItemRow.append(vNameEl, vDots, vPriceEl);
+                vRow.appendChild(vItemRow);
+                content.appendChild(vRow);
+              });
+            }
+            return; // skip interactive elements
+          }
+
+          // ── Normal mode: full interactive rendering ──
           // Build variation dropdown HTML — cart buttons always, fav buttons only for logged-in
           const variationDropdownHtml = availableVariations.length > 0 ? `
             <div class="variation-dropdown" id="var-dd-${escHtml(pid)}">
@@ -575,9 +643,70 @@
         if ((idx + 1) % 3 === 0 && idx < sections.length - 1) {
           const sep = document.createElement('div');
           sep.className = 'wheat-sep-wrap';
-          sep.innerHTML = '<img src="brand-assets/wheat-seperater.webp" class="wheat-sep" alt="" />';
+          const sepImg = document.createElement('img');
+          sepImg.src = 'brand-assets/wheat-seperater.webp';
+          sepImg.className = 'wheat-sep';
+          sepImg.alt = '';
+          sep.appendChild(sepImg);
           content.appendChild(sep);
         }
 
       });
+
+      // ── Print mode: add download toolbar ──
+      if (_isPrintMode) {
+        // Load html2canvas for image export
+        const h2cScript = document.createElement('script');
+        h2cScript.src = 'https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js';
+        document.head.appendChild(h2cScript);
+
+        const toolbar = document.createElement('div');
+        toolbar.className = 'print-toolbar';
+
+        const pdfBtn = document.createElement('button');
+        pdfBtn.type = 'button';
+        pdfBtn.className = 'print-toolbar-btn';
+        pdfBtn.textContent = 'Save as PDF';
+
+        const imgBtn = document.createElement('button');
+        imgBtn.type = 'button';
+        imgBtn.className = 'print-toolbar-btn';
+        imgBtn.textContent = 'Save as Image';
+
+        toolbar.append(pdfBtn, imgBtn);
+        document.body.prepend(toolbar);
+
+        pdfBtn.addEventListener('click', () => {
+          toolbar.style.display = 'none';
+          setTimeout(() => {
+            window.print();
+            window.addEventListener('afterprint', () => { toolbar.style.display = ''; }, { once: true });
+          }, 100);
+        });
+
+        imgBtn.addEventListener('click', async () => {
+          imgBtn.disabled = true;
+          imgBtn.textContent = 'Generating...';
+          toolbar.style.display = 'none';
+          try {
+            while (typeof html2canvas === 'undefined') await new Promise(r => setTimeout(r, 100));
+            const menuCard = document.querySelector('.menu-card');
+            const canvas = await html2canvas(menuCard, {
+              scale: 2,
+              useCORS: true,
+              backgroundColor: null,
+              logging: false,
+            });
+            const link = document.createElement('a');
+            link.download = 'bloomin-acres-menu.png';
+            link.href = canvas.toDataURL('image/png');
+            link.click();
+          } catch (err) {
+            alert('Could not generate image: ' + err.message);
+          }
+          toolbar.style.display = '';
+          imgBtn.disabled = false;
+          imgBtn.textContent = 'Save as Image';
+        });
+      }
     })();
