@@ -313,6 +313,15 @@ body::after {
   font-family: var(--font-display); font-size: 3.5rem; line-height: 1;
   color: var(--wheat-gold); opacity: .6; margin-bottom: -.5rem;
 }
+.testimonial-stars {
+  display: flex; gap: .15rem; margin-bottom: .5rem;
+}
+.testimonial-star {
+  font-size: 1.1rem; color: var(--cream-dark);
+}
+.testimonial-star.filled {
+  color: var(--wheat-gold);
+}
 .testimonial-quote {
   font-family: var(--font-serif); font-size: 1rem; line-height: 1.75;
   color: var(--earth-brown); flex: 1; margin-bottom: 1.5rem;

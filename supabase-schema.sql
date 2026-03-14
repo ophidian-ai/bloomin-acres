@@ -274,7 +274,11 @@ create table if not exists testimonials (
   author_name  text not null,
   author_title text default '',
   image_url    text default '',
+  rating       integer default 5 check (rating >= 1 and rating <= 5),
   sort_order   integer not null default 0,
+  rating       integer default 5 check (rating >= 1 and rating <= 5),
+  submitted_by uuid references auth.users on delete set null,
+  status       text not null default 'approved' check (status in ('pending', 'approved', 'rejected')),
   visible      boolean not null default true,
   created_at   timestamptz default now(),
   updated_at   timestamptz default now()
@@ -282,6 +286,15 @@ create table if not exists testimonials (
 alter table testimonials enable row level security;
 create policy "Public read visible testimonials"
   on testimonials for select using (visible = true);
+create policy "Users read own testimonials"
+  on testimonials for select using (auth.uid() = submitted_by);
+create policy "Users submit testimonials"
+  on testimonials for insert with check (
+    auth.uid() is not null
+    and auth.uid() = submitted_by
+    and status = 'pending'
+    and visible = false
+  );
 create policy "Admins manage testimonials"
   on testimonials for all using (
     exists (select 1 from admins where user_id = auth.uid())

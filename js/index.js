@@ -47,6 +47,18 @@
         quoteIcon.textContent = '\u201C';
         card.appendChild(quoteIcon);
 
+        if (t.rating) {
+          const stars = document.createElement('div');
+          stars.className = 'testimonial-stars';
+          for (var s = 0; s < 5; s++) {
+            const star = document.createElement('span');
+            star.className = s < t.rating ? 'testimonial-star filled' : 'testimonial-star';
+            star.textContent = '\u2605';
+            stars.appendChild(star);
+          }
+          card.appendChild(stars);
+        }
+
         const quote = document.createElement('p');
         quote.className = 'testimonial-quote';
         quote.textContent = t.quote;

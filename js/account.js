@@ -184,6 +184,15 @@
     document.querySelector('.dash-tab[data-panel="club"]')?.addEventListener('click', async () => {
       if (!clubLoaded) { clubLoaded = true; await loadClub(); }
     }, { once: true });
+
+    // Lazy-load reviews on first tab click
+    let reviewsLoaded = targetTab === 'reviews';
+    if (reviewsLoaded) await loadMyReviews();
+    document.querySelector('.dash-tab[data-panel="reviews"]')?.addEventListener('click', async () => {
+      if (!reviewsLoaded) { reviewsLoaded = true; await loadMyReviews(); }
+    }, { once: true });
+
+    initReviewForm();
   }
 
   // ── Load Stripe products ──────────────────────────────────────────────────
@@ -917,6 +926,115 @@
     const { url, error } = await r.json();
     if (error || !url) { showToast(error || 'Checkout failed', true); return; }
     window.location.href = url;
+  }
+
+  // ── Reviews ──────────────────────────────────────────────────────────────
+  let selectedRating = 0;
+
+  function initReviewForm() {
+    const starsWrap = document.getElementById('review-stars-input');
+    if (!starsWrap) return;
+
+    const starBtns = starsWrap.querySelectorAll('.review-star-btn');
+    starBtns.forEach(btn => {
+      btn.addEventListener('mouseenter', () => {
+        const val = parseInt(btn.dataset.value, 10);
+        starBtns.forEach(b => {
+          b.classList.toggle('active', parseInt(b.dataset.value, 10) <= val);
+        });
+      });
+      btn.addEventListener('click', () => {
+        selectedRating = parseInt(btn.dataset.value, 10);
+        starBtns.forEach(b => {
+          b.classList.toggle('selected', parseInt(b.dataset.value, 10) <= selectedRating);
+        });
+      });
+    });
+    starsWrap.addEventListener('mouseleave', () => {
+      starBtns.forEach(b => {
+        b.classList.toggle('active', parseInt(b.dataset.value, 10) <= selectedRating);
+      });
+    });
+
+    document.getElementById('btn-submit-review')?.addEventListener('click', submitReview);
+  }
+
+  async function submitReview() {
+    const quote = document.getElementById('review-quote').value.trim();
+    if (!quote) { showToast('Please write a review', true); return; }
+    if (selectedRating === 0) { showToast('Please select a star rating', true); return; }
+
+    // Get user's name from profile
+    const { data: profile } = await sb.from('profiles').select('first_name, last_name').eq('user_id', currentUser.id).maybeSingle();
+    const authorName = profile
+      ? ((profile.first_name || '') + ' ' + (profile.last_name || '')).trim() || 'Anonymous'
+      : 'Anonymous';
+
+    const { error } = await sb.from('testimonials').insert({
+      quote,
+      author_name: authorName,
+      rating: selectedRating,
+      status: 'pending',
+      visible: false,
+      submitted_by: currentUser.id,
+      sort_order: 999,
+    });
+
+    if (error) { showToast('Failed to submit: ' + error.message, true); return; }
+
+    document.getElementById('review-quote').value = '';
+    selectedRating = 0;
+    document.querySelectorAll('.review-star-btn').forEach(b => {
+      b.classList.remove('selected', 'active');
+    });
+    showToast('Review submitted! It will appear once approved.');
+    await loadMyReviews();
+  }
+
+  async function loadMyReviews() {
+    const list = document.getElementById('my-reviews-list');
+    if (!list) return;
+
+    const { data, error } = await sb.from('testimonials')
+      .select('*')
+      .eq('submitted_by', currentUser.id)
+      .order('created_at', { ascending: false });
+
+    list.textContent = '';
+    if (error || !data || data.length === 0) {
+      const empty = document.createElement('p');
+      empty.className = 'review-empty';
+      empty.textContent = "You haven't submitted any reviews yet.";
+      list.appendChild(empty);
+      return;
+    }
+
+    data.forEach(r => {
+      const card = document.createElement('div');
+      card.className = 'review-my-card';
+
+      const stars = document.createElement('div');
+      stars.className = 'review-my-stars';
+      for (let i = 0; i < 5; i++) {
+        const s = document.createElement('span');
+        s.textContent = '\u2605';
+        s.className = i < r.rating ? 'filled' : '';
+        stars.appendChild(s);
+      }
+      card.appendChild(stars);
+
+      const quote = document.createElement('p');
+      quote.className = 'review-my-quote';
+      quote.textContent = r.quote;
+      card.appendChild(quote);
+
+      const status = document.createElement('span');
+      status.className = 'review-status review-status-' + r.status;
+      status.textContent = r.status === 'approved' ? 'Published' : r.status === 'pending' ? 'Pending approval' : 'Not published';
+      card.appendChild(status);
+
+      list.appendChild(card);
+    });
   }
 
   init();

@@ -1507,11 +1507,25 @@ body::after {
   font-style: italic; color: rgba(255,255,255,.85);
   font-size: .92rem; line-height: 1.6; margin-bottom: .35rem;
 }
+.testimonial-admin-stars {
+  display: block; color: #EDA339; font-size: .9rem;
+  letter-spacing: .1rem; margin-bottom: .2rem;
+}
 .testimonial-admin-author {
   font-size: .82rem; color: rgba(255,255,255,.5);
+}
+.testimonials-form-row-3 {
+  grid-template-columns: 1fr 1fr auto;
+}
+@media (max-width: 600px) {
+  .testimonials-form-row-3 { grid-template-columns: 1fr; }
 }
 .testimonial-admin-actions {
   display: flex; gap: .5rem; flex-shrink: 0; align-self: center;
 }
 .btn-danger { color: #e57373 !important; }
 .btn-danger:hover { color: #ef5350 !important; }
+.testimonials-pending-section { margin-bottom: 2rem; }
+.testimonial-pending {
+  border-left: 3px solid #EDA339;
+}

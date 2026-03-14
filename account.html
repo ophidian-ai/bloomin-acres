@@ -185,6 +185,7 @@
     </button>
     <button class="dash-tab" data-panel="favorites">Favorites</button>
     <button class="dash-tab" data-panel="orders">Orders</button>
+    <button class="dash-tab" data-panel="reviews">Reviews</button>
     <button class="dash-tab" data-panel="profile">Profile</button>
     <button class="dash-tab" data-panel="club">
       <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>
@@ -213,6 +214,28 @@
     <!-- Orders panel -->
     <div class="dash-panel" id="panel-orders">
       <div id="orders-list"></div>
+    </div>
+
+    <!-- Reviews panel -->
+    <div class="dash-panel" id="panel-reviews">
+      <div class="review-form-section">
+        <h3>Leave a Review</h3>
+        <p class="review-form-desc">Share your experience with Bloomin' Acres!</p>
+        <div class="review-stars-input" id="review-stars-input">
+          <button type="button" class="review-star-btn" data-value="1">&#9733;</button>
+          <button type="button" class="review-star-btn" data-value="2">&#9733;</button>
+          <button type="button" class="review-star-btn" data-value="3">&#9733;</button>
+          <button type="button" class="review-star-btn" data-value="4">&#9733;</button>
+          <button type="button" class="review-star-btn" data-value="5">&#9733;</button>
+        </div>
+        <textarea id="review-quote" class="review-textarea" rows="4" placeholder="What did you love about your order?"></textarea>
+        <button type="button" class="review-submit-btn" id="btn-submit-review">Submit Review</button>
+        <p class="review-note">Your review will appear on the site once approved.</p>
+      </div>
+      <div class="review-my-reviews">
+        <h3>My Reviews</h3>
+        <div id="my-reviews-list"></div>
+      </div>
     </div>
 
     <!-- Profile panel -->

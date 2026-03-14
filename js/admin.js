@@ -1223,11 +1223,16 @@
     let testimonials = [];
     let testimonialsLoaded = false;
 
+    let pendingReviews = [];
+
     async function loadTestimonials() {
       const { data, error } = await sb.from('testimonials').select('*').order('sort_order');
       if (error) { showToast('Failed to load testimonials', true); return; }
-      testimonials = data || [];
+      const all = data || [];
+      testimonials = all.filter(t => t.status !== 'pending');
+      pendingReviews = all.filter(t => t.status === 'pending');
       renderTestimonialsList();
+      renderPendingReviews();
     }
 
     function renderTestimonialsList() {
@@ -1279,6 +1284,12 @@
         q.className = 'testimonial-admin-quote';
         q.textContent = '\u201C' + t.quote + '\u201D';
         content.appendChild(q);
+        if (t.rating) {
+          const stars = document.createElement('span');
+          stars.className = 'testimonial-admin-stars';
+          stars.textContent = '\u2605'.repeat(t.rating) + '\u2606'.repeat(5 - t.rating);
+          content.appendChild(stars);
+        }
         const author = document.createElement('span');
         author.className = 'testimonial-admin-author';
         author.textContent = '\u2014 ' + t.author_name + (t.author_title ? ', ' + t.author_title : '');
@@ -1306,6 +1317,88 @@
         row.appendChild(actions);
         list.appendChild(row);
       });
+    }
+
+    function renderPendingReviews() {
+      const list = document.getElementById('testimonials-pending-list');
+      if (!list) return;
+      list.textContent = '';
+
+      if (pendingReviews.length === 0) {
+        const empty = document.createElement('div');
+        empty.className = 'empty-state';
+        empty.textContent = 'No pending reviews.';
+        list.appendChild(empty);
+        return;
+      }
+
+      pendingReviews.forEach(t => {
+        const row = document.createElement('div');
+        row.className = 'testimonial-admin-row testimonial-pending';
+
+        const content = document.createElement('div');
+        content.className = 'testimonial-admin-content';
+
+        if (t.rating) {
+          const stars = document.createElement('span');
+          stars.className = 'testimonial-admin-stars';
+          stars.textContent = '\u2605'.repeat(t.rating) + '\u2606'.repeat(5 - t.rating);
+          content.appendChild(stars);
+        }
+
+        const q = document.createElement('p');
+        q.className = 'testimonial-admin-quote';
+        q.textContent = '\u201C' + t.quote + '\u201D';
+        content.appendChild(q);
+
+        const author = document.createElement('span');
+        author.className = 'testimonial-admin-author';
+        author.textContent = '\u2014 ' + t.author_name + (t.author_title ? ', ' + t.author_title : '');
+        content.appendChild(author);
+
+        row.appendChild(content);
+
+        const actions = document.createElement('div');
+        actions.className = 'testimonial-admin-actions';
+
+        const approveBtn = document.createElement('button');
+        approveBtn.type = 'button';
+        approveBtn.className = 'btn-secondary btn-sm';
+        approveBtn.textContent = 'Approve';
+        approveBtn.addEventListener('click', () => approveReview(t.id));
+        actions.appendChild(approveBtn);
+
+        const rejectBtn = document.createElement('button');
+        rejectBtn.type = 'button';
+        rejectBtn.className = 'btn-ghost btn-sm btn-danger';
+        rejectBtn.textContent = 'Reject';
+        rejectBtn.addEventListener('click', () => rejectReview(t.id));
+        actions.appendChild(rejectBtn);
+
+        row.appendChild(actions);
+        list.appendChild(row);
+      });
+    }
+
+    async function approveReview(id) {
+      const { error } = await sb.from('testimonials').update({
+        status: 'approved',
+        visible: true,
+        sort_order: testimonials.length,
+      }).eq('id', id);
+      if (error) { showToast('Failed to approve', true); return; }
+      await loadTestimonials();
+      showToast('Review approved and published!');
+    }
+
+    async function rejectReview(id) {
+      const { error } = await sb.from('testimonials').update({
+        status: 'rejected',
+        visible: false,
+      }).eq('id', id);
+      if (error) { showToast('Failed to reject', true); return; }
+      await loadTestimonials();
+      showToast('Review rejected');
     }
 
     async function reorderTestimonial(fromIdx, toIdx) {
@@ -1337,6 +1430,7 @@
       const quote = document.getElementById('testimonial-quote').value.trim();
       const authorName = document.getElementById('testimonial-author').value.trim();
       const authorTitle = document.getElementById('testimonial-title').value.trim();
+      const rating = parseInt(document.getElementById('testimonial-rating').value, 10);
 
       if (!quote || !authorName) {
         showToast('Quote and name are required', true);
@@ -1347,6 +1441,7 @@
         quote,
         author_name: authorName,
         author_title: authorTitle,
+        rating,
         sort_order: testimonials.length,
         visible: true,
       });
@@ -1356,6 +1451,7 @@
       document.getElementById('testimonial-quote').value = '';
       document.getElementById('testimonial-author').value = '';
       document.getElementById('testimonial-title').value = '';
+      document.getElementById('testimonial-rating').value = '5';
       await loadTestimonials();
       showToast('Testimonial added!');
     });
