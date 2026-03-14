@@ -1219,6 +1219,154 @@
         <div class="insight-card"><div class="insight-value">${periodReferrals}</div><div class="insight-label">Referrals</div></div>`;
     }
 
+    // ── Download Menu as PDF ──────────────────────────────────────────────
+    document.getElementById('download-menu-btn')?.addEventListener('click', async () => {
+      const btn = document.getElementById('download-menu-btn');
+      btn.disabled = true;
+      btn.textContent = 'Preparing…';
+
+      try {
+        // Fetch product details (variations) from Supabase
+        const { data: detailsRows } = await sb
+          .from('product_details').select('stripe_product_id, variations');
+        const detailsMap = {};
+        (detailsRows || []).forEach(d => { detailsMap[d.stripe_product_id] = d; });
+
+        // Build product lookup from allProducts
+        const productMap = {};
+        allProducts.forEach(p => { productMap[p.id] = p; });
+
+        // Fetch schedule for date range
+        const { data: sched } = await sb
+          .from('menu_schedule').select('start_date,end_date').eq('id', 1).maybeSingle();
+        let scheduleText = '';
+        if (sched && (sched.start_date || sched.end_date)) {
+          const fmtDate = d => {
+            const [y, m, day] = d.split('-');
+            return new Date(y, parseInt(m) - 1, parseInt(day))
+              .toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+          };
+          if (sched.start_date && sched.end_date) scheduleText = `${fmtDate(sched.start_date)} – ${fmtDate(sched.end_date)}`;
+          else if (sched.start_date) scheduleText = `Starting ${fmtDate(sched.start_date)}`;
+          else scheduleText = `Through ${fmtDate(sched.end_date)}`;
+        }
+
+        // Build menu using DOM methods (all text set via textContent)
+        const printArea = document.getElementById('print-area');
+        printArea.className = 'print-area print-menu-active';
+        while (printArea.firstChild) printArea.removeChild(printArea.firstChild);
+
+        const menuEl = document.createElement('div');
+        menuEl.className = 'print-menu';
+
+        // Header
+        const header = document.createElement('div');
+        header.className = 'print-menu-header';
+        const logo = document.createElement('img');
+        logo.src = 'brand-assets/color-logo.png';
+        logo.alt = 'Bloomin\' Acres';
+        logo.className = 'print-menu-logo';
+        header.appendChild(logo);
+        const titleEl = document.createElement('div');
+        titleEl.className = 'print-menu-title';
+        titleEl.textContent = 'Menu';
+        header.appendChild(titleEl);
+        if (scheduleText) {
+          const datesEl = document.createElement('div');
+          datesEl.className = 'print-menu-dates';
+          datesEl.textContent = scheduleText;
+          header.appendChild(datesEl);
+        }
+        menuEl.appendChild(header);
+
+        // Sections
+        sections.forEach(sec => {
+          if (!sec.title.trim()) return;
+          const secEl = document.createElement('div');
+          secEl.className = 'print-menu-section';
+          const secTitle = document.createElement('div');
+          secTitle.className = 'print-menu-section-title';
+          secTitle.textContent = sec.title;
+          secEl.appendChild(secTitle);
+
+          // Sort items alphabetically by product name (same as public menu)
+          const sortedItems = [...sec.items].filter(i => i.stripe_product_id).sort((a, b) => {
+            const nameA = (productMap[a.stripe_product_id]?.name || '').toLowerCase();
+            const nameB = (productMap[b.stripe_product_id]?.name || '').toLowerCase();
+            return nameA.localeCompare(nameB);
+          });
+
+          sortedItems.forEach(item => {
+            const product = productMap[item.stripe_product_id];
+            if (!product) return;
+            const name = product.name;
+            const basePrice = product.price_formatted || '';
+            const baseAmount = product.unit_amount ?? null;
+            const currency = product.currency || 'usd';
+
+            const variations = (detailsMap[item.stripe_product_id]?.variations || [])
+              .filter(v => v.available !== false && (v.quantity === undefined || v.quantity > 0));
+
+            if (variations.length === 0) {
+              // Simple item — name .... price
+              const row = document.createElement('div');
+              row.className = 'print-menu-item';
+              const nameSpan = document.createElement('span');
+              nameSpan.className = 'print-menu-item-name';
+              nameSpan.textContent = name;
+              const dots = document.createElement('span');
+              dots.className = 'print-menu-item-dots';
+              const priceSpan = document.createElement('span');
+              priceSpan.className = 'print-menu-item-price';
+              priceSpan.textContent = basePrice;
+              row.append(nameSpan, dots, priceSpan);
+              secEl.appendChild(row);
+            } else {
+              // Item with variations — show parent name, then each variation indented
+              const parentRow = document.createElement('div');
+              parentRow.className = 'print-menu-item print-menu-item-parent';
+              const parentName = document.createElement('span');
+              parentName.className = 'print-menu-item-name';
+              parentName.textContent = name;
+              parentRow.appendChild(parentName);
+              secEl.appendChild(parentRow);
+
+              variations.forEach(v => {
+                const total = (baseAmount || 0) + (v.price_delta || 0);
+                const priceStr = formatPrice(total, currency);
+                const vRow = document.createElement('div');
+                vRow.className = 'print-menu-item print-menu-variation';
+                const vName = document.createElement('span');
+                vName.className = 'print-menu-item-name';
+                vName.textContent = v.name;
+                const vDots = document.createElement('span');
+                vDots.className = 'print-menu-item-dots';
+                const vPrice = document.createElement('span');
+                vPrice.className = 'print-menu-item-price';
+                vPrice.textContent = priceStr;
+                vRow.append(vName, vDots, vPrice);
+                secEl.appendChild(vRow);
+              });
+            }
+          });
+
+          menuEl.appendChild(secEl);
+        });
+
+        printArea.appendChild(menuEl);
+        window.print();
+
+        // Clean up after print dialog closes
+        printArea.className = 'print-area';
+        while (printArea.firstChild) printArea.removeChild(printArea.firstChild);
+      } catch (err) {
+        showToast('Could not generate menu: ' + err.message, true);
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> Download Menu`;
+      }
+    });
+
     // Download report
     document.getElementById('download-report-btn')?.addEventListener('click', () => {
       window.print();

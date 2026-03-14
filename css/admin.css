@@ -1469,4 +1469,100 @@ body::after {
   .print-size-3x4 .ticket-item { font-size: 8pt; }
   .print-size-3x5 .ticket-customer,
   .print-size-3x4 .ticket-customer { font-size: 9pt; }
+
+  /* ── Print Menu PDF ────────────────────────────────────── */
+  .print-menu-active {
+    display: block !important;
+  }
+
+  .print-menu {
+    font-family: 'Lora', 'Georgia', serif;
+    color: #2c1810;
+    background: #fff;
+    max-width: 7in;
+    margin: 0 auto;
+    padding: .5in .6in;
+  }
+
+  .print-menu-header {
+    text-align: center;
+    margin-bottom: 24pt;
+    padding-bottom: 12pt;
+    border-bottom: 2px solid #2c1810;
+  }
+
+  .print-menu-logo {
+    width: 80pt;
+    height: auto;
+    margin-bottom: 8pt;
+  }
+
+  .print-menu-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 22pt;
+    font-weight: 700;
+    letter-spacing: .04em;
+    text-transform: uppercase;
+    margin-bottom: 4pt;
+  }
+
+  .print-menu-dates {
+    font-size: 10pt;
+    color: #5a4a3a;
+    font-style: italic;
+  }
+
+  .print-menu-section {
+    margin-bottom: 16pt;
+    break-inside: avoid;
+  }
+
+  .print-menu-section-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 13pt;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: .06em;
+    border-bottom: 1px solid #c8a96e;
+    padding-bottom: 3pt;
+    margin-bottom: 6pt;
+    color: #2c1810;
+  }
+
+  .print-menu-item {
+    display: flex;
+    align-items: baseline;
+    font-size: 10.5pt;
+    line-height: 1.8;
+  }
+
+  .print-menu-item-name {
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+
+  .print-menu-item-dots {
+    flex: 1;
+    border-bottom: 1px dotted #c8a96e;
+    margin: 0 4pt;
+    min-width: 16pt;
+    position: relative;
+    top: -3pt;
+  }
+
+  .print-menu-item-price {
+    white-space: nowrap;
+    flex-shrink: 0;
+    font-weight: 500;
+  }
+
+  .print-menu-item-parent {
+    font-weight: 600;
+    margin-top: 4pt;
+  }
+
+  .print-menu-variation {
+    padding-left: 16pt;
+    font-weight: 400;
+  }
 }
