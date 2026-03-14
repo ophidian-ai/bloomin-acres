@@ -13,14 +13,21 @@
   var selectedDay = null;
   var eventsCache = {}; // keyed by 'YYYY-M' → { dayNum: [event, …] }
 
-  /* ── Google Calendar color ID → brand color ─────────── */
-  var COLOR_MAP = {
-    '2': 'sage', '10': 'sage',       // Sage, Basil
-    '5': 'wheat', '6': 'wheat',      // Banana, Tangerine
-    '4': 'orange', '11': 'orange',   // Flamingo, Tomato
-  };
-  function mapColor(colorId) {
-    return COLOR_MAP[colorId] || 'sage';
+  /* ── Keyword-based color mapping ────────────────────── */
+  var COLOR_KEYWORDS = [
+    { color: 'orange', words: ['market', 'festival', 'fair', 'pop-up', 'popup'] },
+    { color: 'wheat',  words: ['delivery', 'deliver', 'drop-off', 'dropoff'] },
+    { color: 'sage',   words: ['farmstand', 'open', 'hours'] },
+  ];
+  function mapColor(eventName) {
+    var name = (eventName || '').toLowerCase();
+    for (var i = 0; i < COLOR_KEYWORDS.length; i++) {
+      var entry = COLOR_KEYWORDS[i];
+      for (var j = 0; j < entry.words.length; j++) {
+        if (name.indexOf(entry.words[j]) !== -1) return entry.color;
+      }
+    }
+    return 'sage';
   }
 
   /* ── Time formatting ────────────────────────────────── */
@@ -102,7 +109,7 @@
             endTime: ev.allDay ? '' : formatTime(ev.endDate),
             description: ev.description,
             location: ev.location,
-            color: mapColor(ev.color),
+            color: mapColor(ev.name),
             allDay: ev.allDay,
             startDate: ev.startDate,
             endDate: ev.endDate,
