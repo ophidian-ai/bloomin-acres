@@ -29,6 +29,61 @@
     }
   }
 
+  // Load testimonials
+  const { data: testimonials } = await sb.from('testimonials').select('*').eq('visible', true).order('sort_order');
+  const tGrid = document.getElementById('testimonials-grid');
+  const tEmpty = document.getElementById('testimonials-empty');
+  if (tGrid) {
+    if (!testimonials || testimonials.length === 0) {
+      tEmpty.classList.remove('cal-hidden');
+    } else {
+      tEmpty.classList.add('cal-hidden');
+      testimonials.forEach(t => {
+        const card = document.createElement('div');
+        card.className = 'testimonial-card';
+
+        const quoteIcon = document.createElement('div');
+        quoteIcon.className = 'testimonial-quote-icon';
+        quoteIcon.textContent = '\u201C';
+        card.appendChild(quoteIcon);
+
+        const quote = document.createElement('p');
+        quote.className = 'testimonial-quote';
+        quote.textContent = t.quote;
+        card.appendChild(quote);
+
+        const footer = document.createElement('div');
+        footer.className = 'testimonial-footer';
+
+        if (t.image_url) {
+          const img = document.createElement('img');
+          img.className = 'testimonial-avatar';
+          img.src = t.image_url;
+          img.alt = t.author_name;
+          img.loading = 'lazy';
+          footer.appendChild(img);
+        }
+
+        const info = document.createElement('div');
+        info.className = 'testimonial-info';
+        const name = document.createElement('span');
+        name.className = 'testimonial-name';
+        name.textContent = t.author_name;
+        info.appendChild(name);
+        if (t.author_title) {
+          const title = document.createElement('span');
+          title.className = 'testimonial-title';
+          title.textContent = t.author_title;
+          info.appendChild(title);
+        }
+        footer.appendChild(info);
+        card.appendChild(footer);
+
+        tGrid.appendChild(card);
+      });
+    }
+  }
+
   // Load all editable landing page content
   const { data: lpContent } = await sb.from('site_content').select('key, value');
   const imgKeys = {

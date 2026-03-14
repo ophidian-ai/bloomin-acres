@@ -1219,6 +1219,152 @@
         <div class="insight-card"><div class="insight-value">${periodReferrals}</div><div class="insight-label">Referrals</div></div>`;
     }
 
+    // ── Testimonials ──────────────────────────────────────────────────────
+    let testimonials = [];
+    let testimonialsLoaded = false;
+
+    async function loadTestimonials() {
+      const { data, error } = await sb.from('testimonials').select('*').order('sort_order');
+      if (error) { showToast('Failed to load testimonials', true); return; }
+      testimonials = data || [];
+      renderTestimonialsList();
+    }
+
+    function renderTestimonialsList() {
+      const list = document.getElementById('testimonials-admin-list');
+      if (!list) return;
+      list.textContent = '';
+
+      if (testimonials.length === 0) {
+        const empty = document.createElement('div');
+        empty.className = 'empty-state';
+        empty.textContent = 'No testimonials yet. Add one above.';
+        list.appendChild(empty);
+        return;
+      }
+
+      testimonials.forEach((t, idx) => {
+        const row = document.createElement('div');
+        row.className = 'testimonial-admin-row';
+        if (!t.visible) row.classList.add('testimonial-hidden');
+
+        // Reorder buttons
+        const controls = document.createElement('div');
+        controls.className = 'testimonial-admin-controls';
+
+        if (idx > 0) {
+          const upBtn = document.createElement('button');
+          upBtn.type = 'button';
+          upBtn.className = 'btn-ghost btn-sm';
+          upBtn.textContent = '\u2191';
+          upBtn.title = 'Move up';
+          upBtn.addEventListener('click', () => reorderTestimonial(idx, idx - 1));
+          controls.appendChild(upBtn);
+        }
+        if (idx < testimonials.length - 1) {
+          const downBtn = document.createElement('button');
+          downBtn.type = 'button';
+          downBtn.className = 'btn-ghost btn-sm';
+          downBtn.textContent = '\u2193';
+          downBtn.title = 'Move down';
+          downBtn.addEventListener('click', () => reorderTestimonial(idx, idx + 1));
+          controls.appendChild(downBtn);
+        }
+        row.appendChild(controls);
+
+        // Content
+        const content = document.createElement('div');
+        content.className = 'testimonial-admin-content';
+        const q = document.createElement('p');
+        q.className = 'testimonial-admin-quote';
+        q.textContent = '\u201C' + t.quote + '\u201D';
+        content.appendChild(q);
+        const author = document.createElement('span');
+        author.className = 'testimonial-admin-author';
+        author.textContent = '\u2014 ' + t.author_name + (t.author_title ? ', ' + t.author_title : '');
+        content.appendChild(author);
+        row.appendChild(content);
+
+        // Actions
+        const actions = document.createElement('div');
+        actions.className = 'testimonial-admin-actions';
+
+        const toggleBtn = document.createElement('button');
+        toggleBtn.type = 'button';
+        toggleBtn.className = 'btn-ghost btn-sm';
+        toggleBtn.textContent = t.visible ? 'Hide' : 'Show';
+        toggleBtn.addEventListener('click', () => toggleTestimonial(t.id, !t.visible));
+        actions.appendChild(toggleBtn);
+
+        const deleteBtn = document.createElement('button');
+        deleteBtn.type = 'button';
+        deleteBtn.className = 'btn-ghost btn-sm btn-danger';
+        deleteBtn.textContent = 'Delete';
+        deleteBtn.addEventListener('click', () => deleteTestimonial(t.id));
+        actions.appendChild(deleteBtn);
+
+        row.appendChild(actions);
+        list.appendChild(row);
+      });
+    }
+
+    async function reorderTestimonial(fromIdx, toIdx) {
+      const moved = testimonials.splice(fromIdx, 1)[0];
+      testimonials.splice(toIdx, 0, moved);
+      const updates = testimonials.map((t, i) => ({ id: t.id, sort_order: i }));
+      for (const u of updates) {
+        await sb.from('testimonials').update({ sort_order: u.sort_order }).eq('id', u.id);
+      }
+      renderTestimonialsList();
+    }
+
+    async function toggleTestimonial(id, visible) {
+      const { error } = await sb.from('testimonials').update({ visible }).eq('id', id);
+      if (error) { showToast('Failed to update', true); return; }
+      await loadTestimonials();
+      showToast(visible ? 'Testimonial shown' : 'Testimonial hidden');
+    }
+
+    async function deleteTestimonial(id) {
+      if (!confirm('Delete this testimonial?')) return;
+      const { error } = await sb.from('testimonials').delete().eq('id', id);
+      if (error) { showToast('Failed to delete', true); return; }
+      await loadTestimonials();
+      showToast('Testimonial deleted');
+    }
+
+    document.getElementById('btn-add-testimonial')?.addEventListener('click', async () => {
+      const quote = document.getElementById('testimonial-quote').value.trim();
+      const authorName = document.getElementById('testimonial-author').value.trim();
+      const authorTitle = document.getElementById('testimonial-title').value.trim();
+
+      if (!quote || !authorName) {
+        showToast('Quote and name are required', true);
+        return;
+      }
+
+      const { error } = await sb.from('testimonials').insert({
+        quote,
+        author_name: authorName,
+        author_title: authorTitle,
+        sort_order: testimonials.length,
+        visible: true,
+      });
+
+      if (error) { showToast('Failed to add: ' + error.message, true); return; }
+
+      document.getElementById('testimonial-quote').value = '';
+      document.getElementById('testimonial-author').value = '';
+      document.getElementById('testimonial-title').value = '';
+      await loadTestimonials();
+      showToast('Testimonial added!');
+    });
+
+    // Lazy-load testimonials on first tab click
+    document.querySelector('[data-tab="testimonials"]')?.addEventListener('click', async () => {
+      if (!testimonialsLoaded) { testimonialsLoaded = true; await loadTestimonials(); }
+    }, { once: true });
+
     // ── Download Menu (opens full public menu in print mode) ─────────────
     document.getElementById('download-menu-btn')?.addEventListener('click', () => {
       window.open('menu.html?mode=print', '_blank');

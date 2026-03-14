@@ -67,6 +67,12 @@
           </svg>
           <span class="sidebar-label">Landing Page</span>
         </button>
+        <button type="button" class="tab-btn" role="tab" aria-selected="false" data-tab="testimonials">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+          </svg>
+          <span class="sidebar-label">Testimonials</span>
+        </button>
         <button type="button" class="tab-btn" role="tab" aria-selected="false" data-tab="orders">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
             <path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>
@@ -443,6 +449,41 @@
       </div>
 
     </div><!-- /tab-landing -->
+
+    <!-- Tab: Testimonials -->
+    <div id="tab-testimonials" class="tab-panel">
+      <h2 class="section-heading">Testimonials</h2>
+      <p class="tab-desc tab-desc-spaced">
+        Manage customer testimonials shown on the home page.
+      </p>
+
+      <!-- Add form -->
+      <div class="testimonials-admin-form lp-section-glass">
+        <p class="lp-section-heading">Add Testimonial</p>
+        <div class="lp-field">
+          <label for="testimonial-quote">Quote</label>
+          <textarea id="testimonial-quote" class="lp-text-input" rows="3" placeholder="What the customer said..."></textarea>
+        </div>
+        <div class="testimonials-form-row">
+          <div class="lp-field">
+            <label for="testimonial-author">Name</label>
+            <input type="text" id="testimonial-author" class="lp-text-input" placeholder="Jane Smith" />
+          </div>
+          <div class="lp-field">
+            <label for="testimonial-title">Title / Location (optional)</label>
+            <input type="text" id="testimonial-title" class="lp-text-input" placeholder="Columbus, IN" />
+          </div>
+        </div>
+        <div class="lp-save-row">
+          <button type="button" class="btn-secondary" id="btn-add-testimonial">Add Testimonial</button>
+        </div>
+      </div>
+
+      <!-- List -->
+      <div class="testimonials-admin-list" id="testimonials-admin-list">
+        <div class="empty-state">Loading...</div>
+      </div>
+    </div>
 
     <!-- Tab: Club -->
     <div id="tab-club" class="tab-panel">

@@ -266,3 +266,23 @@ create table if not exists box_selections (
 alter table box_selections enable row level security;
 create policy "Users manage own box"
   on box_selections for all using (auth.uid() = user_id);
+
+-- Testimonials (customer reviews shown on home page)
+create table if not exists testimonials (
+  id           uuid primary key default gen_random_uuid(),
+  quote        text not null,
+  author_name  text not null,
+  author_title text default '',
+  image_url    text default '',
+  sort_order   integer not null default 0,
+  visible      boolean not null default true,
+  created_at   timestamptz default now(),
+  updated_at   timestamptz default now()
+);
+alter table testimonials enable row level security;
+create policy "Public read visible testimonials"
+  on testimonials for select using (visible = true);
+create policy "Admins manage testimonials"
+  on testimonials for all using (
+    exists (select 1 from admins where user_id = auth.uid())
+  );

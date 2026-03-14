@@ -1480,3 +1480,38 @@ body::after {
   .print-size-3x4 .ticket-customer { font-size: 9pt; }
 
 }
+
+/* ── Testimonials Admin ──────────────────────────────────── */
+.testimonials-admin-form { margin-bottom: 2rem; }
+.testimonials-form-row {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;
+}
+@media (max-width: 600px) {
+  .testimonials-form-row { grid-template-columns: 1fr; }
+}
+.testimonial-admin-row {
+  display: flex; align-items: flex-start; gap: 1rem;
+  padding: 1rem 1.2rem; border-radius: 10px;
+  background: rgba(255,255,255,.04);
+  border: 1px solid rgba(255,255,255,.06);
+  margin-bottom: .75rem;
+  transition: opacity .2s;
+}
+.testimonial-admin-row.testimonial-hidden { opacity: .45; }
+.testimonial-admin-controls {
+  display: flex; flex-direction: column; gap: .25rem;
+  flex-shrink: 0;
+}
+.testimonial-admin-content { flex: 1; min-width: 0; }
+.testimonial-admin-quote {
+  font-style: italic; color: rgba(255,255,255,.85);
+  font-size: .92rem; line-height: 1.6; margin-bottom: .35rem;
+}
+.testimonial-admin-author {
+  font-size: .82rem; color: rgba(255,255,255,.5);
+}
+.testimonial-admin-actions {
+  display: flex; gap: .5rem; flex-shrink: 0; align-self: center;
+}
+.btn-danger { color: #e57373 !important; }
+.btn-danger:hover { color: #ef5350 !important; }
