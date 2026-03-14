@@ -40,14 +40,21 @@ export default async function handler(req, res) {
   const url = `https://www.googleapis.com/calendar/v3/calendars/${encodeURIComponent(calendarId)}/events?${params}`;
 
   try {
-    const response = await fetch(url);
-    if (!response.ok) {
-      const text = await response.text();
-      console.error('Google Calendar API error:', response.status, text);
-      return res.status(502).json({ error: 'Failed to fetch calendar' });
-    }
-
-    const data = await response.json();
+    const https = await import('https');
+    const data = await new Promise((resolve, reject) => {
+      https.default.get(url, (resp) => {
+        let body = '';
+        resp.on('data', (chunk) => { body += chunk; });
+        resp.on('end', () => {
+          if (resp.statusCode !== 200) {
+            reject(new Error('Google API returned ' + resp.statusCode + ': ' + body));
+            return;
+          }
+          try { resolve(JSON.parse(body)); }
+          catch (e) { reject(e); }
+        });
+      }).on('error', reject);
+    });
 
     const events = (data.items || []).map((item) => {
       const isAllDay = !!item.start.date;
@@ -65,7 +72,7 @@ export default async function handler(req, res) {
 
     return res.json({ events });
   } catch (err) {
-    console.error('Calendar fetch error:', err);
-    return res.status(502).json({ error: 'Failed to fetch calendar' });
+    console.error('Calendar fetch error:', err.message || err);
+    return res.status(502).json({ error: 'Failed to fetch calendar', detail: err.message });
   }
 }
