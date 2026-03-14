@@ -1259,25 +1259,23 @@
         const menuEl = document.createElement('div');
         menuEl.className = 'print-menu';
 
-        // Header
-        const header = document.createElement('div');
-        header.className = 'print-menu-header';
-        const logo = document.createElement('img');
-        logo.src = 'brand-assets/color-logo.png';
-        logo.alt = 'Bloomin\' Acres';
-        logo.className = 'print-menu-logo';
-        header.appendChild(logo);
-        const titleEl = document.createElement('div');
-        titleEl.className = 'print-menu-title';
-        titleEl.textContent = 'Menu';
-        header.appendChild(titleEl);
+        // Background template image (has logo + wheat illustrations)
+        const bgImg = document.createElement('img');
+        bgImg.src = 'brand-assets/source/blank-menu-template.png';
+        bgImg.alt = '';
+        bgImg.className = 'print-menu-bg';
+        menuEl.appendChild(bgImg);
+
+        // Menu body (overlays below the template header)
+        const body = document.createElement('div');
+        body.className = 'print-menu-body';
+
         if (scheduleText) {
           const datesEl = document.createElement('div');
           datesEl.className = 'print-menu-dates';
           datesEl.textContent = scheduleText;
-          header.appendChild(datesEl);
+          body.appendChild(datesEl);
         }
-        menuEl.appendChild(header);
 
         // Sections
         sections.forEach(sec => {
@@ -1350,18 +1348,27 @@
             }
           });
 
-          menuEl.appendChild(secEl);
+          body.appendChild(secEl);
         });
 
+        menuEl.appendChild(body);
         printArea.appendChild(menuEl);
-        window.print();
 
         // Clean up after print dialog closes
-        printArea.className = 'print-area';
-        while (printArea.firstChild) printArea.removeChild(printArea.firstChild);
+        function cleanupMenu() {
+          printArea.className = 'print-area';
+          while (printArea.firstChild) printArea.removeChild(printArea.firstChild);
+          btn.disabled = false;
+          btn.innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> Download Menu`;
+          window.removeEventListener('afterprint', cleanupMenu);
+        }
+        window.addEventListener('afterprint', cleanupMenu);
+
+        // Delay print to let browser paint the DOM
+        setTimeout(() => window.print(), 150);
+        return; // cleanup handled by afterprint listener
       } catch (err) {
         showToast('Could not generate menu: ' + err.message, true);
-      } finally {
         btn.disabled = false;
         btn.innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> Download Menu`;
       }

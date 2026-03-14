@@ -24,7 +24,16 @@ body::after {
 
 /* ── Utility ────────────────────────────────────────────── */
 .hidden { display: none !important; }
-.editor-actions { display: flex; gap: .5rem; align-items: center; }
+.editor-actions { display: flex; gap: .5rem; align-items: center; flex-wrap: wrap; }
+.editor-actions .btn-ghost-bordered {
+  color: rgba(250,240,230,.75);
+  border-color: rgba(237,163,57,.35);
+}
+.editor-actions .btn-ghost-bordered:hover {
+  color: var(--wheat-gold);
+  border-color: rgba(237,163,57,.5);
+  background: rgba(237,163,57,.1);
+}
 .grid-message { color: rgba(250,240,230,.45); font-size: .85rem; }
 .grid-error { color: #f5a0a0; }
 
@@ -1479,37 +1488,31 @@ body::after {
     font-family: 'Lora', 'Georgia', serif;
     color: #2c1810;
     background: #fff;
-    max-width: 7in;
+    max-width: 8.5in;
+    min-height: 11in;
     margin: 0 auto;
-    padding: .5in .6in;
+    padding: 0;
+    position: relative;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
   }
 
-  .print-menu-header {
-    text-align: center;
-    margin-bottom: 24pt;
-    padding-bottom: 12pt;
-    border-bottom: 2px solid #2c1810;
-  }
-
-  .print-menu-logo {
-    width: 80pt;
+  .print-menu-bg {
+    width: 100%;
     height: auto;
-    margin-bottom: 8pt;
+    display: block;
   }
 
-  .print-menu-title {
-    font-family: 'Playfair Display', serif;
-    font-size: 22pt;
-    font-weight: 700;
-    letter-spacing: .04em;
-    text-transform: uppercase;
-    margin-bottom: 4pt;
+  .print-menu-body {
+    padding: .35in .9in .5in;
   }
 
   .print-menu-dates {
+    text-align: center;
     font-size: 10pt;
     color: #5a4a3a;
     font-style: italic;
+    margin-bottom: 12pt;
   }
 
   .print-menu-section {
