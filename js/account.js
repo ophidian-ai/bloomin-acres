@@ -502,7 +502,8 @@
       .from('orders').select('*, order_items(*)')
       .eq('user_id', currentUser.id)
       .order('created_at', { ascending: false });
-    if (error) return;
+    if (error) { console.error('loadOrders failed:', error.message); return; }
+    console.log('loadOrders:', orderList?.length, 'orders for user', currentUser.id);
     renderOrders(orderList || []);
   }
 
