@@ -49,7 +49,7 @@
     const targetTab = params.get('tab');
 
     const { data: { session } } = await sb.auth.getSession();
-    const alreadySignedIn = !!session;
+    let alreadySignedIn = !!session;
 
     // Wire sidebar auth state
     const signinLink = document.getElementById('sidebar-signin-link');
@@ -91,6 +91,7 @@
           window.location.href = 'index.html';
         }
       } else if (event === 'SIGNED_OUT') {
+        alreadySignedIn = false;
         showAuthCard();
       }
     });
