@@ -567,7 +567,7 @@
     btn.disabled = true; btn.textContent = 'Creating account…';
     isSigningUp = true;
     const displayName = [firstName, lastName].filter(Boolean).join(' ');
-    const { data, error } = await sb.auth.signUp({ email, password, options: { emailRedirectTo: 'https://bloominacresmarket.com/account.html?tab=profile', data: { display_name: displayName, phone } } });
+    const { data, error } = await sb.auth.signUp({ email, password, phone: phone || undefined, options: { emailRedirectTo: 'https://bloominacresmarket.com/account.html?tab=profile', data: { display_name: displayName, full_name: displayName, first_name: firstName, last_name: lastName } } });
     btn.disabled = false; btn.textContent = 'Create Account';
     if (error) { isSigningUp = false; errEl.textContent = error.message; errEl.classList.add('visible'); return; }
     if (data.user) {
@@ -609,7 +609,8 @@
     btn.disabled = false;
     btn.textContent = 'Save Changes';
     if (error) { showToast(error.message, true); return; }
-    await sb.auth.updateUser({ data: { display_name: [firstName, lastName].filter(Boolean).join(' '), phone } });
+    const fullName = [firstName, lastName].filter(Boolean).join(' ');
+    await sb.auth.updateUser({ phone: phone || undefined, data: { display_name: fullName, full_name: fullName, first_name: firstName, last_name: lastName } });
     // Update greeting and avatar live
     document.getElementById('dash-greeting').textContent = firstName ? `Welcome back, ${firstName}` : 'Welcome back';
     document.getElementById('dash-avatar').textContent = (firstName || currentUser.email || 'U')[0].toUpperCase();
