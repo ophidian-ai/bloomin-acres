@@ -598,6 +598,7 @@
     btn.disabled = false;
     btn.textContent = 'Save Changes';
     if (error) { showToast(error.message, true); return; }
+    await sb.auth.updateUser({ data: { display_name: [firstName, lastName].filter(Boolean).join(' '), phone } });
     // Update greeting and avatar live
     document.getElementById('dash-greeting').textContent = firstName ? `Welcome back, ${firstName}` : 'Welcome back';
     document.getElementById('dash-avatar').textContent = (firstName || currentUser.email || 'U')[0].toUpperCase();
