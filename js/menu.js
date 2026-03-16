@@ -644,7 +644,7 @@
           const sep = document.createElement('div');
           sep.className = 'wheat-sep-wrap';
           const sepImg = document.createElement('img');
-          sepImg.src = '/brand-assets/wheat-seperator.png';
+          sepImg.src = '/brand-assets/wheat-separator.png';
           sepImg.className = 'wheat-sep';
           sepImg.alt = '';
           sep.appendChild(sepImg);
