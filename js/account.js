@@ -32,6 +32,9 @@
       document.querySelectorAll('.dash-panel').forEach(p => p.classList.remove('active'));
       btn.classList.add('active');
       document.getElementById(`panel-${panel}`).classList.add('active');
+      const url = new URL(window.location);
+      url.searchParams.set('tab', panel);
+      history.replaceState(null, '', url);
     });
   });
 
@@ -502,8 +505,7 @@
       .from('orders').select('*, order_items(*)')
       .eq('user_id', currentUser.id)
       .order('created_at', { ascending: false });
-    if (error) { console.error('loadOrders failed:', error.message); return; }
-    console.log('loadOrders:', orderList?.length, 'orders for user', currentUser.id);
+    if (error) return;
     renderOrders(orderList || []);
   }
 
