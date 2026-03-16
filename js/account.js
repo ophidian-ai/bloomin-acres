@@ -562,7 +562,7 @@
     if (password.length < 8) { errEl.textContent = 'Password must be at least 8 characters'; errEl.classList.add('visible'); return; }
     btn.disabled = true; btn.textContent = 'Creating account…';
     isSigningUp = true;
-    const { error } = await sb.auth.signUp({ email, password });
+    const { error } = await sb.auth.signUp({ email, password, options: { emailRedirectTo: 'https://bloominacresmarket.com/account.html?tab=profile' } });
     btn.disabled = false; btn.textContent = 'Create Account';
     if (error) { isSigningUp = false; errEl.textContent = error.message; errEl.classList.add('visible'); }
     else { showToast('Account created! Check your email to confirm.'); }
