@@ -552,20 +552,31 @@
   });
 
   document.getElementById('signup-btn').addEventListener('click', async () => {
+    const firstName = document.getElementById('signup-first-name').value.trim();
+    const lastName = document.getElementById('signup-last-name').value.trim();
+    const phone = document.getElementById('signup-phone').value.trim();
     const email = document.getElementById('signup-email').value.trim();
     const password = document.getElementById('signup-password').value;
     const confirm = document.getElementById('signup-confirm').value;
     const errEl = document.getElementById('signup-error');
     const btn = document.getElementById('signup-btn');
     errEl.classList.remove('visible');
+    if (!firstName) { errEl.textContent = 'First name is required'; errEl.classList.add('visible'); return; }
     if (password !== confirm) { errEl.textContent = 'Passwords do not match'; errEl.classList.add('visible'); return; }
     if (password.length < 8) { errEl.textContent = 'Password must be at least 8 characters'; errEl.classList.add('visible'); return; }
     btn.disabled = true; btn.textContent = 'Creating account…';
     isSigningUp = true;
-    const { error } = await sb.auth.signUp({ email, password, options: { emailRedirectTo: 'https://bloominacresmarket.com/account.html?tab=profile' } });
+    const displayName = [firstName, lastName].filter(Boolean).join(' ');
+    const { data, error } = await sb.auth.signUp({ email, password, options: { emailRedirectTo: 'https://bloominacresmarket.com/account.html?tab=profile', data: { display_name: displayName, phone } } });
     btn.disabled = false; btn.textContent = 'Create Account';
-    if (error) { isSigningUp = false; errEl.textContent = error.message; errEl.classList.add('visible'); }
-    else { showToast('Account created! Check your email to confirm.'); }
+    if (error) { isSigningUp = false; errEl.textContent = error.message; errEl.classList.add('visible'); return; }
+    if (data.user) {
+      await sb.from('profiles').upsert(
+        { user_id: data.user.id, first_name: firstName, last_name: lastName, phone, updated_at: new Date().toISOString() },
+        { onConflict: 'user_id' }
+      );
+    }
+    showToast('Account created! Check your email to confirm.');
   });
 
   async function signOut() {

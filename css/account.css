@@ -226,6 +226,9 @@ body::after {
 }
 
 /* ── Form Fields ─────────────────────────────────────────── */
+.field-row { display: flex; gap: 1rem; }
+.field-row .field { flex: 1; }
+.optional-label { font-weight: 400; text-transform: none; letter-spacing: 0; opacity: .6; }
 .field { margin-bottom: 1rem; }
 
 /* Auth card field labels (dark glass context) */
