@@ -464,7 +464,7 @@
           <label for="testimonial-quote">Quote</label>
           <textarea id="testimonial-quote" class="lp-text-input" rows="3" placeholder="What the customer said..."></textarea>
         </div>
-        <div class="testimonials-form-row">
+        <div class="testimonials-form-row testimonials-form-row-3">
           <div class="lp-field">
             <label for="testimonial-author">Name</label>
             <input type="text" id="testimonial-author" class="lp-text-input" placeholder="Jane Smith" />
@@ -473,15 +473,36 @@
             <label for="testimonial-title">Title / Location (optional)</label>
             <input type="text" id="testimonial-title" class="lp-text-input" placeholder="Columbus, IN" />
           </div>
+          <div class="lp-field">
+            <label for="testimonial-rating">Rating</label>
+            <select id="testimonial-rating" class="lp-text-input">
+              <option value="5">5 Stars</option>
+              <option value="4">4 Stars</option>
+              <option value="3">3 Stars</option>
+              <option value="2">2 Stars</option>
+              <option value="1">1 Star</option>
+            </select>
+          </div>
         </div>
         <div class="lp-save-row">
           <button type="button" class="btn-secondary" id="btn-add-testimonial">Add Testimonial</button>
         </div>
       </div>
 
-      <!-- List -->
-      <div class="testimonials-admin-list" id="testimonials-admin-list">
-        <div class="empty-state">Loading...</div>
+      <!-- Pending Reviews -->
+      <div class="testimonials-pending-section">
+        <p class="lp-section-heading">Pending Customer Reviews</p>
+        <div class="testimonials-admin-list" id="testimonials-pending-list">
+          <div class="empty-state">Loading...</div>
+        </div>
+      </div>
+
+      <!-- Published List -->
+      <div class="testimonials-published-section">
+        <p class="lp-section-heading">Published Testimonials</p>
+        <div class="testimonials-admin-list" id="testimonials-admin-list">
+          <div class="empty-state">Loading...</div>
+        </div>
       </div>
     </div>
 
@@ -638,9 +659,6 @@
       </div>
     </div><!-- /print-modal -->
 
-    <!-- Hidden print container -->
-    <div id="print-area" class="print-area"></div>
-
     <!-- Tab: Analytics -->
     <div id="tab-analytics" class="tab-panel">
       <div class="analytics-header">
@@ -731,6 +749,9 @@
 
     </main><!-- /dashboard-content -->
   </div><!-- /dashboard -->
+
+  <!-- Print container — MUST be outside #dashboard so @media print can show it -->
+  <div id="print-area" class="print-area"></div>
 
   <div id="toast"></div>
 
