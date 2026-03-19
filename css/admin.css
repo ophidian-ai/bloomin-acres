@@ -1437,7 +1437,8 @@ body::after {
 
 /* ── Print Styles ──────────────────────────────────────── */
 @media print {
-  body, #dashboard, .admin-sidebar, .dashboard-content,
+  body { background: #fff !important; color: #000 !important; }
+  #dashboard, .admin-sidebar, .dashboard-content,
   .tab-panel, .print-modal-overlay, #toast,
   .mobile-sidebar-toggle, .sidebar-overlay { display: none !important; }
 
