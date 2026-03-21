@@ -40,12 +40,8 @@
 
   // ── Init ─────────────────────────────────────────────────────────────────
   async function init() {
-    const r = await fetch('/api/config').catch(() => null);
-    if (!r || !r.ok) { setLoading(false); showToast('Cannot reach server', true); return; }
-    const cfg = await r.json();
-    if (!cfg.supabaseUrl) { setLoading(false); showToast('Server not configured', true); return; }
-
-    sb = supabase.createClient(cfg.supabaseUrl, cfg.supabaseAnonKey);
+    sb = await getSupabase();
+    if (!sb) { setLoading(false); showToast('Cannot reach server', true); return; }
 
     // Check for deep-link tab (e.g. ?tab=orders after Stripe redirect)
     const params = new URLSearchParams(window.location.search);

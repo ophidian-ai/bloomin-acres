@@ -16,12 +16,8 @@
         return;
       }
 
-      const r = await fetch('/api/config').catch(() => null);
-      if (!r || !r.ok) return;
-      const cfg = await r.json();
-      if (!cfg.supabaseUrl) return;
-
-      sb = supabase.createClient(cfg.supabaseUrl, cfg.supabaseAnonKey);
+      sb = await getSupabase();
+      if (!sb) return;
 
       // Load auth state
       const { data: { session } } = await sb.auth.getSession();

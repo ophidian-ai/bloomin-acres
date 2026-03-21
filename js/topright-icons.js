@@ -134,11 +134,8 @@
 
   // ── Wire up with Supabase auth ──────────────────────────
   try {
-    const r = await fetch('/api/config').catch(() => null);
-    if (!r || !r.ok) return;
-    const cfg = await r.json();
-    if (!cfg.supabaseUrl || !window.supabase) return;
-    const sb = window.supabase.createClient(cfg.supabaseUrl, cfg.supabaseAnonKey);
+    const sb = await getSupabase();
+    if (!sb) return;
     const { data: { session } } = await sb.auth.getSession();
 
     if (session) {
