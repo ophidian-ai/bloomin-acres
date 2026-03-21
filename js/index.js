@@ -1,9 +1,6 @@
 (async () => {
-  const r = await fetch('/api/config').catch(() => null);
-  if (!r || !r.ok) return;
-  const cfg = await r.json();
-  if (!cfg.supabaseUrl) return;
-  const sb = supabase.createClient(cfg.supabaseUrl, cfg.supabaseAnonKey);
+  const sb = await getSupabase();
+  if (!sb) return;
   const { data: { session } } = await sb.auth.getSession();
   const signinLink  = document.getElementById('sidebar-signin-link');
   const acctItem    = document.getElementById('sidebar-account-item');

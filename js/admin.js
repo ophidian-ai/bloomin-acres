@@ -17,12 +17,8 @@
         return;
       }
 
-      const r = await fetch('/api/config').catch(() => null);
-      if (!r || !r.ok) { alert('Cannot reach server. Is node serve.mjs running?'); return; }
-      const cfg = await r.json();
-      if (!cfg.supabaseUrl) { alert('.env is not configured — set SUPABASE_URL etc.'); return; }
-
-      sb = supabase.createClient(cfg.supabaseUrl, cfg.supabaseAnonKey);
+      sb = await getSupabase();
+      if (!sb) { alert('Cannot reach server or .env not configured.'); return; }
 
       // Initial check from localStorage — reliable and instant
       const { data: { session } } = await sb.auth.getSession();

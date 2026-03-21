@@ -48,22 +48,12 @@
         }
       }
 
-      // 1. Fetch server config
-      let cfg;
-      try {
-        const r = await fetch('/api/config');
-        cfg = await r.json();
-      } catch {
+      // 1. Get shared Supabase client
+      const sb = await getSupabase();
+      if (!sb) {
         showError('Could not reach the server. Please try again.');
         return;
       }
-
-      if (!cfg.supabaseUrl || !cfg.supabaseAnonKey) {
-        showError('Menu configuration is not yet set up.');
-        return;
-      }
-
-      const sb = supabase.createClient(cfg.supabaseUrl, cfg.supabaseAnonKey);
 
       // 2. Check auth state (for favorite buttons)
       const { data: { session } } = await sb.auth.getSession();

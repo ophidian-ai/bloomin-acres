@@ -7,13 +7,9 @@
     document.getElementById('referral-banner').classList.remove('hidden');
   }
 
-  // ── Load config + auth ─────────────────────────────────────────────────────
-  const r = await fetch('/api/config').catch(() => null);
-  if (!r || !r.ok) return;
-  const cfg = await r.json();
-  if (!cfg.supabaseUrl) return;
-
-  const sb = supabase.createClient(cfg.supabaseUrl, cfg.supabaseAnonKey);
+  // ── Load shared client + auth ──────────────────────────────────────────────
+  const sb = await getSupabase();
+  if (!sb) return;
   const { data: { session } } = await sb.auth.getSession();
 
   const signinLink = document.getElementById('sidebar-signin-link');
