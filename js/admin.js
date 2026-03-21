@@ -964,43 +964,229 @@
       document.getElementById('print-modal').classList.add('hidden');
     });
 
+    // Page sizes for @page CSS injection (width x height)
+    const pageSizes = {
+      '4x6': '4in 6in', '4x5': '4in 5in', '4x4': '4in 4in',
+      '3x5': '3in 5in', '3x4': '3in 4in',
+      'letter': '8.5in 11in'
+    };
+
+    function setPageSize(size) {
+      let el = document.getElementById('print-page-style');
+      if (!el) { el = document.createElement('style'); el.id = 'print-page-style'; document.head.appendChild(el); }
+      const dim = pageSizes[size] || pageSizes.letter;
+      el.textContent = `@media print { @page { size: ${dim}; margin: 0; } }`;
+    }
+
     function printTickets(orders, size, fields) {
       const area = document.getElementById('print-area');
       area.className = `print-area print-size-${size}`;
+      setPageSize(size);
 
-      area.innerHTML = orders.map(order => {
+      const tickets = orders.map(order => {
         const p = order.profiles;
         const name = p ? [p.first_name, p.last_name].filter(Boolean).join(' ') || 'Customer' : 'Customer';
         const phone = p?.phone || '';
         const date = new Date(order.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
         const items = (order.order_items || []);
         const total = (order.total_amount || 0) / 100;
+        const statusLabel = order.status === 'picked_up' ? 'Picked Up' : (order.status || 'paid').charAt(0).toUpperCase() + (order.status || 'paid').slice(1);
 
-        let html = `<div class="print-ticket">`;
-        html += `<div class="ticket-brand">BLOOMIN' ACRES</div>`;
-        if (fields.orderId) html += `<div class="ticket-order-id">Order #${order.id.slice(0,8)}</div>`;
-        html += `<div class="ticket-divider"></div>`;
-        if (fields.name) html += `<div class="ticket-customer">${escHtml(name)}</div>`;
-        if (fields.phone && phone) html += `<div class="ticket-phone">${escHtml(phone)}</div>`;
-        if (fields.date) html += `<div class="ticket-date">${escHtml(date)} &middot; ${escHtml(order.status === 'picked_up' ? 'Picked Up' : (order.status || 'paid').charAt(0).toUpperCase() + (order.status || 'paid').slice(1))}</div>`;
+        const ticket = document.createElement('div');
+        ticket.className = 'print-ticket';
+
+        const brand = document.createElement('div');
+        brand.className = 'ticket-brand';
+        brand.textContent = 'BLOOMIN\' ACRES';
+        ticket.appendChild(brand);
+
+        if (fields.orderId) {
+          const oid = document.createElement('div');
+          oid.className = 'ticket-order-id';
+          oid.textContent = `Order #${order.id.slice(0,8)}`;
+          ticket.appendChild(oid);
+        }
+
+        ticket.appendChild(createDivider());
+
+        if (fields.name) {
+          const cust = document.createElement('div');
+          cust.className = 'ticket-customer';
+          cust.textContent = name;
+          ticket.appendChild(cust);
+        }
+        if (fields.phone && phone) {
+          const ph = document.createElement('div');
+          ph.className = 'ticket-phone';
+          ph.textContent = phone;
+          ticket.appendChild(ph);
+        }
+        if (fields.date) {
+          const dt = document.createElement('div');
+          dt.className = 'ticket-date';
+          dt.textContent = `${date} \u00B7 ${statusLabel}`;
+          ticket.appendChild(dt);
+        }
         if (fields.items) {
-          html += `<div class="ticket-divider"></div>`;
+          ticket.appendChild(createDivider());
           items.forEach(i => {
-            html += `<div class="ticket-item"><span>${i.quantity}&times; ${escHtml(i.product_name || i.stripe_product_id)}</span>`;
-            if (fields.prices) html += `<span>${fmtUSD.format((i.unit_amount * i.quantity) / 100)}</span>`;
-            html += `</div>`;
+            const row = document.createElement('div');
+            row.className = 'ticket-item';
+            const nameSpan = document.createElement('span');
+            nameSpan.textContent = `${i.quantity}\u00D7 ${i.product_name || i.stripe_product_id}`;
+            row.appendChild(nameSpan);
+            if (fields.prices) {
+              const priceSpan = document.createElement('span');
+              priceSpan.textContent = fmtUSD.format((i.unit_amount * i.quantity) / 100);
+              row.appendChild(priceSpan);
+            }
+            ticket.appendChild(row);
           });
           if (fields.prices) {
-            html += `<div class="ticket-divider"></div>`;
-            html += `<div class="ticket-total"><strong>TOTAL</strong><strong>${fmtUSD.format(total)}</strong></div>`;
+            ticket.appendChild(createDivider());
+            const totalRow = document.createElement('div');
+            totalRow.className = 'ticket-total';
+            const totalLabel = document.createElement('strong');
+            totalLabel.textContent = 'TOTAL';
+            const totalVal = document.createElement('strong');
+            totalVal.textContent = fmtUSD.format(total);
+            totalRow.appendChild(totalLabel);
+            totalRow.appendChild(totalVal);
+            ticket.appendChild(totalRow);
           }
         }
-        html += `</div>`;
-        return html;
-      }).join('');
+        return ticket;
+      });
 
+      area.replaceChildren(...tickets);
       setTimeout(() => window.print(), 100);
     }
+
+    function createDivider() {
+      const d = document.createElement('div');
+      d.className = 'ticket-divider';
+      return d;
+    }
+
+    // ── Prep List ─────────────────────────────────────────────────────────────
+    document.getElementById('prep-list-btn').addEventListener('click', () => {
+      const orders = filteredOrders.filter(o => o.status !== 'cancelled');
+      if (!orders.length) { showToast('No orders to summarize', true); return; }
+
+      // Aggregate quantities by product + variation
+      const agg = {};
+      orders.forEach(o => {
+        (o.order_items || []).forEach(item => {
+          const name = item.product_name || item.stripe_product_id;
+          if (!agg[name]) agg[name] = { total: 0 };
+          agg[name].total += item.quantity;
+        });
+      });
+
+      // Build table using DOM methods
+      const body = document.getElementById('prep-list-body');
+      const table = document.createElement('table');
+      const thead = document.createElement('thead');
+      const headRow = document.createElement('tr');
+      const thProduct = document.createElement('th');
+      thProduct.textContent = 'Product';
+      const thQty = document.createElement('th');
+      thQty.textContent = 'Quantity';
+      headRow.appendChild(thProduct);
+      headRow.appendChild(thQty);
+      thead.appendChild(headRow);
+      table.appendChild(thead);
+
+      const tbody = document.createElement('tbody');
+      const sorted = Object.entries(agg).sort((a, b) => a[0].localeCompare(b[0]));
+      let grandTotal = 0;
+
+      sorted.forEach(([name, data]) => {
+        const row = document.createElement('tr');
+        const tdName = document.createElement('td');
+        tdName.className = 'prep-product-name';
+        tdName.textContent = name;
+        const tdQty = document.createElement('td');
+        tdQty.textContent = data.total;
+        row.appendChild(tdName);
+        row.appendChild(tdQty);
+        tbody.appendChild(row);
+        grandTotal += data.total;
+      });
+
+      // Total row
+      const totalRow = document.createElement('tr');
+      totalRow.className = 'prep-total-row';
+      const tdTotalLabel = document.createElement('td');
+      tdTotalLabel.textContent = 'Total Items';
+      const tdTotalVal = document.createElement('td');
+      tdTotalVal.textContent = grandTotal;
+      totalRow.appendChild(tdTotalLabel);
+      totalRow.appendChild(tdTotalVal);
+      tbody.appendChild(totalRow);
+      table.appendChild(tbody);
+      body.replaceChildren(table);
+
+      // Date label
+      const dateFilter = document.getElementById('order-date-filter');
+      const label = dateFilter.options[dateFilter.selectedIndex].text;
+      document.getElementById('prep-date-label').textContent =
+        `${label} \u2014 ${orders.length} order${orders.length !== 1 ? 's' : ''}`;
+
+      document.getElementById('prep-modal').classList.remove('hidden');
+    });
+
+    document.getElementById('prep-close').addEventListener('click', () => {
+      document.getElementById('prep-modal').classList.add('hidden');
+    });
+
+    // Print prep list
+    document.getElementById('prep-print-btn').addEventListener('click', () => {
+      const area = document.getElementById('print-area');
+      area.className = 'print-area';
+      setPageSize('letter');
+
+      const dateLabel = document.getElementById('prep-date-label').textContent;
+      const wrapper = document.createElement('div');
+      wrapper.className = 'prep-list-printable';
+
+      const header = document.createElement('div');
+      header.className = 'prep-print-header';
+      header.textContent = 'Bloomin\' Acres \u2014 Prep List';
+      wrapper.appendChild(header);
+
+      const dateLine = document.createElement('div');
+      dateLine.className = 'prep-print-date';
+      dateLine.textContent = dateLabel;
+      wrapper.appendChild(dateLine);
+
+      // Clone the table from the modal
+      const srcTable = document.querySelector('#prep-list-body table');
+      if (srcTable) wrapper.appendChild(srcTable.cloneNode(true));
+
+      area.replaceChildren(wrapper);
+      setTimeout(() => window.print(), 100);
+    });
+
+    // Download prep list as CSV
+    document.getElementById('prep-download-btn').addEventListener('click', () => {
+      const rows = [['Product', 'Quantity']];
+      document.querySelectorAll('#prep-list-body tbody tr').forEach(tr => {
+        const cells = tr.querySelectorAll('td');
+        if (cells.length >= 2) {
+          rows.push([cells[0].textContent, cells[1].textContent]);
+        }
+      });
+      const csv = rows.map(r => r.map(c => `"${c.replace(/"/g, '""')}"`).join(',')).join('\n');
+      const blob = new Blob([csv], { type: 'text/csv' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      const dateFilter = document.getElementById('order-date-filter');
+      a.download = `prep-list-${dateFilter.value}-${new Date().toISOString().slice(0,10)}.csv`;
+      a.click();
+      URL.revokeObjectURL(url);
+    });
 
     // ── Analytics ──────────────────────────────────────────────────────────────
     let analyticsLoaded = false;

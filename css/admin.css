@@ -752,13 +752,13 @@ body::after {
 .btn-secondary {
   font-family: 'DM Sans', sans-serif; font-size: .74rem; font-weight: 600;
   letter-spacing: .08em; text-transform: uppercase;
-  background: rgba(122,155,142,.2); color: var(--sage-light);
-  border: 1px solid rgba(122,155,142,.3); border-radius: 4px;
+  background: rgba(122,155,142,.6); color: var(--farm-cream);
+  border: 1px solid rgba(122,155,142,.7); border-radius: 4px;
   padding: .45rem 1rem; cursor: pointer;
   transition: background .2s, border-color .2s;
   display: inline-flex; align-items: center; gap: .4rem; white-space: nowrap;
 }
-.btn-secondary:hover { background: rgba(122,155,142,.38); border-color: var(--sage-light); }
+.btn-secondary:hover { background: rgba(122,155,142,.75); border-color: var(--sage-light); }
 .btn-secondary:disabled { opacity: .5; cursor: default; }
 .btn-secondary:focus-visible { outline: 2px solid var(--wheat-gold); outline-offset: 3px; }
 
@@ -1192,6 +1192,43 @@ body::after {
   border-top: 1px solid rgba(237,163,57,.1);
 }
 
+/* ── Prep List Modal ──────────────────────────────────── */
+.prep-modal-wide { max-width: 540px; }
+.prep-modal-header {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: .5rem;
+}
+.prep-modal-actions-top { display: flex; gap: .5rem; }
+.prep-date-label {
+  font-size: .82rem; color: rgba(250,240,230,.5);
+  margin-bottom: 1rem;
+}
+.prep-list-body table {
+  width: 100%; border-collapse: collapse;
+}
+.prep-list-body th {
+  font-size: .7rem; font-weight: 700;
+  letter-spacing: .1em; text-transform: uppercase;
+  color: rgba(250,240,230,.4);
+  border-bottom: 1px solid rgba(237,163,57,.2);
+  padding: .5rem .4rem; text-align: left;
+}
+.prep-list-body th:last-child { text-align: right; }
+.prep-list-body td {
+  font-size: .88rem; padding: .45rem .4rem;
+  color: rgba(250,240,230,.85);
+  border-bottom: 1px solid rgba(237,163,57,.08);
+}
+.prep-list-body td:last-child { text-align: right; font-weight: 600; color: var(--wheat-gold); }
+.prep-product-name { font-weight: 600; }
+.prep-variation-name { padding-left: 1rem; color: rgba(250,240,230,.6); }
+.prep-list-body .prep-total-row td {
+  border-top: 2px solid rgba(237,163,57,.25);
+  font-weight: 700; font-size: .92rem;
+  color: var(--wheat-gold);
+  padding-top: .65rem;
+}
+
 /* ── Print Ticket Styles ───────────────────────────────── */
 .print-area { display: none; }
 .print-ticket {
@@ -1438,9 +1475,11 @@ body::after {
 /* ── Print Styles ──────────────────────────────────────── */
 @media print {
   body { background: #fff !important; color: #000 !important; }
+  body::after { display: none !important; }
   #dashboard, .admin-sidebar, .dashboard-content,
   .tab-panel, .print-modal-overlay, #toast,
-  .mobile-sidebar-toggle, .sidebar-overlay { display: none !important; }
+  .mobile-sidebar-toggle, .sidebar-overlay,
+  .prep-list-printable + * { display: none !important; }
 
   .print-area {
     display: block !important;
@@ -1458,28 +1497,67 @@ body::after {
 
   .print-size-4x6 .print-ticket,
   .print-size-4x5 .print-ticket,
+  .print-size-4x4 .print-ticket,
   .print-size-3x5 .print-ticket,
   .print-size-3x4 .print-ticket {
     page-break-after: always; break-after: page; border: none;
   }
 
-  @page { margin: 0; }
-}
-@media print {
-  .print-size-4x6 .print-ticket { width: 4in; min-height: 6in; }
-  .print-size-4x5 .print-ticket { width: 4in; min-height: 5in; }
-  .print-size-3x5 .print-ticket { width: 3in; min-height: 5in; }
-  .print-size-3x4 .print-ticket { width: 3in; min-height: 4in; }
+  /* Label sizes — ticket fills entire page */
+  .print-size-4x6 .print-ticket { width: 4in; height: 6in; max-height: 6in; box-sizing: border-box; }
+  .print-size-4x5 .print-ticket { width: 4in; height: 5in; max-height: 5in; box-sizing: border-box; }
+  .print-size-4x4 .print-ticket { width: 4in; height: 4in; max-height: 4in; box-sizing: border-box; }
+  .print-size-3x5 .print-ticket { width: 3in; height: 5in; max-height: 5in; box-sizing: border-box; }
+  .print-size-3x4 .print-ticket { width: 3in; height: 4in; max-height: 4in; box-sizing: border-box; }
 
-  .print-size-4x6 .ticket-brand { font-size: 12pt; }
-  .print-size-4x5 .ticket-brand { font-size: 11pt; }
+  .print-size-4x6 .ticket-brand { font-size: 14pt; }
+  .print-size-4x5 .ticket-brand,
+  .print-size-4x4 .ticket-brand { font-size: 13pt; }
+  .print-size-4x4 .ticket-item { font-size: 9pt; }
   .print-size-3x5 .ticket-brand,
-  .print-size-3x4 .ticket-brand { font-size: 10pt; }
+  .print-size-3x4 .ticket-brand { font-size: 11pt; }
   .print-size-3x5 .ticket-item,
   .print-size-3x4 .ticket-item { font-size: 8pt; }
   .print-size-3x5 .ticket-customer,
   .print-size-3x4 .ticket-customer { font-size: 9pt; }
 
+  /* Prep list print styles */
+  .prep-list-printable {
+    display: block !important;
+    width: 100%;
+    font-family: 'DM Sans', sans-serif;
+    color: #000;
+  }
+  .prep-list-printable .prep-print-header {
+    text-align: center;
+    font-family: 'Playfair Display', serif;
+    font-size: 16pt; font-weight: 700;
+    margin-bottom: 4pt;
+  }
+  .prep-list-printable .prep-print-date {
+    text-align: center;
+    font-size: 10pt; color: #555;
+    margin-bottom: 12pt;
+  }
+  .prep-list-printable table {
+    width: 100%; border-collapse: collapse;
+  }
+  .prep-list-printable th {
+    font-size: 9pt; font-weight: 700;
+    text-transform: uppercase; letter-spacing: .08em;
+    border-bottom: 2px solid #333;
+    padding: 4pt 6pt; text-align: left;
+  }
+  .prep-list-printable th:last-child { text-align: right; }
+  .prep-list-printable td {
+    font-size: 10pt; padding: 5pt 6pt;
+    border-bottom: 1px solid #ddd;
+  }
+  .prep-list-printable td:last-child {
+    text-align: right; font-weight: 600;
+  }
+  .prep-list-printable .prep-product-name { font-weight: 600; }
+  .prep-list-printable .prep-variation-name { padding-left: 16pt; color: #444; }
 }
 
 /* ── Testimonials Admin ──────────────────────────────────── */
