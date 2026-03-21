@@ -589,6 +589,10 @@
       <div class="orders-header">
         <h2 class="section-heading">Orders</h2>
         <div class="orders-actions">
+          <button type="button" class="btn-secondary" id="prep-list-btn" title="View prep list">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/><path d="M9 14l2 2 4-4"/></svg>
+            Prep List
+          </button>
           <button type="button" class="btn-secondary" id="bulk-print-btn" title="Print order tickets">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
             Print Tickets
@@ -629,6 +633,7 @@
             <option value="letter">Letter (8.5 x 11)</option>
             <option value="4x6" selected>Label (4 x 6)</option>
             <option value="4x5">Label (4 x 5)</option>
+            <option value="4x4">Label (4 x 4)</option>
             <option value="3x5">Label (3 x 5)</option>
             <option value="3x4">Label (3 x 4)</option>
           </select>
@@ -658,6 +663,30 @@
         </div>
       </div>
     </div><!-- /print-modal -->
+
+    <!-- Prep List Modal -->
+    <div class="print-modal-overlay hidden" id="prep-modal">
+      <div class="print-modal prep-modal-wide">
+        <div class="prep-modal-header">
+          <h3>Prep List</h3>
+          <div class="prep-modal-actions-top">
+            <button type="button" class="btn-secondary btn-sm" id="prep-print-btn" title="Print prep list">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+              Print
+            </button>
+            <button type="button" class="btn-secondary btn-sm" id="prep-download-btn" title="Download as CSV">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+              Download
+            </button>
+          </div>
+        </div>
+        <div class="prep-date-label" id="prep-date-label"></div>
+        <div class="prep-list-body" id="prep-list-body"></div>
+        <div class="print-modal-actions">
+          <button type="button" class="btn-ghost" id="prep-close">Done</button>
+        </div>
+      </div>
+    </div><!-- /prep-modal -->
 
     <!-- Tab: Analytics -->
     <div id="tab-analytics" class="tab-panel">
