@@ -752,13 +752,13 @@ body::after {
 .btn-secondary {
   font-family: 'DM Sans', sans-serif; font-size: .74rem; font-weight: 600;
   letter-spacing: .08em; text-transform: uppercase;
-  background: rgba(122,155,142,.35); color: var(--farm-cream);
-  border: 1px solid rgba(122,155,142,.5); border-radius: 4px;
+  background: rgba(122,155,142,.6); color: var(--farm-cream);
+  border: 1px solid rgba(122,155,142,.7); border-radius: 4px;
   padding: .45rem 1rem; cursor: pointer;
   transition: background .2s, border-color .2s;
   display: inline-flex; align-items: center; gap: .4rem; white-space: nowrap;
 }
-.btn-secondary:hover { background: rgba(122,155,142,.5); border-color: var(--sage-light); }
+.btn-secondary:hover { background: rgba(122,155,142,.75); border-color: var(--sage-light); }
 .btn-secondary:disabled { opacity: .5; cursor: default; }
 .btn-secondary:focus-visible { outline: 2px solid var(--wheat-gold); outline-offset: 3px; }
 
