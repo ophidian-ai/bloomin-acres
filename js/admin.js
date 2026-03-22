@@ -978,20 +978,132 @@
       el.textContent = `@media print { @page { size: ${dim}; margin: 0; } }`;
     }
 
+    // Shared: build order data for a ticket
+    function buildTicketData(order, fields) {
+      const p = order.profiles;
+      const name = p ? [p.first_name, p.last_name].filter(Boolean).join(' ') || 'Customer' : 'Customer';
+      const phone = p?.phone || '';
+      const date = new Date(order.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+      const items = (order.order_items || []);
+      const total = (order.total_amount || 0) / 100;
+      const statusLabel = order.status === 'picked_up' ? 'Picked Up' : (order.status || 'paid').charAt(0).toUpperCase() + (order.status || 'paid').slice(1);
+      return { name, phone, date, items, total, statusLabel };
+    }
+
+    // Render one ticket onto a jsPDF page at given inch dimensions
+    function renderTicketToPdf(doc, order, fields, widthIn, heightIn) {
+      const DPI = 72; // jsPDF uses 72 points per inch
+      const w = widthIn * DPI;
+      const h = heightIn * DPI;
+      const margin = 0.35 * DPI;
+      const contentW = w - margin * 2;
+      let y = margin;
+      const d = buildTicketData(order, fields);
+
+      // Brand
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(16);
+      doc.text('BLOOMIN\' ACRES', w / 2, y, { align: 'center' });
+      y += 14;
+
+      // Order ID
+      if (fields.orderId) {
+        doc.setFont('helvetica', 'normal');
+        doc.setFontSize(8);
+        doc.text(`Order #${order.id.slice(0,8)}`, w / 2, y, { align: 'center' });
+        y += 10;
+      }
+
+      // Divider
+      doc.setDrawColor(150); doc.setLineDash([2, 2]);
+      doc.line(margin, y, w - margin, y);
+      doc.setLineDash([]);
+      y += 8;
+
+      // Customer
+      if (fields.name) {
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(11);
+        doc.text(d.name, margin, y);
+        y += 12;
+      }
+      if (fields.phone && d.phone) {
+        doc.setFont('helvetica', 'normal');
+        doc.setFontSize(8);
+        doc.text(d.phone, margin, y);
+        y += 10;
+      }
+      if (fields.date) {
+        doc.setFont('helvetica', 'normal');
+        doc.setFontSize(8);
+        doc.text(`${d.date} \u00B7 ${d.statusLabel}`, margin, y);
+        y += 10;
+      }
+
+      // Items
+      if (fields.items) {
+        doc.setDrawColor(150); doc.setLineDash([2, 2]);
+        doc.line(margin, y, w - margin, y);
+        doc.setLineDash([]);
+        y += 8;
+
+        doc.setFont('helvetica', 'normal');
+        doc.setFontSize(9);
+        d.items.forEach(i => {
+          const label = `${i.quantity}\u00D7 ${i.product_name || i.stripe_product_id}`;
+          // Wrap long text
+          const lines = doc.splitTextToSize(label, fields.prices ? contentW * 0.7 : contentW);
+          lines.forEach((line, idx) => {
+            doc.text(line, margin, y);
+            if (fields.prices && idx === 0) {
+              doc.text(fmtUSD.format((i.unit_amount * i.quantity) / 100), w - margin, y, { align: 'right' });
+            }
+            y += 11;
+          });
+        });
+
+        if (fields.prices) {
+          doc.setDrawColor(150); doc.setLineDash([2, 2]);
+          doc.line(margin, y, w - margin, y);
+          doc.setLineDash([]);
+          y += 8;
+          doc.setFont('helvetica', 'bold');
+          doc.setFontSize(10);
+          doc.text('TOTAL', margin, y);
+          doc.text(fmtUSD.format(d.total), w - margin, y, { align: 'right' });
+        }
+      }
+    }
+
     function printTickets(orders, size, fields) {
+      const isLabel = size !== 'letter';
+
+      // For label sizes, generate a PDF at exact dimensions using jsPDF
+      if (isLabel && window.jspdf) {
+        const dims = { '4x6': [4,6], '4x5': [4,5], '4x4': [4,4], '3x5': [3,5], '3x4': [3,4] };
+        const [wIn, hIn] = dims[size] || [4, 6];
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF({ unit: 'pt', format: [wIn * 72, hIn * 72] });
+
+        orders.forEach((order, idx) => {
+          if (idx > 0) doc.addPage([wIn * 72, hIn * 72]);
+          renderTicketToPdf(doc, order, fields, wIn, hIn);
+        });
+
+        // Save as downloadable PDF — Christina shares this to Munbyn Print
+        const dateStr = new Date().toISOString().slice(0, 10);
+        doc.save(`order-labels-${size}-${dateStr}.pdf`);
+        showToast(`${orders.length} label${orders.length !== 1 ? 's' : ''} downloaded as PDF`);
+        return;
+      }
+
+      // Fallback: letter size uses window.print()
       const area = document.getElementById('print-area');
       area.className = `print-area print-size-${size}`;
       setPageSize(size);
 
       const tickets = orders.map(order => {
-        const p = order.profiles;
-        const name = p ? [p.first_name, p.last_name].filter(Boolean).join(' ') || 'Customer' : 'Customer';
-        const phone = p?.phone || '';
-        const date = new Date(order.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
-        const items = (order.order_items || []);
-        const total = (order.total_amount || 0) / 100;
-        const statusLabel = order.status === 'picked_up' ? 'Picked Up' : (order.status || 'paid').charAt(0).toUpperCase() + (order.status || 'paid').slice(1);
-
+        const d = buildTicketData(order, fields);
         const ticket = document.createElement('div');
         ticket.className = 'print-ticket';
 
@@ -1012,24 +1124,24 @@
         if (fields.name) {
           const cust = document.createElement('div');
           cust.className = 'ticket-customer';
-          cust.textContent = name;
+          cust.textContent = d.name;
           ticket.appendChild(cust);
         }
-        if (fields.phone && phone) {
+        if (fields.phone && d.phone) {
           const ph = document.createElement('div');
           ph.className = 'ticket-phone';
-          ph.textContent = phone;
+          ph.textContent = d.phone;
           ticket.appendChild(ph);
         }
         if (fields.date) {
           const dt = document.createElement('div');
           dt.className = 'ticket-date';
-          dt.textContent = `${date} \u00B7 ${statusLabel}`;
+          dt.textContent = `${d.date} \u00B7 ${d.statusLabel}`;
           ticket.appendChild(dt);
         }
         if (fields.items) {
           ticket.appendChild(createDivider());
-          items.forEach(i => {
+          d.items.forEach(i => {
             const row = document.createElement('div');
             row.className = 'ticket-item';
             const nameSpan = document.createElement('span');
@@ -1049,7 +1161,7 @@
             const totalLabel = document.createElement('strong');
             totalLabel.textContent = 'TOTAL';
             const totalVal = document.createElement('strong');
-            totalVal.textContent = fmtUSD.format(total);
+            totalVal.textContent = fmtUSD.format(d.total);
             totalRow.appendChild(totalLabel);
             totalRow.appendChild(totalVal);
             ticket.appendChild(totalRow);
