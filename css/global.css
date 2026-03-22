@@ -220,7 +220,7 @@ img { display: block; max-width: 100%; }
 /* ── CTA Button ─────────────────────────────────────────── */
 .cta-btn {
   display: inline-flex; align-items: center; gap: .6rem;
-  background: var(--burnt-orange); color: var(--farm-cream);
+  background: #a84832; color: var(--farm-cream);
   font-family: var(--font-body); font-weight: 600; font-size: .95rem;
   letter-spacing: .05em; text-decoration: none;
   padding: .9rem 2.25rem; border-radius: 3px;
@@ -286,8 +286,8 @@ img { display: block; max-width: 100%; }
   position: absolute; top: -3px; right: -5px;
   background: var(--burnt-orange);
   color: #fff;
-  font-size: .58rem; font-weight: 700;
-  min-width: 15px; height: 15px;
+  font-size: .65rem; font-weight: 700;
+  min-width: 17px; height: 17px;
   border-radius: 8px;
   display: flex; align-items: center; justify-content: center;
   padding: 0 3px;
@@ -572,8 +572,8 @@ img { display: block; max-width: 100%; }
   margin-top: 6px;
 }
 .cart-qty-btn {
-  width: 28px;
-  height: 28px;
+  width: 36px;
+  height: 36px;
   border-radius: 4px;
   border: 1px solid #F0E4D0;
   background: #FAF0E6;
@@ -775,3 +775,8 @@ img { display: block; max-width: 100%; }
   text-decoration: underline;
 }
 .guest-signin-link:hover { color: #C85A3A; }
+
+/* ── Mobile Fixes ─────────────────────────────────────── */
+@media (max-width: 768px) {
+  body { background-attachment: scroll !important; }
+}
