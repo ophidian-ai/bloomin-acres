@@ -1299,12 +1299,14 @@
       const entries = Object.entries(days);
       const max = Math.max(...entries.map(e => e[1]), 1);
 
-      container.innerHTML = `<div class="chart-bars">${entries.map(([date, val]) => {
+      const dense = entries.length > 14;
+      container.innerHTML = `<div class="chart-bars${dense ? ' chart-bars-dense' : ''}">${entries.map(([date, val]) => {
         const pct = (val / max) * 100;
         const label = new Date(date + 'T12:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
         return `<div class="chart-bar-col" title="${label}: ${fmtUSD.format(val)}">
+          <div class="chart-bar-value">${val > 0 ? fmtUSD.format(val) : ''}</div>
           <div class="chart-bar" style="--bar-h:${Math.max(pct, 2)}%"></div>
-          <div class="chart-bar-label">${entries.length <= 14 ? label : ''}</div>
+          <div class="chart-bar-label">${!dense ? label : ''}</div>
         </div>`;
       }).join('')}</div>`;
     }
