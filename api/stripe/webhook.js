@@ -105,6 +105,8 @@ export default async function handler(req, res) {
           stripe_session_id: session.id,
           status:           'paid',
           total_amount:     session.amount_total,
+          customer_name:    session.customer_details?.name || null,
+          customer_email:   session.customer_details?.email || null,
         })
         .select()
         .single();
