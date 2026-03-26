@@ -64,6 +64,8 @@ create table if not exists orders (
   stripe_session_id text unique,
   status text not null default 'pending',
   total_amount integer,
+  customer_name text,
+  customer_email text,
   created_at timestamptz default now()
 );
 

@@ -810,8 +810,10 @@
         if (search) {
           const p = o.profiles;
           const name = p ? `${p.first_name || ''} ${p.last_name || ''}`.toLowerCase() : '';
+          const stripeName = (o.customer_name || '').toLowerCase();
+          const email = (o.customer_email || '').toLowerCase();
           const id = o.id.toLowerCase();
-          if (!name.includes(search) && !id.includes(search)) return false;
+          if (!name.includes(search) && !stripeName.includes(search) && !email.includes(search) && !id.includes(search)) return false;
         }
         return true;
       });
@@ -831,8 +833,9 @@
       }
       list.innerHTML = filteredOrders.map(order => {
         const p = order.profiles;
-        const name = p ? [p.first_name, p.last_name].filter(Boolean).join(' ') || 'Unknown' : 'Unknown';
+        const name = p ? [p.first_name, p.last_name].filter(Boolean).join(' ') || order.customer_name || 'Unknown' : order.customer_name || 'Unknown';
         const phone = p?.phone || '';
+        const email = order.customer_email || '';
         const date = new Date(order.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit' });
         const items = (order.order_items || []).map(i =>
           `<div class="admin-order-item"><span>${escHtml(i.product_name || i.stripe_product_id)} &times; ${i.quantity}</span><span>${fmtUSD.format((i.unit_amount * i.quantity) / 100)}</span></div>`
@@ -841,7 +844,7 @@
           <div class="admin-order-header">
             <div class="admin-order-customer">
               <strong>${escHtml(name)}</strong>
-              ${phone ? `<span class="admin-order-phone">${escHtml(phone)}</span>` : ''}
+              ${phone ? `<span class="admin-order-phone">${escHtml(phone)}</span>` : email ? `<span class="admin-order-phone">${escHtml(email)}</span>` : ''}
             </div>
             <div class="admin-order-meta">
               <span class="admin-order-date">${escHtml(date)}</span>
@@ -985,7 +988,7 @@
 
       const tickets = orders.map(order => {
         const p = order.profiles;
-        const name = p ? [p.first_name, p.last_name].filter(Boolean).join(' ') || 'Customer' : 'Customer';
+        const name = p ? [p.first_name, p.last_name].filter(Boolean).join(' ') || order.customer_name || 'Customer' : order.customer_name || 'Customer';
         const phone = p?.phone || '';
         const date = new Date(order.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
         const items = (order.order_items || []);
@@ -1370,7 +1373,9 @@
           <div class="insight-label">Top Customers</div>
           ${topCustomers.length ? topCustomers.map(([uid, spend]) => {
             const p = analyticsData.profileMap[uid];
-            const name = p ? [p.first_name, p.last_name].filter(Boolean).join(' ') || uid.slice(0,8) : uid.slice(0,8);
+            const userOrders = orders.filter(o => o.user_id === uid);
+            const stripeName = userOrders.find(o => o.customer_name)?.customer_name;
+            const name = p ? [p.first_name, p.last_name].filter(Boolean).join(' ') || stripeName || uid.slice(0,8) : stripeName || uid.slice(0,8);
             return `<div class="top-customer-row"><span>${escHtml(name)}</span><span>${fmtUSD.format(spend / 100)}</span></div>`;
           }).join('') : '<div class="grid-message">No data</div>'}
         </div>`;
