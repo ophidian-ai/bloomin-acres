@@ -1357,6 +1357,14 @@ body::after {
   min-height: 2px;
 }
 .chart-bar-col:hover .chart-bar { background: var(--wheat-gold); }
+.chart-bar-value {
+  font-size: .6rem; color: rgba(250,240,230,.5);
+  white-space: nowrap; margin-bottom: 3px;
+  min-height: 1em;
+}
+.chart-bar-col:hover .chart-bar-value { color: var(--wheat-gold); }
+.chart-bars-dense .chart-bar-value { opacity: 0; transition: opacity .15s; }
+.chart-bars-dense .chart-bar-col:hover .chart-bar-value { opacity: 1; }
 .chart-bar-label {
   font-size: .58rem; color: rgba(250,240,230,.3);
   margin-top: 4px; white-space: nowrap;
