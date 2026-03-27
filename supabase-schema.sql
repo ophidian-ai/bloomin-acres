@@ -223,7 +223,8 @@ create table if not exists club_members (
   stripe_subscription_id text unique,
   status                 text not null default 'active', -- 'active' | 'cancelled' | 'past_due'
   started_at             timestamptz default now(),
-  cancelled_at           timestamptz
+  cancelled_at           timestamptz,
+  pending_referral_code  text          -- stored on subscribe, cleared when first order qualifies the referral
 );
 alter table club_members enable row level security;
 create policy "Users read own membership"

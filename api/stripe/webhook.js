@@ -80,18 +80,16 @@ export default async function handler(req, res) {
 
     // Handle club subscription signup — store customer_id on the membership
     if (session.mode === 'subscription' && userId) {
+      const referralCode = session.metadata?.referral_code || null;
       await sb.from('club_members').upsert({
         user_id:            userId,
         stripe_customer_id: session.customer,
         stripe_subscription_id: session.subscription,
         status: 'active',
+        pending_referral_code: referralCode,
       }, { onConflict: 'user_id' });
-
-      // Handle referral for club signup
-      const referralCode = session.metadata?.referral_code;
-      if (referralCode) {
-        await recordReferral(sb, referralCode, userId, 'club', 10);
-      }
+      // Referral is NOT credited here — it requires subscribe + first order.
+      // The referral is stored as pending and credited when the first order is placed.
     }
 
     // Handle one-time box order
@@ -121,6 +119,20 @@ export default async function handler(req, res) {
         }));
         await sb.from('order_items').insert(orderItemRows);
         await sb.from('user_cart').delete().eq('user_id', userId);
+      }
+
+      // Credit pending club referral on first order (subscribe + order = qualified)
+      const { data: memberRow } = await sb
+        .from('club_members')
+        .select('pending_referral_code')
+        .eq('user_id', userId)
+        .maybeSingle();
+
+      if (memberRow?.pending_referral_code) {
+        await recordReferral(sb, memberRow.pending_referral_code, userId, 'club', 10);
+        await sb.from('club_members')
+          .update({ pending_referral_code: null })
+          .eq('user_id', userId);
       }
 
       // Handle referral for regular purchase
@@ -162,16 +174,15 @@ async function recordReferral(sb, code, referredUserId, type, discountPct) {
     discount_pct: discountPct,
   });
 
-  // Check milestone thresholds (5, 15, 25) and store notification in site_content
+  // Check milestone thresholds (1, 3, 5) and store notification
   const { count: total } = await sb
     .from('referral_uses')
     .select('id', { count: 'exact', head: true })
     .eq('referrer_id', codeRow.user_id);
 
-  const milestones = [5, 15, 25];
+  const milestones = [1, 3, 5];
   for (const m of milestones) {
     if (total === m) {
-      // Mark milestone reached in site_content as a simple notification key
       await sb.from('site_content').upsert({
         key:   `referral-milestone-${codeRow.user_id}-${m}`,
         value: new Date().toISOString(),

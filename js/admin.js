@@ -726,7 +726,7 @@
     async function loadRewardTexts() {
       const { data } = await sb.from('site_content')
         .select('key, value')
-        .in('key', ['referral-reward-5', 'referral-reward-15', 'referral-reward-25']);
+        .in('key', ['referral-reward-1', 'referral-reward-3', 'referral-reward-5']);
       (data || []).forEach(row => {
         const suffix = row.key.replace('referral-reward-', '');
         const el = document.getElementById(`reward-text-${suffix}`);
@@ -735,9 +735,9 @@
     }
 
     function setupRewardSaveButtons() {
-      [['save-reward-5', 'reward-text-5', 'referral-reward-5'],
-       ['save-reward-15', 'reward-text-15', 'referral-reward-15'],
-       ['save-reward-25', 'reward-text-25', 'referral-reward-25']].forEach(([btnId, inputId, key]) => {
+      [['save-reward-1', 'reward-text-1', 'referral-reward-1'],
+       ['save-reward-3', 'reward-text-3', 'referral-reward-3'],
+       ['save-reward-5', 'reward-text-5', 'referral-reward-5']].forEach(([btnId, inputId, key]) => {
         document.getElementById(btnId)?.addEventListener('click', async () => {
           const btn = document.getElementById(btnId);
           const val = document.getElementById(inputId).value.trim();

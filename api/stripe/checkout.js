@@ -98,10 +98,9 @@ export default async function handler(req, res) {
     // Determine discounts to apply (only one discount allowed per Stripe session)
     let appliedDiscount = null;
 
-    // Club member discount: 5% off when cart >= $25 AND membership verified server-side
-    const clubMinCents = 2500; // $25.00
+    // Club member discount: 5% off every order — no minimum
     const clubDiscountCoupon = process.env.STRIPE_CLUB_DISCOUNT_ID;
-    if (is_club_member && user_id && sb && clubDiscountCoupon && cartTotal >= clubMinCents) {
+    if (is_club_member && user_id && sb && clubDiscountCoupon) {
       // Verify club membership server-side (also allow admins)
       const [{ data: memberRow }, { data: adminRow }] = await Promise.all([
         sb.from('club_members').select('status').eq('user_id', user_id).maybeSingle(),
