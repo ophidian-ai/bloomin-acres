@@ -84,12 +84,12 @@
   // ── Load reward text from site_content ─────────────────────────────────────
   const { data: rewards } = await sb.from('site_content')
     .select('key, value')
-    .in('key', ['referral-reward-5', 'referral-reward-15', 'referral-reward-25']);
+    .in('key', ['referral-reward-1', 'referral-reward-3', 'referral-reward-5']);
   if (rewards) {
     for (const row of rewards) {
-      const elId = row.key === 'referral-reward-5' ? 'reward-5'
-                 : row.key === 'referral-reward-15' ? 'reward-15'
-                 : 'reward-25';
+      const elId = row.key === 'referral-reward-1' ? 'reward-1'
+                 : row.key === 'referral-reward-3' ? 'reward-3'
+                 : 'reward-5';
       const el = document.getElementById(elId);
       if (el && row.value) el.textContent = row.value;
     }
