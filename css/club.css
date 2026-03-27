@@ -94,6 +94,20 @@ body::after {
   filter: drop-shadow(0 8px 24px rgba(0,0,0,.5));
   mix-blend-mode: multiply;
 }
+.club-price-tag {
+  font-family: var(--font-display);
+  font-size: clamp(2rem, 5vw, 2.75rem);
+  font-weight: 700;
+  color: var(--wheat-gold);
+  margin-bottom: 1.5rem;
+  text-shadow: 0 2px 12px rgba(0,0,0,.4);
+}
+.club-price-tag span {
+  font-size: .45em;
+  font-weight: 500;
+  color: rgba(250,240,230,.6);
+  letter-spacing: .04em;
+}
 .club-hero-actions {
   display: flex;
   flex-direction: column;
@@ -250,11 +264,11 @@ body::after {
     radial-gradient(ellipse at 80% 30%, rgba(122,155,142,.07) 0%, transparent 50%);
   pointer-events: none;
 }
-.club-benefits-outer .club-section-inner { position: relative; z-index: 1; }
+.club-benefits-outer .club-section-inner { position: relative; z-index: 1; max-width: 1060px; }
 .benefits-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-  gap: 1.5rem;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 1.25rem;
   margin-bottom: 3rem;
 }
 .benefit-item {
@@ -328,6 +342,10 @@ body::after {
   letter-spacing: .06em;
   text-transform: uppercase;
   color: rgba(74,51,34,.6);
+}
+.flow-icon-highlight {
+  background: rgba(237,163,57,.2);
+  border-color: rgba(237,163,57,.6);
 }
 .flow-arrow {
   font-size: 1.5rem;
