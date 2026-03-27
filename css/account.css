@@ -748,6 +748,17 @@ body::after {
   padding-bottom: .6rem;
   border-bottom: 1px solid var(--cream-dark);
 }
+.field-hint {
+  font-size: .82rem; color: rgba(74,51,34,.5); margin: -.5rem 0 1rem; line-height: 1.5;
+}
+.delivery-check-row {
+  display: flex; align-items: center; gap: 1rem; margin-top: .5rem; flex-wrap: wrap;
+}
+.delivery-status {
+  font-size: .82rem; font-weight: 600;
+}
+.delivery-status.eligible { color: var(--sage-green); }
+.delivery-status.ineligible { color: var(--berry-red, #c85a3a); }
 .profile-row {
   display: flex; align-items: center; justify-content: space-between;
   flex-wrap: wrap; gap: .75rem;

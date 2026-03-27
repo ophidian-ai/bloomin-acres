@@ -34,6 +34,14 @@ create table if not exists profiles (
   first_name text,
   last_name text,
   phone text,
+  birthday date,
+  address text,
+  city text,
+  state text,
+  zip text,
+  delivery_lat double precision,
+  delivery_lng double precision,
+  delivery_eligible boolean,
   updated_at timestamptz default now()
 );
 
