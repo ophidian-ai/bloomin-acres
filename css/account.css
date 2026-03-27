@@ -887,6 +887,27 @@ body::after {
   justify-content: space-between;
   margin-bottom: 1.25rem;
 }
+/* Punch Card */
+.punch-card-desc {
+  font-size: .84rem; color: rgba(74,51,34,.6); margin: -.75rem 0 1rem; line-height: 1.5;
+}
+.punch-card-grid {
+  display: flex; gap: .6rem; flex-wrap: wrap; margin-bottom: .5rem;
+}
+.punch-dot {
+  width: 32px; height: 32px; border-radius: 50%;
+  border: 2px solid rgba(237,163,57,.3);
+  background: rgba(237,163,57,.06);
+  transition: background .2s, border-color .2s;
+}
+.punch-dot.punched {
+  background: var(--wheat-gold);
+  border-color: var(--wheat-gold);
+}
+.punch-card-label {
+  font-size: .78rem; font-weight: 600; color: rgba(74,51,34,.5);
+  letter-spacing: .05em;
+}
 .club-section-block h3 {
   font-family: var(--font-display);
   font-size: 1.15rem;

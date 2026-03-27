@@ -270,6 +270,10 @@
           <label for="profile-phone">Phone Number</label>
           <input type="tel" id="profile-phone" placeholder="(555) 000-0000" autocomplete="tel" />
         </div>
+        <div class="field">
+          <label for="profile-birthday">Birthday <span class="optional-label">(for your birthday treat)</span></label>
+          <input type="date" id="profile-birthday" autocomplete="bday" />
+        </div>
         <button class="btn-primary btn-primary-180" id="save-profile-btn">Save Changes</button>
       </div>
       <div class="profile-section">
@@ -327,6 +331,14 @@
             <span class="club-status-name">Bread Box Club</span>
           </div>
           <button type="button" class="btn-secondary" id="manage-billing-btn">Manage Billing</button>
+        </div>
+
+        <!-- Punch Card -->
+        <div class="club-section-block">
+          <h3>Punch Card</h3>
+          <p class="punch-card-desc">Every order earns a punch. Collect 10 for a free item.</p>
+          <div class="punch-card-grid" id="punch-card-grid"></div>
+          <div class="punch-card-label" id="punch-card-label">0 / 10</div>
         </div>
 
         <!-- Box builder -->

@@ -121,13 +121,30 @@ export default async function handler(req, res) {
         await sb.from('user_cart').delete().eq('user_id', userId);
       }
 
-      // Credit pending club referral on first order (subscribe + order = qualified)
+      // Punch card: increment for active club members
       const { data: memberRow } = await sb
         .from('club_members')
-        .select('pending_referral_code')
+        .select('pending_referral_code, punch_count, status')
         .eq('user_id', userId)
         .maybeSingle();
 
+      if (memberRow?.status === 'active') {
+        const newCount = (memberRow.punch_count || 0) + 1;
+        if (newCount >= 10) {
+          // Award free item and reset counter
+          await sb.from('referral_rewards').insert({
+            member_id: userId,
+            milestone: 0,
+            reward_type: 'punch_card_free_item',
+            reward_value: 'Free item — earned from 10 completed orders',
+          });
+          await sb.from('club_members').update({ punch_count: 0 }).eq('user_id', userId);
+        } else {
+          await sb.from('club_members').update({ punch_count: newCount }).eq('user_id', userId);
+        }
+      }
+
+      // Credit pending club referral on first order (subscribe + order = qualified)
       if (memberRow?.pending_referral_code) {
         await recordReferral(sb, memberRow.pending_referral_code, userId, 'club', 10);
         await sb.from('club_members')
@@ -174,15 +191,38 @@ async function recordReferral(sb, code, referredUserId, type, discountPct) {
     discount_pct: discountPct,
   });
 
-  // Check milestone thresholds (1, 3, 5) and store notification
+  // Check milestone thresholds (1, 3, 5) and issue rewards
   const { count: total } = await sb
     .from('referral_uses')
     .select('id', { count: 'exact', head: true })
     .eq('referrer_id', codeRow.user_id);
 
-  const milestones = [1, 3, 5];
-  for (const m of milestones) {
-    if (total === m) {
+  const rewardMap = {
+    1: { reward_type: 'bonus_discount', reward_value: '2% bonus discount for 30 days', ttlDays: 30 },
+    3: { reward_type: 'free_item',      reward_value: 'Free item credit — redeemable on any order', ttlDays: null },
+    5: { reward_type: 'promo_code',     reward_value: '10% off one order — single-use promo code', ttlDays: 90 },
+  };
+
+  for (const [m, reward] of Object.entries(rewardMap)) {
+    if (total === Number(m)) {
+      // Idempotency: check if reward already issued for this milestone
+      const { count: alreadyIssued } = await sb
+        .from('referral_rewards')
+        .select('id', { count: 'exact', head: true })
+        .eq('member_id', codeRow.user_id)
+        .eq('milestone', Number(m));
+
+      if (alreadyIssued === 0) {
+        await sb.from('referral_rewards').insert({
+          member_id:    codeRow.user_id,
+          milestone:    Number(m),
+          reward_type:  reward.reward_type,
+          reward_value: reward.reward_value,
+          expires_at:   reward.ttlDays ? new Date(Date.now() + reward.ttlDays * 86400000).toISOString() : null,
+        });
+      }
+
+      // Store milestone notification
       await sb.from('site_content').upsert({
         key:   `referral-milestone-${codeRow.user_id}-${m}`,
         value: new Date().toISOString(),

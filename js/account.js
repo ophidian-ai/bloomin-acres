@@ -137,6 +137,7 @@
     document.getElementById('profile-first-name').value = firstName;
     document.getElementById('profile-last-name').value = lastName;
     document.getElementById('profile-phone').value = profile?.phone || '';
+    document.getElementById('profile-birthday').value = profile?.birthday || '';
 
     // Update greeting and avatar
     const initial = (firstName || user.email || 'U')[0].toUpperCase();
@@ -599,11 +600,12 @@
     const firstName = document.getElementById('profile-first-name').value.trim();
     const lastName = document.getElementById('profile-last-name').value.trim();
     const phone = document.getElementById('profile-phone').value.trim();
+    const birthday = document.getElementById('profile-birthday').value || null;
     const btn = document.getElementById('save-profile-btn');
     btn.disabled = true;
     btn.textContent = 'Saving…';
     const { error } = await sb.from('profiles').upsert(
-      { user_id: currentUser.id, first_name: firstName, last_name: lastName, phone, updated_at: new Date().toISOString() },
+      { user_id: currentUser.id, first_name: firstName, last_name: lastName, phone, birthday, updated_at: new Date().toISOString() },
       { onConflict: 'user_id' }
     );
     btn.disabled = false;
@@ -678,6 +680,16 @@
       const statusMap = { active: 'Active Member', past_due: 'Payment Due', cancelled: 'Cancelled' };
       badge.textContent = statusMap[member?.status] || member?.status || 'Active';
       badge.className = `club-status-badge ${member?.status || 'active'}`;
+    }
+
+    // Punch card
+    const punchCount = member?.punch_count || 0;
+    const punchGrid = document.getElementById('punch-card-grid');
+    if (punchGrid) {
+      punchGrid.innerHTML = Array.from({ length: 10 }, (_, i) =>
+        `<div class="punch-dot${i < punchCount ? ' punched' : ''}"></div>`
+      ).join('');
+      document.getElementById('punch-card-label').textContent = `${punchCount} / 10`;
     }
 
     // Manage billing
