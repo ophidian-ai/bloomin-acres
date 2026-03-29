@@ -273,6 +273,32 @@
         <button class="btn-primary btn-primary-180" id="save-profile-btn">Save Changes</button>
       </div>
       <div class="profile-section">
+        <h3>Delivery Address</h3>
+        <p class="field-hint">Club members get free delivery within our delivery zone.</p>
+        <div class="field">
+          <label for="profile-address">Street Address</label>
+          <input type="text" id="profile-address" placeholder="123 Main St" autocomplete="street-address" />
+        </div>
+        <div class="profile-name-grid">
+          <div class="field">
+            <label for="profile-city">City</label>
+            <input type="text" id="profile-city" placeholder="Hope" autocomplete="address-level2" />
+          </div>
+          <div class="field">
+            <label for="profile-state">State</label>
+            <input type="text" id="profile-state" placeholder="IN" maxlength="2" autocomplete="address-level1" />
+          </div>
+          <div class="field">
+            <label for="profile-zip">ZIP</label>
+            <input type="text" id="profile-zip" placeholder="47246" maxlength="10" autocomplete="postal-code" />
+          </div>
+        </div>
+        <div class="delivery-check-row">
+          <button type="button" class="btn-secondary" id="check-delivery-btn">Check Delivery Zone</button>
+          <span class="delivery-status" id="delivery-status"></span>
+        </div>
+      </div>
+      <div class="profile-section">
         <h3>Account</h3>
         <div class="profile-row">
           <span class="profile-label">Email</span>
