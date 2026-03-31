@@ -7,12 +7,7 @@
 html { scroll-behavior: smooth; }
 body {
   font-family: var(--font-body);
-  background-color: var(--earth-brown);
-  background-image: url('../brand-assets/farm-background.webp');
-  background-size: cover;
-  background-position: center center;
-  background-attachment: fixed;
-  background-repeat: no-repeat;
+  background-color: #FAF0E6;
   color: var(--earth-brown);
   line-height: 1.7;
   min-height: 100vh;

@@ -7,13 +7,8 @@
 * { box-sizing: border-box; margin: 0; padding: 0; }
 body {
   font-family: 'DM Sans', sans-serif;
-  background-color: var(--earth-brown);
-  background-image: url('/brand-assets/farm-background.webp');
-  background-size: cover;
-  background-position: center center;
-  background-attachment: fixed;
-  background-repeat: no-repeat;
-  color: var(--farm-cream);
+  background-color: #FAF0E6;
+  color: var(--earth-brown);
   min-height: 100vh;
 }
 body::after {
