@@ -62,9 +62,9 @@ body::after {
 .club-hero-overlay {
   position: absolute; inset: 0;
   background:
-    radial-gradient(ellipse at 30% 60%, rgba(237,163,57,.15) 0%, transparent 60%),
-    radial-gradient(ellipse at 75% 30%, rgba(122,155,142,.1) 0%, transparent 55%),
-    radial-gradient(ellipse at 50% 100%, rgba(200,90,58,.08) 0%, transparent 50%);
+    radial-gradient(ellipse at 30% 60%, rgba(213,176,123,.15) 0%, transparent 60%),
+    radial-gradient(ellipse at 75% 30%, rgba(141,163,153,.1) 0%, transparent 55%),
+    radial-gradient(ellipse at 50% 100%, rgba(158,62,62,.08) 0%, transparent 50%);
   pointer-events: none;
 }
 .club-hero-content {
@@ -77,8 +77,8 @@ body::after {
 .club-badge-pill {
   display: inline-block;
   padding: .35rem .9rem;
-  background: rgba(237,163,57,.15);
-  border: 1px solid rgba(237,163,57,.35);
+  background: rgba(213,176,123,.15);
+  border: 1px solid rgba(213,176,123,.35);
   border-radius: 999px;
   font-size: .7rem;
   font-weight: 700;
@@ -130,8 +130,8 @@ body::after {
   text-transform: uppercase;
   cursor: pointer;
   box-shadow:
-    0 4px 12px rgba(237,163,57,.35),
-    0 12px 32px rgba(237,163,57,.2);
+    0 4px 12px rgba(213,176,123,.35),
+    0 12px 32px rgba(213,176,123,.2);
   transition: opacity .2s, transform .15s, box-shadow .2s;
   text-decoration: none;
 }
@@ -139,8 +139,8 @@ body::after {
   opacity: .92;
   transform: translateY(-2px);
   box-shadow:
-    0 6px 16px rgba(237,163,57,.45),
-    0 16px 40px rgba(237,163,57,.28);
+    0 6px 16px rgba(213,176,123,.45),
+    0 16px 40px rgba(213,176,123,.28);
 }
 .club-cta-btn:active { transform: translateY(0); }
 .club-cta-btn:disabled { opacity: .5; cursor: not-allowed; transform: none; }
@@ -158,7 +158,7 @@ body::after {
 .club-hero-note {
   margin-top: 1rem;
   font-size: .75rem;
-  color: rgba(237,163,57,.7);
+  color: rgba(213,176,123,.7);
 }
 .club-hero-deco {
   position: absolute;
@@ -220,7 +220,7 @@ body::after {
   font-family: var(--font-display);
   font-size: 3.5rem;
   font-weight: 700;
-  color: rgba(237,163,57,.15);
+  color: rgba(213,176,123,.15);
   line-height: 1;
   position: absolute;
   top: 1.25rem;
@@ -240,7 +240,7 @@ body::after {
 }
 .step-desc {
   font-size: .875rem;
-  color: rgba(74,51,34,.65);
+  color: rgba(78,62,51,.65);
   line-height: 1.65;
 }
 
@@ -260,8 +260,8 @@ body::after {
   content: '';
   position: absolute; inset: 0;
   background:
-    radial-gradient(ellipse at 20% 50%, rgba(237,163,57,.08) 0%, transparent 60%),
-    radial-gradient(ellipse at 80% 30%, rgba(122,155,142,.07) 0%, transparent 50%);
+    radial-gradient(ellipse at 20% 50%, rgba(213,176,123,.08) 0%, transparent 60%),
+    radial-gradient(ellipse at 80% 30%, rgba(141,163,153,.07) 0%, transparent 50%);
   pointer-events: none;
 }
 .club-benefits-outer .club-section-inner { position: relative; z-index: 1; max-width: 1060px; }
@@ -283,7 +283,7 @@ body::after {
 }
 .benefit-item:hover {
   background: rgba(250,240,230,.1);
-  border-color: rgba(237,163,57,.25);
+  border-color: rgba(213,176,123,.25);
 }
 .benefit-icon { flex-shrink: 0; margin-top: .1rem; }
 .benefit-text { display: flex; flex-direction: column; gap: .3rem; }
@@ -305,7 +305,7 @@ body::after {
 .referral-section { background: #fff; }
 .referral-intro {
   font-size: 1rem;
-  color: rgba(74,51,34,.7);
+  color: rgba(78,62,51,.7);
   max-width: 560px;
   margin-bottom: 3rem;
   line-height: 1.75;
@@ -328,8 +328,8 @@ body::after {
 }
 .flow-icon {
   width: 52px; height: 52px;
-  background: rgba(237,163,57,.1);
-  border: 1.5px solid rgba(237,163,57,.3);
+  background: rgba(213,176,123,.1);
+  border: 1.5px solid rgba(213,176,123,.3);
   border-radius: 50%;
   display: flex;
   align-items: center;
@@ -341,15 +341,15 @@ body::after {
   font-weight: 600;
   letter-spacing: .06em;
   text-transform: uppercase;
-  color: rgba(74,51,34,.6);
+  color: rgba(78,62,51,.6);
 }
 .flow-icon-highlight {
-  background: rgba(237,163,57,.2);
-  border-color: rgba(237,163,57,.6);
+  background: rgba(213,176,123,.2);
+  border-color: rgba(213,176,123,.6);
 }
 .flow-arrow {
   font-size: 1.5rem;
-  color: rgba(237,163,57,.4);
+  color: rgba(213,176,123,.4);
   flex-shrink: 0;
   font-weight: 300;
 }
@@ -366,7 +366,7 @@ body::after {
   box-shadow: var(--glass-shadow);
 }
 .milestone-header {
-  background: linear-gradient(135deg, rgba(61,42,26,.6) 0%, rgba(42,30,20,.5) 100%);
+  background: linear-gradient(135deg, rgba(65,53,43,.6) 0%, rgba(46,41,29,.5) 100%);
   padding: .85rem 1.75rem;
   font-size: .72rem;
   font-weight: 700;
@@ -384,8 +384,8 @@ body::after {
   transition: background .2s;
 }
 .milestone-row:hover { background: rgba(250,240,230,.04); }
-.milestone-row.highlight { background: rgba(237,163,57,.08); }
-.milestone-row.highlight:hover { background: rgba(237,163,57,.12); }
+.milestone-row.highlight { background: rgba(213,176,123,.08); }
+.milestone-row.highlight:hover { background: rgba(213,176,123,.12); }
 .milestone-count {
   font-family: var(--font-display);
   font-size: 2rem;
@@ -409,8 +409,8 @@ body::after {
 
 /* User's code box */
 .my-code-box {
-  background: rgba(237,163,57,.08);
-  border: 1.5px solid rgba(237,163,57,.25);
+  background: rgba(213,176,123,.08);
+  border: 1.5px solid rgba(213,176,123,.25);
   border-radius: 12px;
   padding: 1.5rem;
   margin-bottom: 1.5rem;
@@ -431,7 +431,7 @@ body::after {
 .my-code-input {
   flex: 1;
   padding: .65rem .9rem;
-  border: 1.5px solid rgba(237,163,57,.3);
+  border: 1.5px solid rgba(213,176,123,.3);
   border-radius: 8px;
   font-family: var(--font-body);
   font-size: .85rem;
@@ -462,7 +462,7 @@ body::after {
 }
 .referral-cta p {
   font-size: .9rem;
-  color: rgba(74,51,34,.6);
+  color: rgba(78,62,51,.6);
   margin-bottom: 1.25rem;
 }
 
