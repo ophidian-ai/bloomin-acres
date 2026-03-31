@@ -200,7 +200,7 @@ body::after {
   gap: 2rem;
 }
 .step-card {
-  background: #fff;
+  background: #F6EADC;
   border-radius: 16px;
   padding: 2.25rem 2rem;
   box-shadow: var(--shadow-card);
@@ -297,7 +297,7 @@ body::after {
 .benefits-cta { text-align: center; }
 
 /* ── Referral Section ───────────────────────────────────── */
-.referral-section { background: #fff; }
+.referral-section { background: #F6EADC; }
 .referral-intro {
   font-size: 1rem;
   color: rgba(78,62,51,.7);

@@ -46,7 +46,7 @@ body {
 
 /* ── Product Card ────────────────────────────────────────── */
 .product-card {
-  background: var(--farm-cream);
+  background: #F6EADC;
   border-radius: 8px;
   overflow: hidden;
   box-shadow:
