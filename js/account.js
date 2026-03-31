@@ -138,6 +138,17 @@
     document.getElementById('profile-last-name').value = lastName;
     document.getElementById('profile-phone').value = profile?.phone || '';
     document.getElementById('profile-birthday').value = profile?.birthday || '';
+    document.getElementById('profile-address').value = profile?.address || '';
+    document.getElementById('profile-city').value = profile?.city || '';
+    document.getElementById('profile-state').value = profile?.state || '';
+    document.getElementById('profile-zip').value = profile?.zip || '';
+    if (profile?.delivery_eligible === true) {
+      document.getElementById('delivery-status').textContent = 'In delivery zone';
+      document.getElementById('delivery-status').className = 'delivery-status eligible';
+    } else if (profile?.delivery_eligible === false) {
+      document.getElementById('delivery-status').textContent = 'Outside delivery zone';
+      document.getElementById('delivery-status').className = 'delivery-status ineligible';
+    }
 
     // Update greeting and avatar
     const initial = (firstName || user.email || 'U')[0].toUpperCase();
@@ -601,11 +612,15 @@
     const lastName = document.getElementById('profile-last-name').value.trim();
     const phone = document.getElementById('profile-phone').value.trim();
     const birthday = document.getElementById('profile-birthday').value || null;
+    const address = document.getElementById('profile-address').value.trim();
+    const city = document.getElementById('profile-city').value.trim();
+    const state = document.getElementById('profile-state').value.trim();
+    const zip = document.getElementById('profile-zip').value.trim();
     const btn = document.getElementById('save-profile-btn');
     btn.disabled = true;
     btn.textContent = 'Saving…';
     const { error } = await sb.from('profiles').upsert(
-      { user_id: currentUser.id, first_name: firstName, last_name: lastName, phone, birthday, updated_at: new Date().toISOString() },
+      { user_id: currentUser.id, first_name: firstName, last_name: lastName, phone, birthday, address, city, state, zip, updated_at: new Date().toISOString() },
       { onConflict: 'user_id' }
     );
     btn.disabled = false;
@@ -619,6 +634,54 @@
     document.getElementById('dash-greeting').textContent = firstName ? `Welcome back, ${firstName}` : 'Welcome back';
     document.getElementById('dash-avatar').textContent = (firstName || currentUser.email || 'U')[0].toUpperCase();
     showToast('Profile saved');
+  });
+
+  // Check delivery zone
+  document.getElementById('check-delivery-btn')?.addEventListener('click', async () => {
+    const address = document.getElementById('profile-address').value.trim();
+    const city = document.getElementById('profile-city').value.trim();
+    const state = document.getElementById('profile-state').value.trim();
+    const zip = document.getElementById('profile-zip').value.trim();
+    const fullAddress = [address, city, state, zip].filter(Boolean).join(', ');
+    if (!fullAddress) { showToast('Please enter an address first', true); return; }
+
+    const btn = document.getElementById('check-delivery-btn');
+    const statusEl = document.getElementById('delivery-status');
+    btn.disabled = true; btn.textContent = 'Checking…';
+    statusEl.textContent = ''; statusEl.className = 'delivery-status';
+
+    const res = await fetch('/api/geo-fence', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ address: fullAddress }),
+    }).catch(() => null);
+
+    btn.disabled = false; btn.textContent = 'Check Delivery Zone';
+
+    if (!res || !res.ok) {
+      statusEl.textContent = 'Could not check — try again';
+      statusEl.className = 'delivery-status ineligible';
+      return;
+    }
+
+    const data = await res.json();
+    if (data.eligible) {
+      statusEl.textContent = `In delivery zone (${data.distance} mi)`;
+      statusEl.className = 'delivery-status eligible';
+    } else {
+      statusEl.textContent = data.distance
+        ? `Outside delivery zone (${data.distance} mi — max ${data.radius} mi)`
+        : (data.error || 'Address not found');
+      statusEl.className = 'delivery-status ineligible';
+    }
+
+    // Save lat/lng and eligibility to profile
+    await sb.from('profiles').upsert({
+      user_id: currentUser.id,
+      delivery_lat: data.lat || null,
+      delivery_lng: data.lng || null,
+      delivery_eligible: data.eligible ?? null,
+    }, { onConflict: 'user_id' });
   });
 
   // Change password

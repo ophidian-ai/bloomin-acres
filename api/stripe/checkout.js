@@ -142,6 +142,27 @@ export default async function handler(req, res) {
       sessionParams.discounts = [appliedDiscount];
     }
 
+    // Delivery fee: free for club members in the delivery zone, otherwise charge if delivery requested
+    if (req.body.delivery && sb && user_id) {
+      const { data: profileRow } = await sb
+        .from('profiles')
+        .select('delivery_eligible')
+        .eq('user_id', user_id)
+        .maybeSingle();
+
+      const isMemberWithFreeDelivery = appliedDiscount?.coupon === clubDiscountCoupon && profileRow?.delivery_eligible === true;
+
+      if (!isMemberWithFreeDelivery) {
+        // Add delivery fee line item (configurable via STRIPE_DELIVERY_PRICE_ID)
+        const deliveryPriceId = process.env.STRIPE_DELIVERY_PRICE_ID;
+        if (deliveryPriceId) {
+          sessionParams.line_items.push({ price: deliveryPriceId, quantity: 1 });
+        }
+      }
+      sessionParams.metadata.delivery = 'true';
+      sessionParams.metadata.free_delivery = isMemberWithFreeDelivery ? 'true' : 'false';
+    }
+
     const session = await stripe.checkout.sessions.create(sessionParams);
     res.json({ url: session.url });
   } catch (err) {
