@@ -6,8 +6,8 @@
 /* ── Body / Page Base ───────────────────────────────────── */
 body {
   font-family: var(--font-body);
-  background-color: var(--earth-brown);
-  background-image: url('../brand-assets/farm-background.webp');
+  background-color: #FAF0E6;
+  background-image: url('../brand-assets/menu-bg.jpg');
   background-size: cover;
   background-position: center center;
   background-attachment: fixed;
@@ -17,6 +17,19 @@ body {
   min-height: 100vh;
   display: flex;
   flex-direction: column;
+  position: relative;
+}
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background: rgba(250,240,230,.8);
+  z-index: 0;
+  pointer-events: none;
+}
+body > * {
+  position: relative;
+  z-index: 1;
 }
 
 .page-wrap { flex: 1; }
