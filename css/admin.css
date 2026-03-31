@@ -489,12 +489,23 @@ body::after {
   border-bottom: 1.5px dotted rgba(78,62,51,.2);
   margin-bottom: 3px;
 }
-.reorder-btn {
-  background: transparent; border: none; cursor: pointer;
-  color: rgba(78,62,51,.3); padding: .1rem;
+.drag-handle {
+  display: flex; align-items: center; justify-content: center;
+  cursor: grab; color: rgba(78,62,51,.28);
+  padding: .15rem .1rem; flex-shrink: 0;
   transition: color .2s;
+  touch-action: none;
 }
-.reorder-btn:hover { color: var(--sage-dark); }
+.drag-handle:hover { color: var(--sage-dark); }
+.drag-handle:active { cursor: grabbing; }
+.section-block.dragging,
+.item-row.dragging { opacity: .35; }
+.section-block.drag-over {
+  outline: 2px dashed rgba(141,163,153,.55);
+  outline-offset: 3px;
+  border-radius: 4px;
+}
+.item-row.drag-over { background: rgba(141,163,153,.13); border-radius: 3px; }
 
 /* ── Add item / section links ───────────────────────────── */
 .add-item-link {

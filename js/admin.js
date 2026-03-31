@@ -5,6 +5,7 @@
     let sections = [];      // { id?, title, items: [{ id?, stripe_product_id }] }
     let savedMenus = [];    // { id, title, sections, created_at }
     let loadedMenuId = null; // ID of the saved menu currently loaded in editor
+    let dragState = null;   // { type: 'section'|'item', si, ii? }
 
     // ── Init ─────────────────────────────────────────────────────────────────
     async function init() {
@@ -170,14 +171,51 @@
       sections.forEach((sec, si) => renderSection(container, sec, si));
     }
 
+    const DRAG_HANDLE_SVG = `<svg width="10" height="14" viewBox="0 0 10 14" fill="currentColor" aria-hidden="true"><circle cx="3" cy="3" r="1.2"/><circle cx="7" cy="3" r="1.2"/><circle cx="3" cy="7" r="1.2"/><circle cx="7" cy="7" r="1.2"/><circle cx="3" cy="11" r="1.2"/><circle cx="7" cy="11" r="1.2"/></svg>`;
+
     function renderSection(container, sec, si) {
       const block = document.createElement('div');
       block.className = 'section-block';
       block.dataset.si = si;
+      block.draggable = true;
+
+      block.addEventListener('dragstart', e => {
+        dragState = { type: 'section', si };
+        e.dataTransfer.effectAllowed = 'move';
+        block.classList.add('dragging');
+      });
+      block.addEventListener('dragend', () => {
+        dragState = null;
+        block.classList.remove('dragging');
+        document.querySelectorAll('.section-block.drag-over').forEach(el => el.classList.remove('drag-over'));
+      });
+      block.addEventListener('dragover', e => {
+        if (!dragState || dragState.type !== 'section') return;
+        e.preventDefault();
+        e.dataTransfer.dropEffect = 'move';
+        document.querySelectorAll('.section-block.drag-over').forEach(el => el.classList.remove('drag-over'));
+        block.classList.add('drag-over');
+      });
+      block.addEventListener('drop', e => {
+        e.preventDefault();
+        if (!dragState || dragState.type !== 'section') return;
+        const fromSi = dragState.si;
+        const toSi = parseInt(block.dataset.si, 10);
+        if (fromSi === toSi) return;
+        const moved = sections.splice(fromSi, 1)[0];
+        sections.splice(toSi, 0, moved);
+        dragState = null;
+        renderMenuEditor();
+      });
 
       // Title row
       const titleRow = document.createElement('div');
       titleRow.className = 'section-title-row';
+
+      const sectionHandle = document.createElement('div');
+      sectionHandle.className = 'drag-handle';
+      sectionHandle.setAttribute('aria-label', 'Drag to reorder section');
+      sectionHandle.innerHTML = DRAG_HANDLE_SVG;
 
       const titleInput = document.createElement('input');
       titleInput.type = 'text';
@@ -198,6 +236,7 @@
         renderMenuEditor();
       });
 
+      titleRow.appendChild(sectionHandle);
       titleRow.appendChild(titleInput);
       titleRow.appendChild(deleteBtn);
       block.appendChild(titleRow);
@@ -230,30 +269,45 @@
     function renderItem(list, item, si, ii) {
       const row = document.createElement('div');
       row.className = 'item-row';
+      row.draggable = true;
 
-      // Up button
-      const upBtn = document.createElement('button');
-      upBtn.className = 'reorder-btn'; upBtn.type = 'button';
-      upBtn.title = 'Move up'; upBtn.setAttribute('aria-label', 'Move item up');
-      upBtn.innerHTML = `<svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M2 7l3-4 3 4" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
-      upBtn.addEventListener('click', () => {
-        if (ii === 0) return;
+      row.addEventListener('dragstart', e => {
+        e.stopPropagation();
+        dragState = { type: 'item', si, ii };
+        e.dataTransfer.effectAllowed = 'move';
+        row.classList.add('dragging');
+      });
+      row.addEventListener('dragend', () => {
+        dragState = null;
+        row.classList.remove('dragging');
+        document.querySelectorAll('.item-row.drag-over').forEach(el => el.classList.remove('drag-over'));
+      });
+      row.addEventListener('dragover', e => {
+        if (!dragState || dragState.type !== 'item' || dragState.si !== si) return;
+        e.preventDefault();
+        e.stopPropagation();
+        e.dataTransfer.dropEffect = 'move';
+        document.querySelectorAll('.item-row.drag-over').forEach(el => el.classList.remove('drag-over'));
+        row.classList.add('drag-over');
+      });
+      row.addEventListener('drop', e => {
+        e.preventDefault();
+        e.stopPropagation();
+        if (!dragState || dragState.type !== 'item' || dragState.si !== si) return;
+        const fromIi = dragState.ii;
+        const toIi = ii;
+        if (fromIi === toIi) return;
         const items = sections[si].items;
-        [items[ii-1], items[ii]] = [items[ii], items[ii-1]];
+        const moved = items.splice(fromIi, 1)[0];
+        items.splice(toIi, 0, moved);
+        dragState = null;
         renderMenuEditor();
       });
 
-      // Down button
-      const downBtn = document.createElement('button');
-      downBtn.className = 'reorder-btn'; downBtn.type = 'button';
-      downBtn.title = 'Move down'; downBtn.setAttribute('aria-label', 'Move item down');
-      downBtn.innerHTML = `<svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M2 3l3 4 3-4" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
-      downBtn.addEventListener('click', () => {
-        const items = sections[si].items;
-        if (ii === items.length - 1) return;
-        [items[ii], items[ii+1]] = [items[ii+1], items[ii]];
-        renderMenuEditor();
-      });
+      const itemHandle = document.createElement('div');
+      itemHandle.className = 'drag-handle';
+      itemHandle.setAttribute('aria-label', 'Drag to reorder item');
+      itemHandle.innerHTML = DRAG_HANDLE_SVG;
 
       // Product select
       const select = document.createElement('select');
@@ -288,7 +342,7 @@
         renderMenuEditor();
       });
 
-      row.append(upBtn, downBtn, select, dots, removeBtn);
+      row.append(itemHandle, select, dots, removeBtn);
       list.appendChild(row);
     }
 
