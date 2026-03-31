@@ -629,18 +629,6 @@
           content.appendChild(row);
         });
 
-        // Wheat separator after every 2nd section (not after the last)
-        if ((idx + 1) % 2 === 0 && idx < sections.length - 1) {
-          const sep = document.createElement('div');
-          sep.className = 'wheat-sep-wrap';
-          const sepImg = document.createElement('img');
-          sepImg.src = '/brand-assets/wheat-separator.png';
-          sepImg.className = 'wheat-sep';
-          sepImg.alt = '';
-          sep.appendChild(sepImg);
-          content.appendChild(sep);
-        }
-
       });
 
       // ── Print mode: add download toolbar ──
