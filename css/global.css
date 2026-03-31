@@ -24,14 +24,14 @@
 
 /* ── CSS Custom Properties ──────────────────────────────── */
 :root {
-  --wheat-gold:   #EDA339;
-  --sage-green:   #7A9B8E;
-  --sage-dark:    #4E6E64;
-  --sage-light:   #A8C4BB;
-  --burnt-orange: #C85A3A;
-  --berry-red:    #8B3A3A;
-  --earth-brown:  #4A3322;
-  --earth-mid:    #6B4C35;
+  --wheat-gold:   #D5B07B;
+  --sage-green:   #8DA399;
+  --sage-dark:    #6B847A;
+  --sage-light:   #A8BDB5;
+  --burnt-orange: #9E3E3E;
+  --berry-red:    #9E3E3E;
+  --earth-brown:  #4E3E33;
+  --earth-mid:    #6E5E50;
   --farm-cream:   #FAF0E6;
   --cream-dark:   #F0E4D0;
   --cream-warm:   #EDD9B8;
@@ -43,15 +43,15 @@
     0 8px 24px rgba(74,51,34,.10),
     0 20px 40px rgba(74,51,34,.08);
   --shadow-card-hover:
-    0 4px 8px rgba(74,51,34,.08),
-    0 16px 40px rgba(200,90,58,.14),
-    0 32px 64px rgba(74,51,34,.12);
+    0 4px 8px rgba(78,62,51,.08),
+    0 16px 40px rgba(158,62,62,.1),
+    0 32px 64px rgba(78,62,51,.12);
   --shadow-btn:
-    0 2px 8px rgba(200,90,58,.25),
-    0 8px 24px rgba(200,90,58,.18);
+    0 2px 8px rgba(158,62,62,.25),
+    0 8px 24px rgba(158,62,62,.18);
   --shadow-btn-hover:
-    0 4px 12px rgba(200,90,58,.35),
-    0 12px 32px rgba(200,90,58,.22);
+    0 4px 12px rgba(158,62,62,.35),
+    0 12px 32px rgba(158,62,62,.22);
 
   /* Glass card effect — matches sidebar glass */
   --glass-bg:
@@ -220,14 +220,14 @@ img { display: block; max-width: 100%; }
 /* ── CTA Button ─────────────────────────────────────────── */
 .cta-btn {
   display: inline-flex; align-items: center; gap: .6rem;
-  background: #a84832; color: var(--farm-cream);
+  background: #9E3E3E; color: var(--farm-cream);
   font-family: var(--font-body); font-weight: 600; font-size: .95rem;
   letter-spacing: .05em; text-decoration: none;
   padding: .9rem 2.25rem; border-radius: 3px;
   box-shadow: var(--shadow-btn);
   transition: transform 0.3s cubic-bezier(.22,1,.36,1), box-shadow 0.3s cubic-bezier(.22,1,.36,1), background 0.2s ease;
 }
-.cta-btn:hover  { background: #b34e31; transform: translateY(-2px); box-shadow: var(--shadow-btn-hover); }
+.cta-btn:hover  { background: #B34848; transform: translateY(-2px); box-shadow: var(--shadow-btn-hover); }
 .cta-btn:active { transform: translateY(0); box-shadow: var(--shadow-btn); }
 
 /* ── Overline label ─────────────────────────────────────── */
