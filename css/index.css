@@ -68,7 +68,7 @@ h1, h2, h3 { font-family: var(--font-display); letter-spacing: -0.03em; line-hei
 /* ── Cards ──────────────────────────────────────────────── */
 .product-card {
   border-radius: 6px; overflow: hidden;
-  background: var(--farm-cream);
+  background: #F6EADC;
   box-shadow: var(--shadow-card);
   transition: transform 0.45s cubic-bezier(.22,1,.36,1), box-shadow 0.45s cubic-bezier(.22,1,.36,1);
 }
@@ -90,9 +90,10 @@ h1, h2, h3 { font-family: var(--font-display); letter-spacing: -0.03em; line-hei
 
 /* ── Hours glass card ───────────────────────────────────── */
 .hours-card {
-  background: rgba(78,62,51,.04);
-  border: 1px solid rgba(78,62,51,.1);
+  background: #F6EADC;
+  border: 1px solid rgba(78,62,51,.12);
   border-radius: 4px; padding: 1.5rem 1.75rem;
+  box-shadow: 0 2px 8px rgba(74,51,34,.08);
 }
 
 /* ── Process step icon circles ──────────────────────────── */
@@ -297,18 +298,21 @@ h1, h2, h3 { font-family: var(--font-display); letter-spacing: -0.03em; line-hei
   gap: 2rem;
 }
 .testimonial-card {
-  background: rgba(255,255,255,.7);
-  -webkit-backdrop-filter: blur(6px);
-  backdrop-filter: blur(6px);
-  border: 1px solid rgba(200,169,110,.2);
+  background: #F6EADC;
+  border: 1px solid rgba(78,62,51,.12);
   border-radius: 16px;
   padding: 2rem 1.8rem 1.6rem;
   display: flex; flex-direction: column;
+  box-shadow:
+    0 2px 4px rgba(74,51,34,.06),
+    0 8px 24px rgba(74,51,34,.1);
   transition: transform .25s ease, box-shadow .25s ease;
 }
 .testimonial-card:hover {
   transform: translateY(-3px);
-  box-shadow: 0 8px 24px rgba(74,51,34,.1);
+  box-shadow:
+    0 4px 8px rgba(74,51,34,.08),
+    0 16px 40px rgba(74,51,34,.14);
 }
 .testimonial-quote-icon {
   font-family: var(--font-display); font-size: 3.5rem; line-height: 1;
@@ -574,10 +578,12 @@ h1, h2, h3 { font-family: var(--font-display); letter-spacing: -0.03em; line-hei
 .cal-event-detail.cal-hidden { display: none; }
 .testimonials-empty.cal-hidden { display: none; }
 .cal-event-card {
-  background: var(--farm-cream);
-  border: 1px solid rgba(74,51,34,.1);
+  background: #F6EADC;
+  border: 1px solid rgba(74,51,34,.12);
   border-radius: 10px; padding: 1.25rem 1.5rem;
-  box-shadow: 0 2px 8px rgba(74,51,34,.06);
+  box-shadow:
+    0 2px 4px rgba(74,51,34,.07),
+    0 6px 16px rgba(74,51,34,.09);
 }
 .cal-event-badge {
   display: inline-block; padding: .2rem .65rem;
