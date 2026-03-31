@@ -572,6 +572,7 @@ h1, h2, h3 { font-family: var(--font-display); letter-spacing: -0.03em; line-hei
   display: grid; gap: 1rem;
 }
 .cal-event-detail.cal-hidden { display: none; }
+.testimonials-empty.cal-hidden { display: none; }
 .cal-event-card {
   background: var(--farm-cream);
   border: 1px solid rgba(74,51,34,.1);
