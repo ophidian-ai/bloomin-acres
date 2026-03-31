@@ -232,7 +232,8 @@ create table if not exists club_members (
   status                 text not null default 'active', -- 'active' | 'cancelled' | 'past_due'
   started_at             timestamptz default now(),
   cancelled_at           timestamptz,
-  pending_referral_code  text          -- stored on subscribe, cleared when first order qualifies the referral
+  pending_referral_code  text,         -- stored on subscribe, cleared when first order qualifies the referral
+  punch_count            int not null default 0  -- incremented per order; resets to 0 after 10 (free item)
 );
 alter table club_members enable row level security;
 create policy "Users read own membership"
@@ -266,6 +267,35 @@ create policy "Users read own referral uses"
   on referral_uses for select using (auth.uid() = referrer_id);
 create policy "Service insert referral uses"
   on referral_uses for insert with check (true);
+
+-- Referral rewards (issued when a member hits a milestone)
+create table if not exists referral_rewards (
+  id           uuid primary key default gen_random_uuid(),
+  member_id    uuid not null references auth.users on delete cascade,
+  milestone    int not null,             -- 1, 3, or 5
+  reward_type  text not null,            -- 'bonus_discount' | 'free_item' | 'promo_code'
+  reward_value text,                     -- coupon ID, credit description, or promo code
+  expires_at   timestamptz,              -- null for free item (no expiry)
+  claimed_at   timestamptz,              -- null until redeemed
+  created_at   timestamptz default now()
+);
+alter table referral_rewards enable row level security;
+create policy "Users read own referral rewards"
+  on referral_rewards for select using (auth.uid() = member_id);
+
+-- Referral links (click tracking for analytics)
+create table if not exists referral_links (
+  id         uuid primary key default gen_random_uuid(),
+  member_id  uuid not null references auth.users on delete cascade,
+  code       text unique not null,
+  clicks     int not null default 0,
+  created_at timestamptz default now()
+);
+alter table referral_links enable row level security;
+create policy "Users read own referral links"
+  on referral_links for select using (auth.uid() = member_id);
+create policy "Public increment referral clicks"
+  on referral_links for update using (true);
 
 -- Box selections (saved box contents per club member)
 create table if not exists box_selections (
