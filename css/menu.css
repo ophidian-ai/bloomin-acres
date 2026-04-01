@@ -54,10 +54,10 @@ body > * {
   padding: .4rem; border-radius: 4px;
   transition: background .2s;
 }
-.nav-toggle:hover { background: rgba(250,240,230,.1); }
+.nav-toggle:hover { background: rgba(78,62,51,.1); }
 .nav-toggle span {
   display: block; width: 22px; height: 2px;
-  background: var(--cream-warm);
+  background: var(--earth-brown);
   border-radius: 2px;
   transition: transform .3s, opacity .3s;
 }
@@ -143,10 +143,6 @@ body > * {
   background-size: 100% 100%;
   background-repeat: no-repeat;
 }
-
-/* ── Wheat Separator ─────────────────────────────────────── */
-.wheat-sep-wrap { display: flex; justify-content: center; padding: 0.6rem 0; }
-.wheat-sep { height: 28px; width: auto; display: block; }
 
 /* ── Section Title ───────────────────────────────────────── */
 .section-title {
