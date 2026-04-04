@@ -131,7 +131,24 @@
     document.getElementById('profile-email').textContent = user.email;
 
     // Populate profile fields from profiles table
-    const { data: profile } = await sb.from('profiles').select('*').eq('user_id', user.id).maybeSingle();
+    let { data: profile } = await sb.from('profiles').select('*').eq('user_id', user.id).maybeSingle();
+
+    // First login after signup: profile may not exist because the signup upsert
+    // runs before email verification (no session → RLS blocks the write).
+    // Seed the profile from user_metadata saved during signUp.
+    if (!profile) {
+      const meta = user.user_metadata || {};
+      const seed = {
+        user_id: user.id,
+        first_name: meta.first_name || '',
+        last_name: meta.last_name || '',
+        phone: meta.phone || '',
+        updated_at: new Date().toISOString(),
+      };
+      const { data: seeded } = await sb.from('profiles').upsert(seed, { onConflict: 'user_id' }).select().single();
+      if (seeded) profile = seeded;
+    }
+
     const firstName = profile?.first_name || '';
     const lastName = profile?.last_name || '';
     document.getElementById('profile-first-name').value = firstName;
