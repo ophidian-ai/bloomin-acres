@@ -183,6 +183,12 @@
       if (tabBtn) tabBtn.click();
     }
 
+    // On mobile, scroll the active dashboard tab into view
+    const activeTab = document.querySelector('.dash-tab.active');
+    if (activeTab && window.innerWidth <= 768) {
+      activeTab.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
+    }
+
     await loadProducts();
     await Promise.all([loadCart(), loadFavorites(), loadOrders(), loadMenuItems()]);
 

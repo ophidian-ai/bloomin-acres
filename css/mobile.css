@@ -1,0 +1,295 @@
+/* ══════════════════════════════════════════════════════════════
+   Bloomin' Acres Market — Mobile Overrides
+   Every rule lives inside a @media block.
+   Desktop layout is never affected.
+   ══════════════════════════════════════════════════════════════ */
+
+/* ── Phase 1: Critical — Cart & Checkout ──────────────────── */
+
+/* Fix 1: Cart panel full-width on phones */
+@media (max-width: 480px) {
+  .cart-panel {
+    width: 100vw;
+    max-width: 100vw;
+  }
+  .cart-panel-header {
+    padding: 16px 16px 12px;
+  }
+  .cart-panel-items {
+    padding: 12px 16px;
+  }
+  .cart-panel-footer {
+    padding: 12px 16px 16px;
+  }
+}
+
+/* Fix 2: Guest checkout modal → bottom sheet */
+@media (max-width: 480px) {
+  .guest-modal-overlay {
+    align-items: flex-end;
+    padding: 0;
+  }
+  .guest-modal {
+    max-width: 100%;
+    padding: 24px 20px;
+    border-radius: 16px 16px 0 0;
+    max-height: 90vh;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  .guest-modal-title {
+    font-size: 20px;
+  }
+  .guest-field input {
+    font-size: 16px;
+    padding: 14px 12px;
+  }
+  .guest-submit-btn {
+    padding: 16px;
+    font-size: 16px;
+  }
+  .guest-modal-close {
+    min-width: 44px;
+    min-height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    top: 8px;
+    right: 8px;
+  }
+}
+
+/* Fix 3: Cart close button hit area */
+@media (max-width: 768px) {
+  .cart-panel-close {
+    min-width: 44px;
+    min-height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+}
+
+/* Fix 4: iOS zoom prevention on all inputs */
+@media (max-width: 768px) {
+  input, select, textarea {
+    font-size: max(16px, 1em);
+  }
+}
+
+
+/* ── Phase 2: Major Layout ────────────────────────────────── */
+
+/* Fix 5: Cart items wrap on narrow screens */
+@media (max-width: 480px) {
+  .cart-item {
+    flex-wrap: wrap;
+  }
+  .cart-item-info {
+    flex-basis: calc(100% - 60px);
+  }
+  .cart-item-price {
+    margin-left: auto;
+  }
+  .cart-item-qty {
+    width: 100%;
+    margin-top: 8px;
+  }
+}
+
+/* Fix 6: Image fixed heights → responsive */
+@media (max-width: 768px) {
+  .card-img {
+    height: 200px;
+  }
+  .welcome-image {
+    height: auto;
+    aspect-ratio: 4 / 3;
+  }
+  .visit-map-iframe {
+    height: 280px;
+  }
+}
+@media (max-width: 480px) {
+  .card-img {
+    height: 180px;
+  }
+  .visit-map-iframe {
+    height: 220px;
+  }
+}
+
+/* Fix 7: Section padding reduction */
+@media (max-width: 768px) {
+  .welcome-section,
+  .what-we-make-section,
+  .process-section,
+  .testimonials-section,
+  .visit-section,
+  .schedule-section {
+    padding: 3.5rem 1rem;
+  }
+}
+@media (max-width: 480px) {
+  .welcome-section,
+  .what-we-make-section,
+  .process-section,
+  .testimonials-section,
+  .visit-section,
+  .schedule-section {
+    padding: 2.5rem 1rem;
+  }
+}
+
+/* Fix 8: Product & menu page margins */
+@media (max-width: 768px) {
+  .page-wrap {
+    margin-top: 2rem;
+    margin-bottom: 2rem;
+  }
+}
+@media (max-width: 480px) {
+  .page-wrap {
+    margin-top: 1.5rem;
+    margin-bottom: 1.5rem;
+    padding: 0 1rem;
+  }
+}
+
+/* Fix 9: Menu button touch targets (44px minimum) */
+@media (max-width: 768px) {
+  .btn-fav,
+  .btn-view,
+  .btn-add-cart,
+  .btn-options {
+    min-height: 44px;
+    min-width: 44px;
+    padding: .55rem .85rem;
+    font-size: .75rem;
+  }
+  .menu-item-actions {
+    gap: .5rem;
+    flex-wrap: wrap;
+  }
+  .variation-dropdown-row {
+    padding: .55rem .75rem;
+    min-height: 44px;
+  }
+  .variation-dd-cart,
+  .variation-dd-fav {
+    min-height: 36px;
+    min-width: 36px;
+    padding: .3rem .55rem;
+  }
+}
+
+/* Fix 10: Account page grids stack on mobile */
+@media (max-width: 480px) {
+  .profile-name-grid {
+    grid-template-columns: 1fr;
+  }
+  .field-row {
+    flex-direction: column;
+    gap: 0;
+  }
+}
+
+
+/* ── Phase 3: Moderate UX ─────────────────────────────────── */
+
+/* Fix 11: Floating cart button respects safe areas */
+@media (max-width: 768px) {
+  .floating-cart-btn {
+    bottom: max(24px, env(safe-area-inset-bottom, 0px) + 16px);
+    right: 16px;
+  }
+}
+
+/* Fix 12: Account tabs horizontal scroll with fade hint */
+@media (max-width: 768px) {
+  .dash-tabs-bar {
+    scroll-snap-type: x mandatory;
+    mask-image: linear-gradient(to right, black calc(100% - 40px), transparent);
+    -webkit-mask-image: linear-gradient(to right, black calc(100% - 40px), transparent);
+  }
+  .dash-tab {
+    scroll-snap-align: start;
+    flex-shrink: 0;
+  }
+}
+
+/* Fix 13: Club hero padding reduction */
+@media (max-width: 768px) {
+  .club-hero {
+    padding: 4rem 1.25rem 3.5rem;
+    min-height: 80vh;
+  }
+}
+@media (max-width: 480px) {
+  .club-hero {
+    padding: 3rem 1rem 2.5rem;
+    min-height: 70vh;
+  }
+  .club-section-outer,
+  .club-benefits-outer {
+    padding: 3rem 1rem;
+  }
+}
+
+/* Fix 14: Referral progress bar stacking */
+@media (max-width: 480px) {
+  .referral-stats-row {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+  }
+  .referral-progress-wrap {
+    width: 100%;
+    min-width: unset;
+  }
+  .milestone-chips {
+    gap: .5rem;
+  }
+  .milestone-chip {
+    min-width: 60px;
+    padding: .6rem .75rem;
+  }
+}
+
+
+/* ── Phase 4: Minor Polish ────────────────────────────────── */
+
+/* Fix 15: Small screen general tightening */
+@media (max-width: 375px) {
+  .page-wrap {
+    padding-left: .75rem;
+    padding-right: .75rem;
+  }
+  .cart-panel-header {
+    padding: 12px 12px 10px;
+  }
+  .cart-panel-items {
+    padding: 10px 12px;
+  }
+  .cart-panel-footer {
+    padding: 10px 12px 14px;
+  }
+}
+
+/* Fix 16: Landscape mode */
+@media (max-height: 500px) and (orientation: landscape) {
+  .club-hero,
+  .hero-section {
+    min-height: auto;
+    padding: 2rem 1.5rem;
+  }
+  .hero-logo {
+    max-height: 30vh;
+  }
+  .floating-cart-btn {
+    bottom: 12px;
+    right: 12px;
+    width: 44px;
+    height: 44px;
+  }
+}
