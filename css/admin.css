@@ -8,13 +8,9 @@
 body {
   font-family: 'DM Sans', sans-serif;
   background-color: #FAF0E6;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23n)' opacity='.035'/%3E%3C/svg%3E");
   color: var(--earth-brown);
   min-height: 100vh;
-}
-body::after {
-  content: '';
-  position: fixed; inset: 0; z-index: 9999; pointer-events: none; opacity: .035;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23n)'/%3E%3C/svg%3E");
 }
 
 /* ── Utility ────────────────────────────────────────────── */
@@ -1395,8 +1391,7 @@ body::after {
 
 /* ── Print Styles ──────────────────────────────────────── */
 @media print {
-  body { background: #fff !important; color: #000 !important; }
-  body::after { display: none !important; }
+  body { background: #fff !important; background-image: none !important; color: #000 !important; }
   #dashboard, .admin-sidebar, .dashboard-content,
   .tab-panel, .print-modal-overlay, #toast,
   .mobile-sidebar-toggle, .sidebar-overlay,
