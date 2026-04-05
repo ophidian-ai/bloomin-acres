@@ -299,9 +299,10 @@ body {
   z-index: 190;
   background: rgba(0,0,0,.5);
   opacity: 0;
+  pointer-events: none;
   transition: opacity .3s;
 }
-.sidebar-overlay.visible { opacity: 1; }
+.sidebar-overlay.visible { opacity: 1; pointer-events: auto; }
 
 /* ── Ghost button (kept for JS compatibility) ────────────── */
 .btn-ghost {
