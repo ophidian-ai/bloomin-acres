@@ -87,7 +87,7 @@
           isSigningUp = false;
           window.location.href = 'account.html?tab=profile';
         } else {
-          window.location.href = 'index.html';
+          window.location.href = '/';
         }
       } else if (event === 'SIGNED_OUT') {
         alreadySignedIn = false;
