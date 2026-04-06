@@ -82,7 +82,7 @@
           signoutBtn.style.display = 'block';
           signoutBtn.addEventListener('click', async () => {
             await sb.auth.signOut();
-            window.location.href = 'index.html';
+            window.location.href = '/';
           });
         }
       }
