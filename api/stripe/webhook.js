@@ -99,12 +99,13 @@ export default async function handler(req, res) {
       const { data: order, error: orderErr } = await sb
         .from('orders')
         .insert({
-          user_id:          userId,
-          stripe_session_id: session.id,
-          status:           'paid',
-          total_amount:     session.amount_total,
-          customer_name:    session.customer_details?.name || null,
-          customer_email:   session.customer_details?.email || null,
+          user_id:              userId,
+          stripe_session_id:    session.id,
+          status:               'paid',
+          total_amount:         session.amount_total,
+          customer_name:        session.customer_details?.name || null,
+          customer_email:       session.customer_details?.email || null,
+          pickup_location_name: session.metadata?.pickup_location || null,
         })
         .select()
         .single();

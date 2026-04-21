@@ -167,6 +167,9 @@
       document.getElementById('delivery-status').className = 'delivery-status ineligible';
     }
 
+    // Load pickup locations (non-blocking)
+    loadPickupLocations(profile?.preferred_pickup_location_id || null);
+
     // Update greeting and avatar
     const initial = (firstName || user.email || 'U')[0].toUpperCase();
     document.getElementById('dash-greeting').textContent = firstName ? `Welcome back, ${firstName}` : 'Welcome back';
@@ -705,6 +708,58 @@
       delivery_lng: data.lng || null,
       delivery_eligible: data.eligible ?? null,
     }, { onConflict: 'user_id' });
+  });
+
+  // Pickup location preference
+  async function loadPickupLocations(preferredId) {
+    const listEl = document.getElementById('pickup-locations-list');
+    if (!listEl) return;
+
+    const { data: locations, error } = await sb
+      .from('pickup_locations')
+      .select('id, name, address, hours, notes')
+      .eq('active', true)
+      .order('sort_order');
+
+    if (error || !locations?.length) {
+      listEl.innerHTML = '<p class="pickup-location-empty">No pickup locations configured yet.</p>';
+      document.getElementById('save-pickup-btn')?.classList.add('hidden');
+      return;
+    }
+
+    listEl.innerHTML = locations.map(loc => `
+      <label class="pickup-location-card${loc.id === preferredId ? ' selected' : ''}">
+        <input type="radio" name="pickup-location" value="${escHtml(loc.id)}" ${loc.id === preferredId ? 'checked' : ''} />
+        <div class="pickup-location-info">
+          <span class="pickup-location-name">${escHtml(loc.name)}</span>
+          <span class="pickup-location-address">${escHtml(loc.address)}</span>
+          ${loc.hours ? `<span class="pickup-location-hours">${escHtml(loc.hours)}</span>` : ''}
+          ${loc.notes ? `<span class="pickup-location-notes">${escHtml(loc.notes)}</span>` : ''}
+        </div>
+      </label>
+    `).join('');
+
+    listEl.querySelectorAll('.pickup-location-card').forEach(card => {
+      card.addEventListener('click', () => {
+        listEl.querySelectorAll('.pickup-location-card').forEach(c => c.classList.remove('selected'));
+        card.classList.add('selected');
+      });
+    });
+  }
+
+  document.getElementById('save-pickup-btn')?.addEventListener('click', async () => {
+    const checked = document.querySelector('input[name="pickup-location"]:checked');
+    const btn = document.getElementById('save-pickup-btn');
+    if (!checked) { showToast('Please select a location first', true); return; }
+
+    btn.disabled = true; btn.textContent = 'Saving…';
+    const { error } = await sb.from('profiles').upsert(
+      { user_id: currentUser.id, preferred_pickup_location_id: checked.value },
+      { onConflict: 'user_id' }
+    );
+    btn.disabled = false; btn.textContent = 'Save Preference';
+    if (error) showToast('Save failed: ' + error.message, true);
+    else showToast('Pickup location saved');
   });
 
   // Change password

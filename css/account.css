@@ -1323,3 +1323,32 @@ body::after {
   color: var(--earth-mid, #6B4C35); font-style: italic;
   padding: 1rem 0;
 }
+
+/* ── Pickup Location Preference ──────────────────────────── */
+.pickup-locations-list {
+  display: flex; flex-direction: column; gap: .65rem;
+  margin-bottom: 1rem;
+}
+.pickup-location-card {
+  display: flex; align-items: flex-start; gap: .85rem;
+  padding: .85rem 1rem;
+  background: var(--farm-cream, #FBF3EA);
+  border: 1.5px solid rgba(78,62,51,.12);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: border-color .15s, box-shadow .15s;
+}
+.pickup-location-card:hover { border-color: rgba(78,62,51,.3); }
+.pickup-location-card.selected {
+  border-color: var(--sage-dark, #5A7A5A);
+  box-shadow: 0 0 0 2px rgba(90,122,90,.15);
+}
+.pickup-location-card input[type="radio"] { margin-top: .15rem; flex-shrink: 0; accent-color: var(--sage-dark, #5A7A5A); }
+.pickup-location-info { display: flex; flex-direction: column; gap: .15rem; }
+.pickup-location-name { font-weight: 600; font-size: .9rem; color: var(--earth-brown, #4E3E33); }
+.pickup-location-address { font-size: .84rem; color: rgba(78,62,51,.75); }
+.pickup-location-hours { font-size: .82rem; color: rgba(78,62,51,.55); font-style: italic; }
+.pickup-location-notes { font-size: .78rem; color: rgba(78,62,51,.45); }
+.pickup-location-empty { font-size: .87rem; color: rgba(78,62,51,.45); font-style: italic; }
+.pickup-location-loading { font-size: .87rem; color: rgba(78,62,51,.45); }
+.btn-save-pickup { margin-top: .25rem; }

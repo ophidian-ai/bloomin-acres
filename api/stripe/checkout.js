@@ -28,16 +28,19 @@ export default async function handler(req, res) {
     // Validate stock before proceeding
     const productIds = items.map(i => i.stripe_product_id);
     if (sb) {
-      const { data: detailsRows } = await sb.from('product_details').select('stripe_product_id, variations').in('stripe_product_id', productIds);
+      const { data: detailsRows } = await sb.from('product_details').select('stripe_product_id, variations, quantity').in('stripe_product_id', productIds);
       const stockMap = {};
+      const baseQtyMap = {};
       (detailsRows || []).forEach(row => {
+        if (row.quantity !== null && row.quantity !== undefined) baseQtyMap[row.stripe_product_id] = row.quantity;
         (row.variations || []).forEach(v => {
           stockMap[row.stripe_product_id + '|' + (v.name || '')] = v.quantity;
         });
       });
       for (const item of items) {
         const key = item.stripe_product_id + '|' + (item.variation_name || '');
-        const available = stockMap[key];
+        const variationQty = stockMap[key];
+        const available = variationQty !== undefined ? variationQty : baseQtyMap[item.stripe_product_id];
         if (available !== undefined && available !== null && item.quantity > available) {
           return res.status(400).json({ error: available === 0 ? 'An item in your cart is sold out. Please update your cart.' : 'An item exceeds available stock. Please update your cart.' });
         }
@@ -161,6 +164,27 @@ export default async function handler(req, res) {
       }
       sessionParams.metadata.delivery = 'true';
       sessionParams.metadata.free_delivery = isMemberWithFreeDelivery ? 'true' : 'false';
+    }
+
+    // Attach preferred pickup location name to order metadata
+    if (sb && user_id) {
+      const { data: profileWithPickup } = await sb
+        .from('profiles')
+        .select('preferred_pickup_location_id')
+        .eq('user_id', user_id)
+        .maybeSingle();
+
+      if (profileWithPickup?.preferred_pickup_location_id) {
+        const { data: locRow } = await sb
+          .from('pickup_locations')
+          .select('name')
+          .eq('id', profileWithPickup.preferred_pickup_location_id)
+          .maybeSingle();
+        if (locRow?.name) {
+          if (!sessionParams.metadata) sessionParams.metadata = {};
+          sessionParams.metadata.pickup_location = locRow.name;
+        }
+      }
     }
 
     const session = await stripe.checkout.sessions.create(sessionParams);
