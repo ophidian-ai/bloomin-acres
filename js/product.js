@@ -106,6 +106,12 @@
           </div>
         </div>` : '';
 
+      const baseQtyFieldHtml = `
+        <div class="admin-field" id="base-qty-field"${variations.length > 0 ? ' style="display:none"' : ''}>
+          <label class="admin-label" for="edit-base-qty">Item Quantity <span class="admin-label-note">(stock — hidden when variations are set)</span></label>
+          <input type="number" class="admin-input" id="edit-base-qty" min="0" max="9999" placeholder="0" value="${productDetails?.quantity ?? ''}" />
+        </div>`;
+
       const adminVariationsHtml = `
         <div class="admin-field">
           <label class="admin-label">Variations <span class="admin-label-note">(optional — e.g. sizes, flavors)</span></label>
@@ -192,6 +198,7 @@
               <input type="file" class="admin-file-input" id="edit-image" accept="image/*" />
             </div>
           </div>
+          ${baseQtyFieldHtml}
           ${adminVariationsHtml}
           <button class="btn-save" id="btn-save">Save Changes</button>
           <a href="menu.html" class="btn-back-to-menu">
@@ -315,12 +322,20 @@
       });
     }
 
+    function updateBaseQtyVisibility() {
+      const field = document.getElementById('base-qty-field');
+      if (!field) return;
+      const hasVariations = document.querySelectorAll('#variations-list .variation-row-wrap').length > 0;
+      field.style.display = hasVariations ? 'none' : '';
+    }
+
     function wireVariationRowBehavior(row) {
       // Remove button — remove the wrap (parent) if it exists, otherwise the row
       const removeBtn = row.querySelector('.btn-variation-remove');
       if (removeBtn) removeBtn.addEventListener('click', () => {
         const wrap = row.closest('.variation-row-wrap');
         (wrap || row).remove();
+        updateBaseQtyVisibility();
       });
 
       // Checkbox toggle
@@ -479,7 +494,10 @@
         wireVariationRowBehavior(row);
       });
 
-      document.getElementById('btn-add-variation').addEventListener('click', () => addVariationRow());
+      document.getElementById('btn-add-variation').addEventListener('click', () => {
+        addVariationRow();
+        updateBaseQtyVisibility();
+      });
 
       // Preview selected image
       fileInput.addEventListener('change', () => {
@@ -522,6 +540,10 @@
         const description = document.getElementById('edit-description').value.trim();
         const ingredients = document.getElementById('edit-ingredients').value.trim();
 
+        // Base quantity (only meaningful when no variations)
+        const baseQtyRaw = document.getElementById('edit-base-qty')?.value;
+        const baseQty = baseQtyRaw !== '' && baseQtyRaw !== undefined ? (parseInt(baseQtyRaw, 10) || 0) : null;
+
         // Collect variations
         const variations = [];
         document.querySelectorAll('#variations-list .variation-row-wrap').forEach(wrap => {
@@ -535,14 +557,17 @@
         });
 
         const { error } = await sb.from('product_details').upsert(
-          { stripe_product_id: productId, description, ingredients, image_url: imageUrl, variations, updated_at: new Date().toISOString() },
+          { stripe_product_id: productId, description, ingredients, image_url: imageUrl, variations, quantity: variations.length > 0 ? null : baseQty, updated_at: new Date().toISOString() },
           { onConflict: 'stripe_product_id' }
         );
 
         if (error) {
           showToast('Save failed: ' + error.message, true);
         } else {
-          productDetails = { description, ingredients, image_url: imageUrl, variations };
+          productDetails = { description, ingredients, image_url: imageUrl, variations, quantity: variations.length > 0 ? null : baseQty };
+          // Toggle base-qty field visibility based on whether variations now exist
+          const baseQtyField = document.getElementById('base-qty-field');
+          if (baseQtyField) baseQtyField.style.display = variations.length > 0 ? 'none' : '';
           showToast('Product updated');
           // Refresh ingredients display
           const ingredientsDisplay = document.getElementById('product-ingredients-display');

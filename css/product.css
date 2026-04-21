@@ -212,6 +212,18 @@ body {
   color: var(--earth-mid);
   font-size: .72rem;
 }
+.admin-input {
+  padding: .55rem .75rem;
+  border: 1.5px solid rgba(78,62,51,.18);
+  border-radius: 5px;
+  background: var(--farm-cream);
+  font-family: var(--font-body);
+  font-size: .88rem;
+  color: var(--earth-brown);
+  transition: border-color .2s;
+  width: 6rem;
+}
+.admin-input:focus { outline: none; border-color: var(--sage-dark); }
 .admin-textarea {
   width: 100%;
   min-height: 90px;

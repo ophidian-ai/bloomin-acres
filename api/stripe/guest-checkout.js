@@ -66,16 +66,19 @@ export default async function handler(req, res) {
 
     // Validate stock before proceeding
     const productIds = items.map(i => i.stripe_product_id);
-    const { data: detailsRows } = await sb.from('product_details').select('stripe_product_id, variations').in('stripe_product_id', productIds);
+    const { data: detailsRows } = await sb.from('product_details').select('stripe_product_id, variations, quantity').in('stripe_product_id', productIds);
     const stockMap = {};
+    const baseQtyMap = {};
     (detailsRows || []).forEach(row => {
+      if (row.quantity !== null && row.quantity !== undefined) baseQtyMap[row.stripe_product_id] = row.quantity;
       (row.variations || []).forEach(v => {
         stockMap[row.stripe_product_id + '|' + (v.name || '')] = v.quantity;
       });
     });
     for (const item of items) {
       const key = item.stripe_product_id + '|' + (item.variation_name || '');
-      const available = stockMap[key];
+      const variationQty = stockMap[key];
+      const available = variationQty !== undefined ? variationQty : baseQtyMap[item.stripe_product_id];
       if (available !== undefined && available !== null && item.quantity > available) {
         return res.status(400).json({
           error: available === 0

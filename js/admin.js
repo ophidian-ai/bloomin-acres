@@ -64,6 +64,12 @@
       await loadProducts(); // must complete before menu editor renders (populates allProducts for dropdowns)
       await Promise.all([loadMenuFromSupabase(), loadMenuSchedule(), loadSavedMenus(), loadLandingContent()]);
 
+      // Lazy-load locations tab on first click
+      let locationsTabLoaded = false;
+      document.querySelector('[data-tab="locations"]')?.addEventListener('click', async () => {
+        if (!locationsTabLoaded) { locationsTabLoaded = true; await loadLocations(); }
+      }, { once: true });
+
       // Lazy-load club tab on first click
       let clubTabLoaded = false;
       document.querySelector('[data-tab="club"]')?.addEventListener('click', async () => {
@@ -668,6 +674,175 @@
         btn.textContent = originalLabel;
       });
     });
+
+    // ── Pickup Locations ──────────────────────────────────────────────────────
+    async function loadLocations() {
+      const list = document.getElementById('locations-list');
+      const { data, error } = await sb
+        .from('pickup_locations')
+        .select('*')
+        .order('sort_order');
+
+      if (error) {
+        list.innerHTML = '<p class="grid-message grid-error">Failed to load locations.</p>';
+        return;
+      }
+
+      renderLocations(data || []);
+
+      document.getElementById('btn-add-location').addEventListener('click', () => {
+        openLocationModal(null);
+      });
+    }
+
+    function renderLocations(locations) {
+      const list = document.getElementById('locations-list');
+      if (!locations.length) {
+        list.innerHTML = '<p class="empty-state">No pickup locations yet. Click "Add Location" to create one.</p>';
+        return;
+      }
+
+      list.innerHTML = locations.map(loc => `
+        <div class="location-card" data-id="${escHtml(loc.id)}">
+          <div class="location-card-header">
+            <div class="location-card-title">
+              <strong>${escHtml(loc.name)}</strong>
+              <span class="location-status-pill ${loc.active ? 'pill-active' : 'pill-inactive'}">${loc.active ? 'Active' : 'Inactive'}</span>
+            </div>
+            <div class="location-card-actions">
+              <button type="button" class="btn-ghost-sm btn-edit-location" data-id="${escHtml(loc.id)}">Edit</button>
+              <button type="button" class="btn-ghost-sm btn-delete-location" data-id="${escHtml(loc.id)}">Delete</button>
+            </div>
+          </div>
+          <div class="location-card-body">
+            <div class="location-detail">${escHtml(loc.address)}</div>
+            ${loc.hours ? `<div class="location-detail location-hours">${escHtml(loc.hours)}</div>` : ''}
+            ${loc.notes ? `<div class="location-detail location-notes">${escHtml(loc.notes)}</div>` : ''}
+          </div>
+        </div>
+      `).join('');
+
+      list.querySelectorAll('.btn-edit-location').forEach(btn => {
+        btn.addEventListener('click', async () => {
+          const id = btn.dataset.id;
+          const { data } = await sb.from('pickup_locations').select('*').eq('id', id).maybeSingle();
+          if (data) openLocationModal(data);
+        });
+      });
+
+      list.querySelectorAll('.btn-delete-location').forEach(btn => {
+        btn.addEventListener('click', async () => {
+          const id = btn.dataset.id;
+          if (!confirm('Delete this pickup location? This will clear it from any customer profiles that selected it.')) return;
+          const { error } = await sb.from('pickup_locations').delete().eq('id', id);
+          if (error) { showToast('Delete failed: ' + error.message, true); return; }
+          showToast('Location deleted');
+          await reloadLocations();
+        });
+      });
+    }
+
+    async function reloadLocations() {
+      const { data } = await sb.from('pickup_locations').select('*').order('sort_order');
+      renderLocations(data || []);
+    }
+
+    function openLocationModal(existing) {
+      // Remove any existing modal
+      document.getElementById('location-modal')?.remove();
+
+      const modal = document.createElement('div');
+      modal.id = 'location-modal';
+      modal.className = 'modal-overlay';
+      modal.innerHTML = `
+        <div class="modal-panel">
+          <div class="modal-header">
+            <h3 class="modal-title">${existing ? 'Edit Location' : 'Add Pickup Location'}</h3>
+            <button type="button" class="modal-close" id="location-modal-close" aria-label="Close">&times;</button>
+          </div>
+          <div class="modal-body">
+            <div class="admin-field">
+              <label class="admin-label" for="loc-name">Name <span class="required-star">*</span></label>
+              <input type="text" class="admin-input" id="loc-name" placeholder="e.g. Hope Farmers Market" value="${escHtml(existing?.name || '')}" />
+            </div>
+            <div class="admin-field">
+              <label class="admin-label" for="loc-address">Address <span class="required-star">*</span></label>
+              <input type="text" class="admin-input" id="loc-address" placeholder="e.g. 123 Main St, Hope, IN 47246" value="${escHtml(existing?.address || '')}" />
+            </div>
+            <div class="admin-field">
+              <label class="admin-label" for="loc-hours">Hours / Pickup Window</label>
+              <input type="text" class="admin-input" id="loc-hours" placeholder="e.g. Saturdays 8am–12pm" value="${escHtml(existing?.hours || '')}" />
+            </div>
+            <div class="admin-field">
+              <label class="admin-label" for="loc-notes">Notes / Instructions</label>
+              <input type="text" class="admin-input" id="loc-notes" placeholder="e.g. Look for the blue tent" value="${escHtml(existing?.notes || '')}" />
+            </div>
+            <div class="admin-field">
+              <label class="admin-label" for="loc-calendar">Calendar Event ID <span class="admin-label-note">(optional)</span></label>
+              <input type="text" class="admin-input" id="loc-calendar" placeholder="Google Calendar event ID" value="${escHtml(existing?.calendar_event_id || '')}" />
+            </div>
+            <div class="admin-field admin-field-inline">
+              <label class="admin-label" for="loc-active">Active (visible to customers)</label>
+              <input type="checkbox" id="loc-active" ${existing?.active !== false ? 'checked' : ''} />
+            </div>
+            <div class="admin-field">
+              <label class="admin-label" for="loc-sort">Sort Order</label>
+              <input type="number" class="admin-input admin-input-sm" id="loc-sort" min="0" max="999" value="${existing?.sort_order ?? 0}" />
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn-ghost-sm" id="location-modal-cancel">Cancel</button>
+            <button type="button" class="btn-secondary" id="location-modal-save">
+              ${existing ? 'Save Changes' : 'Add Location'}
+            </button>
+          </div>
+        </div>
+      `;
+
+      document.body.appendChild(modal);
+
+      modal.querySelector('#location-modal-close').addEventListener('click', () => modal.remove());
+      modal.querySelector('#location-modal-cancel').addEventListener('click', () => modal.remove());
+      modal.addEventListener('click', e => { if (e.target === modal) modal.remove(); });
+
+      modal.querySelector('#location-modal-save').addEventListener('click', async () => {
+        const saveBtn = modal.querySelector('#location-modal-save');
+        const name = modal.querySelector('#loc-name').value.trim();
+        const address = modal.querySelector('#loc-address').value.trim();
+        if (!name || !address) { showToast('Name and address are required', true); return; }
+
+        const payload = {
+          name,
+          address,
+          hours: modal.querySelector('#loc-hours').value.trim() || null,
+          notes: modal.querySelector('#loc-notes').value.trim() || null,
+          calendar_event_id: modal.querySelector('#loc-calendar').value.trim() || null,
+          active: modal.querySelector('#loc-active').checked,
+          sort_order: parseInt(modal.querySelector('#loc-sort').value, 10) || 0,
+        };
+
+        saveBtn.disabled = true;
+        saveBtn.textContent = 'Saving…';
+
+        let error;
+        if (existing) {
+          ({ error } = await sb.from('pickup_locations').update(payload).eq('id', existing.id));
+        } else {
+          ({ error } = await sb.from('pickup_locations').insert(payload));
+        }
+
+        if (error) {
+          showToast('Save failed: ' + error.message, true);
+          saveBtn.disabled = false;
+          saveBtn.textContent = existing ? 'Save Changes' : 'Add Location';
+          return;
+        }
+
+        showToast(existing ? 'Location updated' : 'Location added');
+        modal.remove();
+        await reloadLocations();
+      });
+    }
 
     // ── Club Admin ────────────────────────────────────────────────────────────
     async function loadClubTab() {
