@@ -68,12 +68,13 @@ create table if not exists user_cart (
 
 create table if not exists orders (
   id uuid primary key default gen_random_uuid(),
-  user_id uuid not null references auth.users(id) on delete cascade,
+  user_id uuid references auth.users(id) on delete cascade, -- nullable: manual/phone orders may have no account
   stripe_session_id text unique,
   status text not null default 'pending',
   total_amount integer,
   customer_name text,
   customer_email text,
+  admin_created boolean not null default false,
   created_at timestamptz default now()
 );
 
