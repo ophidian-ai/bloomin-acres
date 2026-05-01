@@ -1136,6 +1136,239 @@
       openPrintDialog(filteredOrders, true);
     });
 
+    // ── Create Order (manual / on behalf of customer) ──────────────────────────
+    let adminProducts = null;
+    let adminPickupLocations = null;
+
+    async function loadAdminOrderAssets() {
+      if (!adminProducts) {
+        const res = await fetch('/api/stripe/products');
+        adminProducts = res.ok ? await res.json() : [];
+      }
+      if (!adminPickupLocations) {
+        const { data } = await sb.from('pickup_locations').select('id, name').eq('active', true).order('sort_order');
+        adminPickupLocations = data || [];
+      }
+    }
+
+    document.getElementById('create-order-btn').addEventListener('click', async () => {
+      await loadAdminOrderAssets();
+      openCreateOrderModal();
+    });
+
+    function openCreateOrderModal() {
+      const locationOptions = adminPickupLocations.map(loc =>
+        `<option value="${escHtml(loc.name)}">${escHtml(loc.name)}</option>`
+      ).join('');
+
+      const modal = document.createElement('div');
+      modal.className = 'modal-overlay';
+      modal.innerHTML = `
+        <div class="modal-panel" style="max-width:600px;width:100%">
+          <div class="modal-header">
+            <h3 class="modal-title">Create Order</h3>
+            <button class="modal-close" aria-label="Close">&times;</button>
+          </div>
+          <div class="modal-body" style="display:flex;flex-direction:column;gap:1.25rem">
+
+            <div>
+              <label class="admin-label">Customer</label>
+              <input type="text" class="admin-input" id="co-customer-search" placeholder="Search by name or phone…" autocomplete="off" />
+              <ul id="co-customer-results" style="list-style:none;margin:0;padding:0;border:1px solid #ddd;border-top:none;border-radius:0 0 6px 6px;display:none;max-height:160px;overflow-y:auto;background:#fff;"></ul>
+              <div style="display:flex;gap:.75rem;margin-top:.5rem">
+                <input type="text" class="admin-input" id="co-customer-name" placeholder="Full name *" style="flex:1" />
+                <input type="email" class="admin-input" id="co-customer-email" placeholder="Email (optional)" style="flex:1" />
+              </div>
+              <input type="hidden" id="co-customer-user-id" />
+            </div>
+
+            <div>
+              <label class="admin-label">Pickup Location</label>
+              <select class="admin-input" id="co-pickup-location">
+                <option value="">— None / Not specified —</option>
+                ${locationOptions}
+              </select>
+            </div>
+
+            <div>
+              <label class="admin-label">Items</label>
+              <div id="co-items-list" style="display:flex;flex-direction:column;gap:.5rem"></div>
+              <button type="button" class="btn-ghost-sm" id="co-add-item-btn" style="margin-top:.5rem">+ Add Item</button>
+            </div>
+
+            <div style="text-align:right;font-weight:600;font-size:.95rem" id="co-total-display">Total: $0.00</div>
+
+          </div>
+          <div class="modal-footer">
+            <button class="btn-ghost-sm" id="co-cancel-btn">Cancel</button>
+            <button class="btn-secondary" id="co-submit-btn">Create Order</button>
+          </div>
+        </div>
+      `;
+      document.body.appendChild(modal);
+
+      // Product dropdown HTML helper
+      const productOptions = (adminProducts || []).map(p =>
+        `<option value="${escHtml(p.id)}" data-price="${p.unit_amount || 0}" data-name="${escHtml(p.name)}">${escHtml(p.name)} — ${p.price_formatted || '$?'}</option>`
+      ).join('');
+
+      function addItemRow(product = null) {
+        const row = document.createElement('div');
+        row.style.cssText = 'display:flex;align-items:center;gap:.5rem';
+        row.innerHTML = `
+          <select class="admin-input co-product-select" style="flex:2">
+            <option value="">Select product…</option>
+            ${productOptions}
+          </select>
+          <input type="number" class="admin-input co-qty-input" value="1" min="1" style="width:64px;text-align:center" aria-label="Quantity" />
+          <span class="co-item-price" style="min-width:56px;text-align:right;font-size:.875rem;color:#666">$0.00</span>
+          <button type="button" class="modal-close" aria-label="Remove item" style="font-size:1rem;line-height:1">×</button>
+        `;
+        if (product) {
+          const sel = row.querySelector('.co-product-select');
+          sel.value = product.id;
+          row.querySelector('.co-item-price').textContent = product.price_formatted || '$0.00';
+        }
+        row.querySelector('.co-product-select').addEventListener('change', e => {
+          const opt = e.target.selectedOptions[0];
+          const price = parseInt(opt?.dataset.price || '0', 10);
+          row.querySelector('.co-item-price').textContent = formatPrice(price);
+          recalcTotal();
+        });
+        row.querySelector('.co-qty-input').addEventListener('input', recalcTotal);
+        row.querySelector('[aria-label="Remove item"]').addEventListener('click', () => {
+          row.remove();
+          recalcTotal();
+        });
+        modal.querySelector('#co-items-list').appendChild(row);
+        recalcTotal();
+      }
+
+      addItemRow();
+
+      modal.querySelector('#co-add-item-btn').addEventListener('click', () => addItemRow());
+
+      function recalcTotal() {
+        let cents = 0;
+        modal.querySelectorAll('#co-items-list > div').forEach(row => {
+          const sel = row.querySelector('.co-product-select');
+          const qty = parseInt(row.querySelector('.co-qty-input').value, 10) || 0;
+          const price = parseInt(sel?.selectedOptions[0]?.dataset.price || '0', 10);
+          cents += price * qty;
+        });
+        modal.querySelector('#co-total-display').textContent = `Total: ${formatPrice(cents)}`;
+        modal._totalCents = cents;
+      }
+
+      // Customer search with debounce
+      let searchTimer;
+      modal.querySelector('#co-customer-search').addEventListener('input', e => {
+        clearTimeout(searchTimer);
+        const q = e.target.value.trim();
+        const results = modal.querySelector('#co-customer-results');
+        if (q.length < 2) { results.style.display = 'none'; return; }
+        searchTimer = setTimeout(async () => {
+          const { data } = await sb
+            .from('profiles')
+            .select('user_id, first_name, last_name, phone')
+            .or(`first_name.ilike.%${q}%,last_name.ilike.%${q}%,phone.ilike.%${q}%`)
+            .limit(8);
+          if (!data || !data.length) { results.style.display = 'none'; return; }
+          results.innerHTML = data.map(p => {
+            const name = `${p.first_name || ''} ${p.last_name || ''}`.trim() || '(no name)';
+            return `<li data-uid="${escHtml(p.user_id)}" data-name="${escHtml(name)}" style="padding:.5rem .75rem;cursor:pointer;border-bottom:1px solid #eee">${escHtml(name)}${p.phone ? ' — ' + escHtml(p.phone) : ''}</li>`;
+          }).join('');
+          results.style.display = 'block';
+          results.querySelectorAll('li').forEach(li => {
+            li.addEventListener('click', () => {
+              modal.querySelector('#co-customer-name').value = li.dataset.name;
+              modal.querySelector('#co-customer-user-id').value = li.dataset.uid;
+              modal.querySelector('#co-customer-search').value = li.dataset.name;
+              results.style.display = 'none';
+            });
+          });
+        }, 300);
+      });
+
+      // Close handlers
+      const close = () => modal.remove();
+      modal.querySelector('.modal-close').addEventListener('click', close);
+      modal.querySelector('#co-cancel-btn').addEventListener('click', close);
+      modal.addEventListener('click', e => { if (e.target === modal) close(); });
+
+      // Submit
+      modal.querySelector('#co-submit-btn').addEventListener('click', async () => {
+        const customerName = modal.querySelector('#co-customer-name').value.trim();
+        const customerEmail = modal.querySelector('#co-customer-email').value.trim();
+        const customerUserId = modal.querySelector('#co-customer-user-id').value.trim() || null;
+        const pickupLocationName = modal.querySelector('#co-pickup-location').value || null;
+
+        if (!customerName) {
+          showToast('Please enter a customer name', true);
+          modal.querySelector('#co-customer-name').focus();
+          return;
+        }
+
+        const items = [];
+        let valid = true;
+        modal.querySelectorAll('#co-items-list > div').forEach(row => {
+          const sel = row.querySelector('.co-product-select');
+          const qty = parseInt(row.querySelector('.co-qty-input').value, 10) || 0;
+          const opt = sel?.selectedOptions[0];
+          if (!sel?.value) { valid = false; return; }
+          items.push({
+            stripe_product_id: sel.value,
+            product_name: opt?.dataset.name || sel.value,
+            quantity: qty,
+            unit_amount: parseInt(opt?.dataset.price || '0', 10),
+          });
+        });
+
+        if (!valid || !items.length) {
+          showToast('Please select a product for every item row', true);
+          return;
+        }
+
+        const btn = modal.querySelector('#co-submit-btn');
+        btn.disabled = true;
+        btn.textContent = 'Creating…';
+
+        try {
+          const { data: { session } } = await sb.auth.getSession();
+          const res = await fetch('/api/admin/create-order', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${session.access_token}`,
+            },
+            body: JSON.stringify({
+              customer_name: customerName,
+              customer_email: customerEmail || null,
+              customer_user_id: customerUserId,
+              items,
+              pickup_location_name: pickupLocationName,
+              total_amount: modal._totalCents || null,
+            }),
+          });
+          if (res.ok) {
+            showToast('Order created');
+            modal.remove();
+            ordersLoaded = false;
+            await loadAllOrders();
+          } else {
+            const err = await res.json().catch(() => ({}));
+            showToast(err.error || 'Failed to create order', true);
+            btn.disabled = false;
+            btn.textContent = 'Create Order';
+          }
+        } catch (e) {
+          showToast('Network error — please try again', true);
+          btn.disabled = false;
+          btn.textContent = 'Create Order';
+        }
+      });
+    }
+
     // ── Print Dialog ───────────────────────────────────────────────────────────
     let printOrders = [];
     let printIsBulk = false;
