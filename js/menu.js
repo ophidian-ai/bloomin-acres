@@ -102,7 +102,7 @@
       let detailsMap = {};
       const [stripeRes, scheduleRes, detailsRes] = await Promise.all([
         fetch('/api/stripe/products').catch(() => null),
-        sb.from('menu_schedule').select('start_date,end_date').eq('id', 1).maybeSingle(),
+        sb.from('menu_schedule').select('start_date,end_date,message').eq('id', 1).maybeSingle(),
         sb.from('product_details').select('stripe_product_id, variations'),
       ]);
       if (stripeRes && stripeRes.ok) {
@@ -112,15 +112,24 @@
         } catch { /* non-fatal */ }
       }
       (detailsRes.data || []).forEach(d => { detailsMap[d.stripe_product_id] = d; });
-      // Build schedule text (rendered inside menu card later)
+      // Build schedule text and determine if the menu is currently available
       const sched = scheduleRes.data;
       let scheduleRangeText = '';
+      let menuUnavailable = false;
+      let placeholderMessage = '';
       if (sched && (sched.start_date || sched.end_date)) {
-        const fmtDate = d => {
-          const [y, m, day] = d.split('-');
-          return new Date(y, parseInt(m) - 1, parseInt(day))
-            .toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
-        };
+        const parseDate = d => { const [y, m, day] = d.split('-'); return new Date(+y, +m - 1, +day); };
+        const fmtDate  = d => parseDate(d).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+
+        const today = new Date(); today.setHours(0, 0, 0, 0);
+        const start = sched.start_date ? parseDate(sched.start_date) : null;
+        const end   = sched.end_date   ? parseDate(sched.end_date)   : null;
+
+        if ((start && today < start) || (end && today > end)) {
+          menuUnavailable = true;
+          placeholderMessage = sched.message || 'Our menu isn\'t available right now — check back soon!';
+        }
+
         if (sched.start_date && sched.end_date) scheduleRangeText = `Available ${fmtDate(sched.start_date)} – ${fmtDate(sched.end_date)}`;
         else if (sched.start_date) scheduleRangeText = `Available starting ${fmtDate(sched.start_date)}`;
         else scheduleRangeText = `Available through ${fmtDate(sched.end_date)}`;
@@ -426,12 +435,21 @@
       removeFallback();
       skeleton.remove();
 
-      // Insert schedule dates inside menu card
+      // Always show the schedule date range if one is set
       if (scheduleRangeText) {
         const schedEl = document.createElement('div');
         schedEl.className = 'menu-schedule-date';
         schedEl.textContent = scheduleRangeText;
         content.appendChild(schedEl);
+      }
+
+      // If today is outside the schedule window, show placeholder and stop rendering
+      if (menuUnavailable) {
+        const ph = document.createElement('div');
+        ph.className = 'menu-unavailable';
+        ph.textContent = placeholderMessage;
+        content.appendChild(ph);
+        return;
       }
 
       sections.forEach((section, idx) => {

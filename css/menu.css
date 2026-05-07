@@ -89,6 +89,17 @@ body > * {
   opacity: .65;
 }
 
+/* ── Menu Unavailable Placeholder ───────────────────────── */
+.menu-unavailable {
+  text-align: center;
+  padding: 2.5rem 1.5rem;
+  font-family: var(--font-body);
+  font-size: 1rem;
+  color: var(--earth-brown);
+  opacity: .7;
+  line-height: 1.6;
+}
+
 /* ── Page Wrapper ────────────────────────────────────────── */
 .page-wrap {
   max-width: 780px;

@@ -427,6 +427,7 @@
       if (data) {
         document.getElementById('schedule-start').value = data.start_date || '';
         document.getElementById('schedule-end').value = data.end_date || '';
+        document.getElementById('schedule-message').value = data.message || '';
       }
       // Sync calendar UI with loaded data
       if (typeof initScheduleCalendar === 'function') initScheduleCalendar();
@@ -435,10 +436,11 @@
     document.getElementById('btn-save-schedule').addEventListener('click', async () => {
       const btn = document.getElementById('btn-save-schedule');
       btn.disabled = true;
-      const start = document.getElementById('schedule-start').value || null;
-      const end   = document.getElementById('schedule-end').value || null;
+      const start   = document.getElementById('schedule-start').value || null;
+      const end     = document.getElementById('schedule-end').value || null;
+      const message = document.getElementById('schedule-message').value.trim() || null;
       const { error } = await sb.from('menu_schedule').upsert(
-        { id: 1, start_date: start, end_date: end, updated_at: new Date().toISOString() },
+        { id: 1, start_date: start, end_date: end, message, updated_at: new Date().toISOString() },
         { onConflict: 'id' }
       );
       if (error) showToast('Failed: ' + error.message, true);
