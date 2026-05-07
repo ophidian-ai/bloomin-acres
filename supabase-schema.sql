@@ -94,6 +94,7 @@ create table if not exists menu_schedule (
   id integer primary key default 1,
   start_date date,
   end_date date,
+  message text,    -- shown on the public menu page when outside the date range
   updated_at timestamptz default now()
 );
 

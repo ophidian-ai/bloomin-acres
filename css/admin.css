@@ -699,6 +699,12 @@ body {
   align-items: center;
   flex-wrap: wrap;
 }
+.schedule-message-row {
+  display: flex;
+  flex-direction: column;
+  gap: .35rem;
+  margin-top: .75rem;
+}
 .btn-ghost-sm {
   background: none;
   border: 1px solid rgba(78,62,51,.15);
