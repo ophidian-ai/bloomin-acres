@@ -1141,6 +1141,7 @@
     // ── Create Order (manual / on behalf of customer) ──────────────────────────
     let adminProducts = null;
     let adminPickupLocations = null;
+    let adminProductDetails = null;
 
     async function loadAdminOrderAssets() {
       if (!adminProducts) {
@@ -1150,6 +1151,11 @@
       if (!adminPickupLocations) {
         const { data } = await sb.from('pickup_locations').select('id, name').eq('active', true).order('sort_order');
         adminPickupLocations = data || [];
+      }
+      if (!adminProductDetails) {
+        const { data } = await sb.from('product_details').select('stripe_product_id, variations');
+        adminProductDetails = {};
+        (data || []).forEach(row => { adminProductDetails[row.stripe_product_id] = row.variations || []; });
       }
     }
 
@@ -1216,27 +1222,67 @@
 
       function addItemRow(product = null) {
         const row = document.createElement('div');
-        row.style.cssText = 'display:flex;align-items:center;gap:.5rem';
+        row.className = 'co-item-entry';
+        row.style.cssText = 'display:flex;flex-direction:column;gap:.25rem';
         row.innerHTML = `
-          <select class="admin-input co-product-select" style="flex:2">
-            <option value="">Select product…</option>
-            ${productOptions}
-          </select>
-          <input type="number" class="admin-input co-qty-input" value="1" min="1" style="width:64px;text-align:center" aria-label="Quantity" />
-          <span class="co-item-price" style="min-width:56px;text-align:right;font-size:.875rem;color:#666">$0.00</span>
-          <button type="button" class="modal-close" aria-label="Remove item" style="font-size:1rem;line-height:1">×</button>
+          <div style="display:flex;align-items:center;gap:.5rem">
+            <select class="admin-input co-product-select" style="flex:2">
+              <option value="">Select product…</option>
+              ${productOptions}
+            </select>
+            <input type="number" class="admin-input co-qty-input" value="1" min="1" style="width:64px;text-align:center" aria-label="Quantity" />
+            <span class="co-item-price" style="min-width:56px;text-align:right;font-size:.875rem;color:#666">$0.00</span>
+            <button type="button" class="modal-close" aria-label="Remove item" style="font-size:1rem;line-height:1">×</button>
+          </div>
+          <div class="co-variation-row" style="display:none">
+            <select class="admin-input co-variation-select" style="width:100%">
+              <option value="" data-delta="0">Select variation…</option>
+            </select>
+          </div>
         `;
         if (product) {
           const sel = row.querySelector('.co-product-select');
           sel.value = product.id;
           row.querySelector('.co-item-price').textContent = product.price_formatted || '$0.00';
         }
-        row.querySelector('.co-product-select').addEventListener('change', e => {
-          const opt = e.target.selectedOptions[0];
-          const price = parseInt(opt?.dataset.price || '0', 10);
-          row.querySelector('.co-item-price').textContent = formatPrice(price);
+
+        const productSel = row.querySelector('.co-product-select');
+        const variationRow = row.querySelector('.co-variation-row');
+        const variationSel = row.querySelector('.co-variation-select');
+        const priceDisplay = row.querySelector('.co-item-price');
+
+        function updateVariations() {
+          const productId = productSel.value;
+          const basePrice = parseInt(productSel.selectedOptions[0]?.dataset.price || '0', 10);
+          const variations = (adminProductDetails || {})[productId] || [];
+          const active = variations.filter(v => v.available !== false && (v.quantity === undefined || v.quantity > 0));
+
+          if (active.length > 0) {
+            variationSel.innerHTML = '<option value="" data-delta="0">Select variation…</option>' +
+              active.map(v => {
+                const delta = parseInt(v.price_delta || 0, 10);
+                const suffix = delta > 0 ? ` (+${formatPrice(delta)})` : delta < 0 ? ` (${formatPrice(delta)})` : '';
+                return `<option value="${escHtml(v.name)}" data-delta="${delta}">${escHtml(v.name)}${escHtml(suffix)}</option>`;
+              }).join('');
+            variationRow.style.display = '';
+          } else {
+            variationRow.style.display = 'none';
+            variationSel.innerHTML = '<option value="" data-delta="0">Select variation…</option>';
+          }
+
+          priceDisplay.textContent = formatPrice(basePrice);
+          recalcTotal();
+        }
+
+        productSel.addEventListener('change', updateVariations);
+
+        variationSel.addEventListener('change', () => {
+          const basePrice = parseInt(productSel.selectedOptions[0]?.dataset.price || '0', 10);
+          const delta = parseInt(variationSel.selectedOptions[0]?.dataset.delta || '0', 10);
+          priceDisplay.textContent = formatPrice(basePrice + delta);
           recalcTotal();
         });
+
         row.querySelector('.co-qty-input').addEventListener('input', recalcTotal);
         row.querySelector('[aria-label="Remove item"]').addEventListener('click', () => {
           row.remove();
@@ -1252,11 +1298,13 @@
 
       function recalcTotal() {
         let cents = 0;
-        modal.querySelectorAll('#co-items-list > div').forEach(row => {
+        modal.querySelectorAll('#co-items-list > .co-item-entry').forEach(row => {
           const sel = row.querySelector('.co-product-select');
+          const varSel = row.querySelector('.co-variation-select');
           const qty = parseInt(row.querySelector('.co-qty-input').value, 10) || 0;
-          const price = parseInt(sel?.selectedOptions[0]?.dataset.price || '0', 10);
-          cents += price * qty;
+          const basePrice = parseInt(sel?.selectedOptions[0]?.dataset.price || '0', 10);
+          const delta = parseInt(varSel?.selectedOptions[0]?.dataset.delta || '0', 10);
+          cents += (basePrice + delta) * qty;
         });
         modal.querySelector('#co-total-display').textContent = `Total: ${formatPrice(cents)}`;
         modal._totalCents = cents;
@@ -1313,16 +1361,23 @@
 
         const items = [];
         let valid = true;
-        modal.querySelectorAll('#co-items-list > div').forEach(row => {
+        modal.querySelectorAll('#co-items-list > .co-item-entry').forEach(row => {
           const sel = row.querySelector('.co-product-select');
+          const varSel = row.querySelector('.co-variation-select');
           const qty = parseInt(row.querySelector('.co-qty-input').value, 10) || 0;
           const opt = sel?.selectedOptions[0];
+          const varOpt = varSel?.selectedOptions[0];
           if (!sel?.value) { valid = false; return; }
+          const basePrice = parseInt(opt?.dataset.price || '0', 10);
+          const variationVisible = row.querySelector('.co-variation-row')?.style.display !== 'none';
+          const variationName = variationVisible ? (varOpt?.value || '') : '';
+          const variationDelta = variationVisible ? parseInt(varOpt?.dataset.delta || '0', 10) : 0;
+          const productName = (opt?.dataset.name || sel.value) + (variationName ? ` — ${variationName}` : '');
           items.push({
             stripe_product_id: sel.value,
-            product_name: opt?.dataset.name || sel.value,
+            product_name: productName,
             quantity: qty,
-            unit_amount: parseInt(opt?.dataset.price || '0', 10),
+            unit_amount: basePrice + variationDelta,
           });
         });
 
