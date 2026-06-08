@@ -569,7 +569,7 @@
                 <svg width="11" height="11" viewBox="0 0 24 24" fill="${isFav ? 'currentColor' : 'none'}" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
                 ${isFav ? 'Saved' : 'Save'}
               </button>` : ''}
-              <button class="btn-add-cart" data-pid="${escHtml(pid)}">+ Cart</button>
+              ${availableVariations.length === 0 ? `<button class="btn-add-cart" data-pid="${escHtml(pid)}">+ Cart</button>` : ''}
             </div>
             ${variationDropdownHtml}
           `;
@@ -639,8 +639,8 @@
             }
           });
 
-          // Add to cart button (always rendered, no auth gate)
-          row.querySelector('.btn-add-cart').addEventListener('click', () => {
+          // Add to cart button (only rendered for items without variations)
+          row.querySelector('.btn-add-cart')?.addEventListener('click', () => {
             addToCart(pid, '', 0, name);
           });
 
