@@ -76,7 +76,7 @@
       }
       await enterDashboard(session.user, targetTab);
     } else {
-      showAuthCard();
+      showAuthCard(targetTab);
     }
 
     // Only redirect on genuine new sign-ins, not token refreshes when already logged in
@@ -91,16 +91,26 @@
         }
       } else if (event === 'SIGNED_OUT') {
         alreadySignedIn = false;
-        showAuthCard();
+        showAuthCard(targetTab);
       }
     });
 
     setLoading(false);
   }
 
-  function showAuthCard() {
+  function showAuthCard(tab) {
     document.getElementById('auth-wrap').classList.remove('hidden');
     document.getElementById('dashboard').classList.add('hidden');
+    const subhead = document.getElementById('auth-subhead');
+    if (subhead) {
+      if (tab === 'cart') {
+        subhead.textContent = 'Sign in to view your basket and manage your subscription.';
+      } else if (tab === 'club') {
+        subhead.textContent = 'Membership is $4.99/month, cancel anytime. Sign in or create an account to join.';
+      } else {
+        subhead.textContent = 'Sign in to save favorites, track orders, and join the Bread Box Club';
+      }
+    }
   }
 
   async function enterDashboard(user, targetTab) {
@@ -211,6 +221,15 @@
 
     await loadProducts();
     await Promise.all([loadCart(), loadFavorites(), loadOrders(), loadMenuItems()]);
+
+    // Basket tab shows a cross-link to the Club box builder for active members —
+    // checked here (not just in loadClub, which is lazy) since Basket is the
+    // default tab and most returning members land on it directly.
+    const { data: basketMemberRow } = await sb.from('club_members').select('status').eq('user_id', user.id).maybeSingle();
+    const basketClubHint = document.getElementById('basket-club-hint');
+    if (basketClubHint) {
+      basketClubHint.classList.toggle('hidden', basketMemberRow?.status !== 'active');
+    }
 
     // Load club data if club tab requested or already active
     if (targetTab === 'club') {

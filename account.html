@@ -128,7 +128,7 @@
     <div class="auth-card-header">
       <img src="brand-assets/color-logo.png" alt="Bloomin' Acres" class="auth-logo" />
       <h1>Welcome Back</h1>
-      <p>Sign in to save favorites, track orders, and join the Bread Box Club</p>
+      <p id="auth-subhead">Sign in to save favorites, track orders, and join the Bread Box Club</p>
     </div>
     <div class="auth-tabs">
       <button class="auth-tab active" data-tab="signin">Sign In</button>
@@ -221,6 +221,9 @@
       <div class="basket-layout">
         <div class="basket-card">
           <img src="brand-assets/basket-header.webp" alt="Your Bloomin' Basket" class="basket-header-img" />
+          <p class="basket-club-hint hidden" id="basket-club-hint">
+            Bread Box Club member — <a href="account.html?tab=club">manage your weekly box</a> from the Club tab.
+          </p>
           <div id="cart-items"></div>
         </div>
       </div>
