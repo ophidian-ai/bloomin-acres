@@ -1549,6 +1549,12 @@
           dt.textContent = `${date} \u00B7 ${statusLabel}`;
           ticket.appendChild(dt);
         }
+        if (order.pickup_location_name) {
+          const loc = document.createElement('div');
+          loc.className = 'ticket-pickup-location';
+          loc.textContent = `Pickup: ${order.pickup_location_name}`;
+          ticket.appendChild(loc);
+        }
         if (fields.items) {
           ticket.appendChild(createDivider());
           items.forEach(i => {
