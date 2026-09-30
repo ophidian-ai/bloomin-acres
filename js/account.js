@@ -91,7 +91,10 @@
         }
       } else if (event === 'SIGNED_OUT') {
         alreadySignedIn = false;
-        showAuthCard(targetTab);
+        // Re-read the tab from the URL rather than the stale `targetTab` closure —
+        // the dash-tab click handler updates the URL on tab switch but not this variable.
+        const currentTab = new URLSearchParams(window.location.search).get('tab');
+        showAuthCard(currentTab);
       }
     });
 
@@ -220,15 +223,24 @@
     }
 
     await loadProducts();
-    await Promise.all([loadCart(), loadFavorites(), loadOrders(), loadMenuItems()]);
 
-    // Basket tab shows a cross-link to the Club box builder for active members —
-    // checked here (not just in loadClub, which is lazy) since Basket is the
-    // default tab and most returning members land on it directly.
-    const { data: basketMemberRow } = await sb.from('club_members').select('status').eq('user_id', user.id).maybeSingle();
+    // Basket tab shows a cross-link to the Club box builder for members — fetched
+    // here (concurrently with the other dashboard data) since Basket is the
+    // default tab and most returning members land on it directly, before
+    // loadClub()'s own lazy fetch would ever run. Shares the same membership
+    // row/admin flag loadClub() uses below, so both places agree on who counts
+    // as a member instead of each re-deriving it independently.
+    const [, , , , { data: membershipRow }] = await Promise.all([
+      loadCart(), loadFavorites(), loadOrders(), loadMenuItems(),
+      sb.from('club_members').select('*').eq('user_id', user.id).maybeSingle(),
+    ]);
+    clubMembership = membershipRow;
+    isAdminUser = !!adminRow;
+
     const basketClubHint = document.getElementById('basket-club-hint');
     if (basketClubHint) {
-      basketClubHint.classList.toggle('hidden', basketMemberRow?.status !== 'active');
+      const isMember = isAdminUser || (clubMembership && clubMembership.status !== 'cancelled');
+      basketClubHint.classList.toggle('hidden', !isMember);
     }
 
     // Load club data if club tab requested or already active
@@ -796,6 +808,7 @@
 
   // ── Club ──────────────────────────────────────────────────────────────────
   let clubMembership = null;
+  let isAdminUser = false;
   let boxSelections = [];
   let myReferralCode = null;
   let referralCount = 0;
@@ -806,20 +819,20 @@
     document.getElementById('club-non-member').classList.add('hidden');
     document.getElementById('club-member-view').classList.add('hidden');
 
-    // Check admin status (admins always have club access)
-    const { data: adminRow } = await sb.from('admins').select('user_id').eq('user_id', currentUser.id).maybeSingle();
-
-    const [{ data: member }, { data: boxData }, { data: codeRow }] = await Promise.all([
-      sb.from('club_members').select('*').eq('user_id', currentUser.id).maybeSingle(),
+    // enterDashboard() always fetches membership/admin status (both call sites
+    // below run after that fetch resolves), so reuse it here instead of
+    // re-querying the same rows — keeps a single source of truth for "is this
+    // user a member" shared with the basket-tab hint.
+    const [{ data: boxData }, { data: codeRow }] = await Promise.all([
       sb.from('box_selections').select('items').eq('user_id', currentUser.id).maybeSingle(),
       sb.from('referral_codes').select('code').eq('user_id', currentUser.id).maybeSingle(),
     ]);
 
-    clubMembership = member;
+    const member = clubMembership;
     boxSelections = boxData?.items || [];
     myReferralCode = codeRow?.code || null;
 
-    const isMember = adminRow || (member && member.status !== 'cancelled');
+    const isMember = isAdminUser || (member && member.status !== 'cancelled');
 
     document.getElementById('club-loading-state').classList.add('hidden');
 
@@ -833,7 +846,7 @@
 
     // Status badge
     const badge = document.getElementById('club-status-badge');
-    if (adminRow && !member) {
+    if (isAdminUser && !member) {
       badge.textContent = 'Admin Access';
       badge.className = 'club-status-badge admin';
     } else {

@@ -116,6 +116,7 @@
       const sched = scheduleRes.data;
       let scheduleRangeText = '';
       let menuUnavailable = false;
+      let menuAlreadyClosed = false; // past end_date specifically — vs. not-yet-open
       let placeholderMessage = '';
       if (sched && (sched.start_date || sched.end_date)) {
         const parseDate = d => { const [y, m, day] = d.split('-'); return new Date(+y, +m - 1, +day); };
@@ -124,6 +125,8 @@
         const today = new Date(); today.setHours(0, 0, 0, 0);
         const start = sched.start_date ? parseDate(sched.start_date) : null;
         const end   = sched.end_date   ? parseDate(sched.end_date)   : null;
+
+        if (end && today > end) menuAlreadyClosed = true;
 
         if ((start && today < start) || (end && today > end)) {
           menuUnavailable = true;
@@ -435,9 +438,11 @@
       removeFallback();
       skeleton.remove();
 
-      // Show the schedule date range only while it's still the active window —
-      // an expired range next to "not available" reads as stale/contradictory.
-      if (scheduleRangeText && !menuUnavailable) {
+      // Show the schedule date range unless its window has already closed —
+      // a past end date next to "not available" reads as stale/contradictory,
+      // but a future start date ("Available starting Oct 5") is still useful
+      // information, not stale, so that case keeps showing it.
+      if (scheduleRangeText && !menuAlreadyClosed) {
         const schedEl = document.createElement('div');
         schedEl.className = 'menu-schedule-date';
         schedEl.textContent = scheduleRangeText;
