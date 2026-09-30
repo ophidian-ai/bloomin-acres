@@ -76,6 +76,16 @@ body > * {
 /* ── Sidebar hidden elements ─────────────────────────────── */
 .menu-sidebar-hidden { display: none; }
 
+/* ── Referral Teaser (above menu content, always visible) ── */
+.menu-referral-teaser {
+  text-align: center;
+  font-family: var(--font-body);
+  font-size: .78rem;
+  color: var(--earth-mid);
+  padding: .5rem 1rem 0;
+}
+.menu-referral-teaser a { color: var(--burnt-orange); font-weight: 600; }
+
 /* ── Schedule Date (inside menu card) ───────────────────── */
 .menu-schedule-date {
   text-align: center;
@@ -98,6 +108,16 @@ body > * {
   color: var(--earth-brown);
   opacity: .7;
   line-height: 1.6;
+}
+.menu-unavailable-cta {
+  text-align: center;
+  padding: 0 1.5rem 2rem;
+}
+.menu-unavailable-hint {
+  font-family: var(--font-body);
+  font-size: .8rem;
+  color: var(--earth-mid);
+  margin-top: .75rem;
 }
 
 /* ── Page Wrapper ────────────────────────────────────────── */

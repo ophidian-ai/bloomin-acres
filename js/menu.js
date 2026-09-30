@@ -435,20 +435,30 @@
       removeFallback();
       skeleton.remove();
 
-      // Always show the schedule date range if one is set
-      if (scheduleRangeText) {
+      // Show the schedule date range only while it's still the active window —
+      // an expired range next to "not available" reads as stale/contradictory.
+      if (scheduleRangeText && !menuUnavailable) {
         const schedEl = document.createElement('div');
         schedEl.className = 'menu-schedule-date';
         schedEl.textContent = scheduleRangeText;
         content.appendChild(schedEl);
       }
 
-      // If today is outside the schedule window, show placeholder and stop rendering
+      // If today is outside the schedule window, show placeholder + a CTA that
+      // keeps the page converting between menu windows, and stop rendering.
       if (menuUnavailable) {
         const ph = document.createElement('div');
         ph.className = 'menu-unavailable';
         ph.textContent = placeholderMessage;
         content.appendChild(ph);
+
+        const ctaWrap = document.createElement('div');
+        ctaWrap.className = 'menu-unavailable-cta';
+        ctaWrap.innerHTML = `
+          <a href="club.html" class="cta-btn">Join the Breadbox Club</a>
+          <p class="menu-unavailable-hint">Members get first pick when the next menu opens, plus 5% off every order.</p>
+        `;
+        content.appendChild(ctaWrap);
         return;
       }
 
