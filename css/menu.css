@@ -85,6 +85,8 @@ body > * {
   padding: .5rem 1rem 0;
 }
 .menu-referral-teaser a { color: var(--burnt-orange); font-weight: 600; }
+.menu-referral-teaser a:hover,
+.menu-referral-teaser a:active { text-decoration: underline; }
 
 /* ── Schedule Date (inside menu card) ───────────────────── */
 .menu-schedule-date {

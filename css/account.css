@@ -505,6 +505,8 @@ body::after {
   margin: 0 0 .5rem;
 }
 .basket-club-hint a { color: var(--burnt-orange); font-weight: 600; }
+.basket-club-hint a:hover,
+.basket-club-hint a:active { text-decoration: underline; }
 
 #cart-items {
   background: rgba(250,240,230,.92);

@@ -713,3 +713,5 @@ h1, h2, h3 { font-family: var(--font-display); letter-spacing: -0.03em; line-hei
   margin-top: 1.25rem;
 }
 .club-promo-referral a { color: var(--burnt-orange); font-weight: 600; }
+.club-promo-referral a:hover,
+.club-promo-referral a:active { text-decoration: underline; }
