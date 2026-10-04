@@ -32,7 +32,7 @@ export default async function handler(req, res) {
 
     // Find or create Supabase user
     let userId;
-    const { data: existingUsers } = await sb.auth.admin.listUsers();
+    const { data: existingUsers } = await sb.auth.admin.listUsers({ page: 1, perPage: 1000 });
     const existingUser = (existingUsers?.users || []).find(u => u.email === guest_email.toLowerCase().trim());
 
     if (existingUser) {
@@ -88,6 +88,19 @@ export default async function handler(req, res) {
       }
     }
 
+    // Resolve + validate pickup location (guest may not have selected one)
+    let pickupLocationName = null;
+    const { pickup_location_id } = req.body;
+    if (pickup_location_id) {
+      const { data: locRow } = await sb
+        .from('pickup_locations')
+        .select('name')
+        .eq('id', pickup_location_id)
+        .eq('active', true)
+        .maybeSingle();
+      if (locRow?.name) pickupLocationName = locRow.name;
+    }
+
     // Fetch Stripe products to get their default price IDs
     const products = await Promise.all(
       productIds.map(id => stripe.products.retrieve(id, { expand: ['default_price'] }))
@@ -117,12 +130,16 @@ export default async function handler(req, res) {
         ? `https://${process.env.VERCEL_URL}`
         : 'http://localhost:3000';
 
+    const metadata = { user_id: userId, is_guest: 'true' };
+    if (pickupLocationName) metadata.pickup_location = pickupLocationName;
+
     const session = await stripe.checkout.sessions.create({
       mode: 'payment',
       line_items: lineItems,
       customer_email: guest_email.toLowerCase().trim(),
       client_reference_id: userId,
-      metadata: { user_id: userId, is_guest: 'true' },
+      metadata,
+      payment_intent_data: { receipt_email: guest_email.toLowerCase().trim() },
       success_url: `${origin}/menu.html?order=success`,
       cancel_url: `${origin}/menu.html`,
     });

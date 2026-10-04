@@ -1,5 +1,6 @@
 import Stripe from 'stripe';
 import { createClient } from '@supabase/supabase-js';
+import { Resend } from 'resend';
 
 export const config = { api: { bodyParser: false } };
 
@@ -120,6 +121,7 @@ export default async function handler(req, res) {
         }));
         await sb.from('order_items').insert(orderItemRows);
         await sb.from('user_cart').delete().eq('user_id', userId);
+        await notifyOrderPlaced(order, orderItemRows);
       }
 
       // Punch card: increment for active club members
@@ -162,6 +164,37 @@ export default async function handler(req, res) {
   }
 
   res.json({ received: true });
+}
+
+// Best-effort: never throws, so a Resend outage can't turn a paid order into a Stripe retry loop.
+async function notifyOrderPlaced(order, orderItemRows) {
+  const apiKey = process.env.RESEND_API_KEY;
+  const from = process.env.RESEND_FROM_EMAIL;
+  const to = process.env.ORDER_NOTIFICATION_EMAIL;
+  if (!apiKey || !from || !to) return;
+
+  try {
+    const resend = new Resend(apiKey);
+    const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
+    const total = ((order.total_amount || 0) / 100).toFixed(2);
+    const name = esc(order.customer_name || 'Guest');
+    const itemLines = orderItemRows
+      .map(i => `${i.quantity}x ${esc(i.product_name)} — $${((i.unit_amount || 0) * i.quantity / 100).toFixed(2)}`)
+      .join('<br>');
+    await resend.emails.send({
+      from,
+      to,
+      subject: `New order — ${order.customer_name || 'Guest'} — $${total}`,
+      html: `
+        <p><strong>${name}</strong> (${esc(order.customer_email || 'no email')})</p>
+        <p>${order.pickup_location_name ? `Pickup: ${esc(order.pickup_location_name)}` : ''}</p>
+        <p>${itemLines}</p>
+        <p><strong>Total: $${total}</strong></p>
+      `,
+    });
+  } catch (err) {
+    console.error('[webhook] order notification email failed:', err.message);
+  }
 }
 
 // Records a successful referral use and checks milestone thresholds

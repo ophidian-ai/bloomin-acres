@@ -1178,6 +1178,7 @@ body {
 .ticket-customer { font-size: 11pt; font-weight: 600; }
 .ticket-phone { font-size: 9pt; color: #555; }
 .ticket-date { font-size: 9pt; color: #555; margin-top: 4pt; }
+.ticket-pickup-location { font-size: 9pt; color: #555; margin-top: 2pt; }
 .ticket-item { display: flex; justify-content: space-between; font-size: 10pt; padding: 2pt 0; }
 .ticket-total { display: flex; justify-content: space-between; font-size: 11pt; padding: 4pt 0; }
 
@@ -1443,6 +1444,8 @@ body {
   .print-size-3x4 .ticket-item { font-size: 8pt; }
   .print-size-3x5 .ticket-customer,
   .print-size-3x4 .ticket-customer { font-size: 9pt; }
+  .print-size-3x5 .ticket-pickup-location,
+  .print-size-3x4 .ticket-pickup-location { font-size: 8pt; }
 
   /* Prep list print styles */
   .prep-list-printable {

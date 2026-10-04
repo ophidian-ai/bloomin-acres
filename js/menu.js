@@ -191,6 +191,24 @@
       const guestModalClose = document.getElementById('guest-modal-close');
       const guestCheckoutForm = document.getElementById('guest-checkout-form');
       const guestSubmitBtn = document.getElementById('guest-submit-btn');
+      const guestPickupField = document.getElementById('guest-pickup-field');
+      const guestPickupSelect = document.getElementById('guest-pickup-location');
+      let pickupLocationsLoaded = false;
+
+      async function loadGuestPickupLocations() {
+        if (pickupLocationsLoaded) return;
+        pickupLocationsLoaded = true;
+        const { data: locations } = await sb
+          .from('pickup_locations')
+          .select('id, name')
+          .eq('active', true)
+          .order('sort_order');
+        if (!locations || !locations.length) return; // no locations configured — skip the field entirely
+        guestPickupSelect.innerHTML = locations
+          .map(loc => `<option value="${escHtml(loc.id)}">${escHtml(loc.name)}</option>`)
+          .join('');
+        guestPickupField.classList.remove('hidden');
+      }
 
       function updateCartBadge() {
         const count = cartCount();
@@ -340,6 +358,7 @@
       // Guest checkout modal
       function openGuestModal() {
         guestModalOverlay.style.display = '';
+        loadGuestPickupLocations();
       }
       function closeGuestModal() {
         guestModalOverlay.style.display = 'none';
@@ -376,6 +395,7 @@
               })),
               guest_email: emailVal,
               guest_name: nameVal,
+              pickup_location_id: guestPickupSelect.value || null,
             }),
           });
           const data = await res.json();
