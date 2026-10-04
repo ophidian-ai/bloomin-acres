@@ -165,24 +165,14 @@ export default async function handler(req, res) {
       sessionParams.metadata.free_delivery = isMemberWithFreeDelivery ? 'true' : 'false';
     }
 
-    // Attach preferred pickup location name to order metadata
-    if (sb && user_id) {
-      const { data: profileWithPickup } = await sb
-        .from('profiles')
-        .select('preferred_pickup_location_id')
-        .eq('user_id', user_id)
-        .maybeSingle();
-
-      if (profileWithPickup?.preferred_pickup_location_id) {
-        const { data: locRow } = await sb
-          .from('pickup_locations')
-          .select('name')
-          .eq('id', profileWithPickup.preferred_pickup_location_id)
-          .maybeSingle();
-        if (locRow?.name) {
-          if (!sessionParams.metadata) sessionParams.metadata = {};
-          sessionParams.metadata.pickup_location = locRow.name;
-        }
+    // Pickup location is required whenever any location is configured
+    if (sb) {
+      const { data: activeLocs } = await sb.from('pickup_locations').select('id, name').eq('active', true);
+      if (activeLocs?.length) {
+        const chosen = activeLocs.find(l => l.id === req.body.pickup_location_id);
+        if (!chosen) return res.status(400).json({ error: 'Please choose a pickup location.' });
+        if (!sessionParams.metadata) sessionParams.metadata = {};
+        sessionParams.metadata.pickup_location = chosen.name;
       }
     }
 

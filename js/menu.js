@@ -204,9 +204,9 @@
           .eq('active', true)
           .order('sort_order');
         if (!locations || !locations.length) return; // no locations configured — skip the field entirely
-        guestPickupSelect.innerHTML = locations
-          .map(loc => `<option value="${escHtml(loc.id)}">${escHtml(loc.name)}</option>`)
-          .join('');
+        guestPickupSelect.innerHTML = '<option value="" disabled selected>Choose a pickup location</option>' +
+          locations.map(loc => `<option value="${escHtml(loc.id)}">${escHtml(loc.name)}</option>`).join('');
+        guestPickupSelect.required = true;
         guestPickupField.classList.remove('hidden');
       }
 

@@ -469,9 +469,29 @@
     itemsEl.textContent = '';
     itemsEl.appendChild(frag);
     totalEl.textContent = 'Total: ' + fmt(total);
-    confirmBtn.disabled = hasStockIssue;
-    confirmBtn.textContent = hasStockIssue ? 'Fix Cart to Continue' : 'Confirm & Pay';
     overlay.classList.remove('hidden');
+
+    const pickupField = document.getElementById('order-review-pickup');
+    const pickupSelect = document.getElementById('review-pickup-location');
+    const [{ data: pickupLocs }, { data: prof }] = await Promise.all([
+      sb.from('pickup_locations').select('id, name').eq('active', true).order('sort_order'),
+      sb.from('profiles').select('preferred_pickup_location_id').eq('user_id', currentUser.id).maybeSingle(),
+    ]);
+    const hasPickup = !!pickupLocs?.length;
+    pickupField.classList.toggle('hidden', !hasPickup);
+    if (hasPickup) {
+      pickupSelect.innerHTML = '<option value="" disabled>Choose a pickup location</option>' +
+        pickupLocs.map(l => `<option value="${escHtml(l.id)}">${escHtml(l.name)}</option>`).join('');
+      pickupSelect.value = pickupLocs.some(l => l.id === prof?.preferred_pickup_location_id) ? prof.preferred_pickup_location_id : '';
+    }
+    const pickupOk = () => !hasPickup || !!pickupSelect.value;
+    const syncConfirm = () => {
+      confirmBtn.disabled = hasStockIssue || !pickupOk();
+      confirmBtn.textContent = hasStockIssue ? 'Fix Cart to Continue'
+        : pickupOk() ? 'Confirm & Pay' : 'Choose a Pickup Location';
+    };
+    pickupSelect.onchange = syncConfirm;
+    syncConfirm();
 
     document.getElementById('review-cancel-btn').onclick = () => overlay.classList.add('hidden');
     confirmBtn.onclick = hasStockIssue ? null : confirmCheckout;
@@ -486,7 +506,7 @@
     const r = await fetch('/api/stripe/checkout', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ items, user_id: currentUser.id }),
+      body: JSON.stringify({ items, user_id: currentUser.id, pickup_location_id: document.getElementById('review-pickup-location').value || null }),
     }).catch(() => null);
     if (!r || !r.ok) { btn.disabled = false; btn.textContent = 'Confirm & Pay'; overlay.classList.add('hidden'); showToast('Checkout failed', true); return; }
     const { url, error } = await r.json();
