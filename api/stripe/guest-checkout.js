@@ -30,6 +30,15 @@ export default async function handler(req, res) {
     const stripe = new Stripe(secretKey);
     const sb = createClient(supabaseUrl, supabaseServiceKey);
 
+    // Pickup location is required whenever any location is configured
+    let pickupLocationName = null;
+    const { data: activeLocs } = await sb.from('pickup_locations').select('id, name').eq('active', true);
+    if (activeLocs?.length) {
+      const chosen = activeLocs.find(l => l.id === req.body.pickup_location_id);
+      if (!chosen) return res.status(400).json({ error: 'Please choose a pickup location.' });
+      pickupLocationName = chosen.name;
+    }
+
     // Find or create Supabase user
     let userId;
     const { data: existingUsers } = await sb.auth.admin.listUsers({ page: 1, perPage: 1000 });
@@ -86,19 +95,6 @@ export default async function handler(req, res) {
             : 'An item exceeds available stock. Please update your cart.',
         });
       }
-    }
-
-    // Resolve + validate pickup location (guest may not have selected one)
-    let pickupLocationName = null;
-    const { pickup_location_id } = req.body;
-    if (pickup_location_id) {
-      const { data: locRow } = await sb
-        .from('pickup_locations')
-        .select('name')
-        .eq('id', pickup_location_id)
-        .eq('active', true)
-        .maybeSingle();
-      if (locRow?.name) pickupLocationName = locRow.name;
     }
 
     // Fetch Stripe products to get their default price IDs
