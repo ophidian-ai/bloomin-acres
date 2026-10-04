@@ -76,7 +76,7 @@
       }
       await enterDashboard(session.user, targetTab);
     } else {
-      showAuthCard();
+      showAuthCard(targetTab);
     }
 
     // Only redirect on genuine new sign-ins, not token refreshes when already logged in
@@ -87,20 +87,34 @@
           isSigningUp = false;
           window.location.href = 'account.html?tab=profile';
         } else {
-          window.location.href = '/';
+          const tab = new URLSearchParams(window.location.search).get('tab');
+          window.location.href = tab ? `account.html?tab=${encodeURIComponent(tab)}` : '/';
         }
       } else if (event === 'SIGNED_OUT') {
         alreadySignedIn = false;
-        showAuthCard();
+        // Re-read the tab from the URL rather than the stale `targetTab` closure —
+        // the dash-tab click handler updates the URL on tab switch but not this variable.
+        const currentTab = new URLSearchParams(window.location.search).get('tab');
+        showAuthCard(currentTab);
       }
     });
 
     setLoading(false);
   }
 
-  function showAuthCard() {
+  function showAuthCard(tab) {
     document.getElementById('auth-wrap').classList.remove('hidden');
     document.getElementById('dashboard').classList.add('hidden');
+    const subhead = document.getElementById('auth-subhead');
+    if (subhead) {
+      if (tab === 'cart') {
+        subhead.textContent = 'Sign in to view your basket and manage your subscription.';
+      } else if (tab === 'club') {
+        subhead.textContent = 'Membership is $4.99/month, cancel anytime. Sign in or create an account to join.';
+      } else {
+        subhead.textContent = 'Sign in to save favorites, track orders, and join the Bread Box Club';
+      }
+    }
   }
 
   async function enterDashboard(user, targetTab) {
@@ -210,7 +224,25 @@
     }
 
     await loadProducts();
-    await Promise.all([loadCart(), loadFavorites(), loadOrders(), loadMenuItems()]);
+
+    // Basket tab shows a cross-link to the Club box builder for members — fetched
+    // here (concurrently with the other dashboard data) since Basket is the
+    // default tab and most returning members land on it directly, before
+    // loadClub()'s own lazy fetch would ever run. Shares the same membership
+    // row/admin flag loadClub() uses below, so both places agree on who counts
+    // as a member instead of each re-deriving it independently.
+    const [, , , , { data: membershipRow }] = await Promise.all([
+      loadCart(), loadFavorites(), loadOrders(), loadMenuItems(),
+      sb.from('club_members').select('*').eq('user_id', user.id).maybeSingle(),
+    ]);
+    clubMembership = membershipRow;
+    isAdminUser = !!adminRow;
+
+    const basketClubHint = document.getElementById('basket-club-hint');
+    if (basketClubHint) {
+      const isMember = isAdminUser || (clubMembership && clubMembership.status !== 'cancelled');
+      basketClubHint.classList.toggle('hidden', !isMember);
+    }
 
     // Load club data if club tab requested or already active
     if (targetTab === 'club') {
@@ -777,6 +809,7 @@
 
   // ── Club ──────────────────────────────────────────────────────────────────
   let clubMembership = null;
+  let isAdminUser = false;
   let boxSelections = [];
   let myReferralCode = null;
   let referralCount = 0;
@@ -787,20 +820,20 @@
     document.getElementById('club-non-member').classList.add('hidden');
     document.getElementById('club-member-view').classList.add('hidden');
 
-    // Check admin status (admins always have club access)
-    const { data: adminRow } = await sb.from('admins').select('user_id').eq('user_id', currentUser.id).maybeSingle();
-
-    const [{ data: member }, { data: boxData }, { data: codeRow }] = await Promise.all([
-      sb.from('club_members').select('*').eq('user_id', currentUser.id).maybeSingle(),
+    // enterDashboard() always fetches membership/admin status (both call sites
+    // below run after that fetch resolves), so reuse it here instead of
+    // re-querying the same rows — keeps a single source of truth for "is this
+    // user a member" shared with the basket-tab hint.
+    const [{ data: boxData }, { data: codeRow }] = await Promise.all([
       sb.from('box_selections').select('items').eq('user_id', currentUser.id).maybeSingle(),
       sb.from('referral_codes').select('code').eq('user_id', currentUser.id).maybeSingle(),
     ]);
 
-    clubMembership = member;
+    const member = clubMembership;
     boxSelections = boxData?.items || [];
     myReferralCode = codeRow?.code || null;
 
-    const isMember = adminRow || (member && member.status !== 'cancelled');
+    const isMember = isAdminUser || (member && member.status !== 'cancelled');
 
     document.getElementById('club-loading-state').classList.add('hidden');
 
@@ -814,7 +847,7 @@
 
     // Status badge
     const badge = document.getElementById('club-status-badge');
-    if (adminRow && !member) {
+    if (isAdminUser && !member) {
       badge.textContent = 'Admin Access';
       badge.className = 'club-status-badge admin';
     } else {

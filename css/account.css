@@ -496,6 +496,18 @@ body::after {
   max-width: 700px;
 }
 
+.basket-club-hint {
+  font-family: var(--font-body);
+  font-size: .85rem;
+  color: var(--earth-mid);
+  text-align: center;
+  padding: .75rem 1rem;
+  margin: 0 0 .5rem;
+}
+.basket-club-hint a { color: var(--burnt-orange); font-weight: 600; }
+.basket-club-hint a:hover,
+.basket-club-hint a:active { text-decoration: underline; }
+
 #cart-items {
   background: rgba(250,240,230,.92);
   padding: 1.25rem 1.5rem;

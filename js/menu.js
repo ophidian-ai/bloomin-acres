@@ -116,6 +116,7 @@
       const sched = scheduleRes.data;
       let scheduleRangeText = '';
       let menuUnavailable = false;
+      let menuAlreadyClosed = false; // past end_date specifically — vs. not-yet-open
       let placeholderMessage = '';
       if (sched && (sched.start_date || sched.end_date)) {
         const parseDate = d => { const [y, m, day] = d.split('-'); return new Date(+y, +m - 1, +day); };
@@ -124,6 +125,8 @@
         const today = new Date(); today.setHours(0, 0, 0, 0);
         const start = sched.start_date ? parseDate(sched.start_date) : null;
         const end   = sched.end_date   ? parseDate(sched.end_date)   : null;
+
+        if (end && today > end) menuAlreadyClosed = true;
 
         if ((start && today < start) || (end && today > end)) {
           menuUnavailable = true;
@@ -435,20 +438,32 @@
       removeFallback();
       skeleton.remove();
 
-      // Always show the schedule date range if one is set
-      if (scheduleRangeText) {
+      // Show the schedule date range unless its window has already closed —
+      // a past end date next to "not available" reads as stale/contradictory,
+      // but a future start date ("Available starting Oct 5") is still useful
+      // information, not stale, so that case keeps showing it.
+      if (scheduleRangeText && !menuAlreadyClosed) {
         const schedEl = document.createElement('div');
         schedEl.className = 'menu-schedule-date';
         schedEl.textContent = scheduleRangeText;
         content.appendChild(schedEl);
       }
 
-      // If today is outside the schedule window, show placeholder and stop rendering
+      // If today is outside the schedule window, show placeholder + a CTA that
+      // keeps the page converting between menu windows, and stop rendering.
       if (menuUnavailable) {
         const ph = document.createElement('div');
         ph.className = 'menu-unavailable';
         ph.textContent = placeholderMessage;
         content.appendChild(ph);
+
+        const ctaWrap = document.createElement('div');
+        ctaWrap.className = 'menu-unavailable-cta';
+        ctaWrap.innerHTML = `
+          <a href="club.html" class="cta-btn">Join the Bread Box Club</a>
+          <p class="menu-unavailable-hint">Members get first pick when the next menu opens, plus 5% off every order.</p>
+        `;
+        content.appendChild(ctaWrap);
         return;
       }
 

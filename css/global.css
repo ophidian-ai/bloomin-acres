@@ -237,6 +237,13 @@ img { display: block; max-width: 100%; }
 .cta-btn:hover  { background: #B34848; transform: translateY(-2px); box-shadow: var(--shadow-btn-hover); }
 .cta-btn:active { transform: translateY(0); box-shadow: var(--shadow-btn); }
 
+.cta-btn-outline {
+  background: transparent; color: var(--farm-cream);
+  border: 1.5px solid rgba(250,240,230,.65); box-shadow: none;
+}
+.cta-btn-outline:hover  { background: rgba(250,240,230,.12); transform: translateY(-2px); box-shadow: none; }
+.cta-btn-outline:active { transform: translateY(0); }
+
 /* ── Overline label ─────────────────────────────────────── */
 .overline {
   display: block; font-family: var(--font-body);

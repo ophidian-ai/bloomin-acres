@@ -35,8 +35,13 @@
   <img src="brand-assets/color-logo.png" alt="Bloomin' Acres" class="nav-sidebar-logo" />
   <nav>
     <a href="/"   class="nav-sidebar-link">Home</a>
+    <a href="/#welcome" class="nav-sidebar-link">Our Story</a>
+    <a href="/#market-schedule" class="nav-sidebar-link">Market Schedule</a>
+    <a href="/#what-we-make" class="nav-sidebar-link">What We Make</a>
     <a href="menu.html"    class="nav-sidebar-link accent">Menu</a>
     <a href="club.html"    class="nav-sidebar-link">The Club</a>
+    <a href="club.html#referral" class="nav-sidebar-link">Refer &amp; Earn</a>
+    <a href="/#visit" class="nav-sidebar-link">Visit Us</a>
     <a href="account.html" class="nav-sidebar-link" id="sidebar-signin-link">Sign In</a>
     <div class="nav-account-item hidden" id="sidebar-account-item">
       <button type="button" class="nav-account-toggle" id="sidebar-account-toggle" aria-haspopup="true" aria-expanded="false">
@@ -123,7 +128,7 @@
     <div class="auth-card-header">
       <img src="brand-assets/color-logo.png" alt="Bloomin' Acres" class="auth-logo" />
       <h1>Welcome Back</h1>
-      <p>Sign in to save favorites, track orders, and join the Bread Box Club</p>
+      <p id="auth-subhead">Sign in to save favorites, track orders, and join the Bread Box Club</p>
     </div>
     <div class="auth-tabs">
       <button class="auth-tab active" data-tab="signin">Sign In</button>
@@ -216,6 +221,9 @@
       <div class="basket-layout">
         <div class="basket-card">
           <img src="brand-assets/basket-header.webp" alt="Your Bloomin' Basket" class="basket-header-img" />
+          <p class="basket-club-hint hidden" id="basket-club-hint">
+            Bread Box Club member — <a href="account.html?tab=club">manage your weekly box</a> from the Club tab.
+          </p>
           <div id="cart-items"></div>
         </div>
       </div>
