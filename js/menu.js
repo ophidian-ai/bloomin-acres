@@ -460,7 +460,7 @@
         const ctaWrap = document.createElement('div');
         ctaWrap.className = 'menu-unavailable-cta';
         ctaWrap.innerHTML = `
-          <a href="club.html" class="cta-btn">Join the Breadbox Club</a>
+          <a href="club.html" class="cta-btn">Join the Bread Box Club</a>
           <p class="menu-unavailable-hint">Members get first pick when the next menu opens, plus 5% off every order.</p>
         `;
         content.appendChild(ctaWrap);
