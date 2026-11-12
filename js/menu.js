@@ -198,14 +198,18 @@
       async function loadGuestPickupLocations() {
         if (pickupLocationsLoaded) return;
         pickupLocationsLoaded = true;
-        const { data: locations } = await sb
+        let { data: locations, error } = await sb
           .from('pickup_locations')
-          .select('id, name')
+          .select('id, name, club_only')
           .eq('active', true)
           .order('sort_order');
+        if (error) ({ data: locations } = await sb.from('pickup_locations').select('id, name').eq('active', true).order('sort_order'));
         if (!locations || !locations.length) return; // no locations configured — skip the field entirely
+        // Club delivery stops are shown (they advertise the Club) but can't be picked as a guest
         guestPickupSelect.innerHTML = '<option value="" disabled selected>Choose a pickup location</option>' +
-          locations.map(loc => `<option value="${escHtml(loc.id)}">${escHtml(loc.name)}</option>`).join('');
+          locations.map(loc => loc.club_only
+            ? `<option value="${escHtml(loc.id)}" disabled>${escHtml(loc.name)} — Club members only</option>`
+            : `<option value="${escHtml(loc.id)}">${escHtml(loc.name)}</option>`).join('');
         guestPickupSelect.required = true;
         guestPickupField.classList.remove('hidden');
       }

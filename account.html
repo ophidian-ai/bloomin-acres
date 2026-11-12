@@ -168,7 +168,7 @@
         <input type="tel" id="signup-phone" autocomplete="tel" placeholder="(555) 555-5555" />
       </div>
       <div class="field">
-        <label for="signup-birthday">Birthday <span class="optional-label">(optional — Club members get a birthday treat)</span></label>
+        <label for="signup-birthday">Birthday <span class="optional-label">(optional — Club members get a birthday treat; can only be set once)</span></label>
         <input type="date" id="signup-birthday" autocomplete="bday" />
       </div>
       <div class="field">
@@ -283,8 +283,9 @@
           <input type="tel" id="profile-phone" placeholder="(555) 000-0000" autocomplete="tel" />
         </div>
         <div class="field">
-          <label for="profile-birthday">Birthday <span class="optional-label">(for your birthday treat)</span></label>
+          <label for="profile-birthday">Birthday <span class="optional-label">(for your birthday treat — can only be set once)</span></label>
           <input type="date" id="profile-birthday" autocomplete="bday" />
+          <p class="field-note hidden" id="profile-birthday-note"></p>
         </div>
         <button class="btn-primary btn-primary-180" id="save-profile-btn">Save Changes</button>
       </div>
@@ -368,7 +369,7 @@
         <!-- Birthday treat -->
         <div class="club-section-block" id="club-birthday-block">
           <h3>Birthday Treat</h3>
-          <p class="punch-card-desc" id="club-birthday-text">Add your birthday and any order you place within 3 days of it gets one free item of your choice. Your order ticket is flagged automatically, so just tell us your pick at pickup.</p>
+          <p class="punch-card-desc" id="club-birthday-text">Add your birthday and your first order in the 30 days starting on your birthday gets one free item of your choice. Your order ticket is flagged automatically, so just tell us your pick at pickup.</p>
           <div class="club-birthday-row" id="club-birthday-form">
             <label class="sr-only" for="club-birthday-input">Your birthday</label>
             <input type="date" id="club-birthday-input" autocomplete="bday" />
@@ -464,7 +465,7 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <script src="/js/supabase-client.js"></script>
 <script src="/js/cart.js?v=2"></script>
-<script src="/js/account.js?v=3"></script>
+<script src="/js/account.js?v=4"></script>
 </main>
 
 <footer class="site-footer">

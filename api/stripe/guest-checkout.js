@@ -2,6 +2,7 @@ import Stripe from 'stripe';
 import { createClient } from '@supabase/supabase-js';
 import crypto from 'crypto';
 import { findUserByEmail, fillProfileNameIfMissing } from '../_lib/auth.js';
+import { activePickupLocations, CLUB_ONLY_LOCATION_ERROR } from '../_lib/club.js';
 
 export default async function handler(req, res) {
   const allowedOrigin = (process.env.ALLOWED_ORIGIN || (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'http://localhost:3000')).trim();
@@ -33,10 +34,12 @@ export default async function handler(req, res) {
 
     // Pickup location is required whenever any location is configured
     let pickupLocationName = null;
-    const { data: activeLocs } = await sb.from('pickup_locations').select('id, name').eq('active', true);
-    if (activeLocs?.length) {
+    const activeLocs = await activePickupLocations(sb);
+    if (activeLocs.length) {
       const chosen = activeLocs.find(l => l.id === req.body.pickup_location_id);
       if (!chosen) return res.status(400).json({ error: 'Please choose a pickup location.' });
+      // Guests aren't signed in, so they can't use the Club delivery stops
+      if (chosen.club_only) return res.status(400).json({ error: CLUB_ONLY_LOCATION_ERROR });
       pickupLocationName = chosen.name;
     }
 
