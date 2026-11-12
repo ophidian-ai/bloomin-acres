@@ -11,6 +11,19 @@ const CLUB_COUPON_ID = 'BREADBOX-CLUB-5';
 export const CLUB_DISCOUNT_PCT = 5;
 export const MEMBER_STATUSES = ['active', 'past_due'];
 
+// Active pickup/delivery locations with their Club-only flag. Falls back to
+// treating every location as open if the club_only column isn't there yet, so
+// checkout never silently skips location validation.
+export async function activePickupLocations(sb) {
+  const withFlag = await sb.from('pickup_locations').select('id, name, club_only').eq('active', true);
+  if (!withFlag.error) return withFlag.data || [];
+  const { data, error } = await sb.from('pickup_locations').select('id, name').eq('active', true);
+  if (error) throw error;
+  return (data || []).map(l => ({ ...l, club_only: false }));
+}
+
+export const CLUB_ONLY_LOCATION_ERROR = 'That delivery location is a Bread Box Club perk — please choose another location or join the Club.';
+
 let cachedPriceId = null;
 export async function resolveClubPriceId(stripe) {
   if (cachedPriceId) return cachedPriceId;
@@ -155,8 +168,8 @@ export async function sendClubWelcomeOnce(stripe, sub, { email, name, accountCre
         <p><strong>Your perks:</strong></p>
         <ul>
           <li>${CLUB_DISCOUNT_PCT}% off every order — applied automatically at checkout when you're signed in</li>
-          <li>Free delivery to any of our pickup locations</li>
-          <li>A birthday treat — add your birthday in your account so we can flag your birthday-week order</li>
+          <li>Free delivery to our Club delivery stops — choose one at checkout</li>
+          <li>A birthday treat — add your birthday in your account and your first order in the 30 days starting on your birthday gets a free item</li>
           <li>Punch card — every 10 orders earns a free item</li>
           <li>Your own referral link to share with friends</li>
         </ul>

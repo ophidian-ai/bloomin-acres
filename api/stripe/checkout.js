@@ -1,7 +1,7 @@
 import Stripe from 'stripe';
 import { createClient } from '@supabase/supabase-js';
 import { setCors, getRequestUser } from '../_lib/auth.js';
-import { resolveClubCouponId, MEMBER_STATUSES } from '../_lib/club.js';
+import { resolveClubCouponId, MEMBER_STATUSES, activePickupLocations, CLUB_ONLY_LOCATION_ERROR } from '../_lib/club.js';
 
 export default async function handler(req, res) {
   console.log('[checkout] handler invoked', req.method);
@@ -112,12 +112,14 @@ export default async function handler(req, res) {
     // Club member discount: 5% off every order — no minimum. Membership is
     // checked server-side for the signed-in account (admins included).
     let clubDiscountCoupon = null;
+    let hasClubAccess = false; // member or admin — also unlocks Club-only locations
     if (authUser && sb) {
       const [{ data: memberRow }, { data: adminRow }] = await Promise.all([
         sb.from('club_members').select('status').eq('user_id', authUser.id).maybeSingle(),
         sb.from('admins').select('user_id').eq('user_id', authUser.id).maybeSingle(),
       ]);
-      if (MEMBER_STATUSES.includes(memberRow?.status) || adminRow) {
+      hasClubAccess = MEMBER_STATUSES.includes(memberRow?.status) || !!adminRow;
+      if (hasClubAccess) {
         clubDiscountCoupon = await resolveClubCouponId(stripe);
         appliedDiscount = { coupon: clubDiscountCoupon };
         sessionParams.metadata.discount_type = 'club_member';
@@ -177,10 +179,11 @@ export default async function handler(req, res) {
 
     // Pickup location is required whenever any location is configured
     if (sb) {
-      const { data: activeLocs } = await sb.from('pickup_locations').select('id, name').eq('active', true);
-      if (activeLocs?.length) {
+      const activeLocs = await activePickupLocations(sb);
+      if (activeLocs.length) {
         const chosen = activeLocs.find(l => l.id === req.body.pickup_location_id);
         if (!chosen) return res.status(400).json({ error: 'Please choose a pickup location.' });
+        if (chosen.club_only && !hasClubAccess) return res.status(400).json({ error: CLUB_ONLY_LOCATION_ERROR });
         if (!sessionParams.metadata) sessionParams.metadata = {};
         sessionParams.metadata.pickup_location = chosen.name;
       }

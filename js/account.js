@@ -198,6 +198,7 @@
     document.getElementById('profile-phone').value = profile?.phone || '';
     document.getElementById('profile-birthday').value = profile?.birthday || '';
     userBirthday = profile?.birthday || null;
+    lockProfileBirthday();
 
     // Load pickup locations (non-blocking)
     loadPickupLocations(profile?.preferred_pickup_location_id || null);
@@ -270,6 +271,8 @@
     if (basketClubHint) basketClubHint.classList.toggle('hidden', !hasMemberPricing());
     // Basket rendered before membership was known — redraw with the member discount line
     renderCart();
+    // Same for the location list: unlock the Club delivery stops for members
+    loadPickupLocations();
 
     // Load club data if club tab requested or already active
     if (targetTab === 'club') {
@@ -523,16 +526,20 @@
 
     const pickupField = document.getElementById('order-review-pickup');
     const pickupSelect = document.getElementById('review-pickup-location');
-    const [{ data: pickupLocs }, { data: prof }] = await Promise.all([
-      sb.from('pickup_locations').select('id, name').eq('active', true).order('sort_order'),
+    const [pickupLocs, { data: prof }] = await Promise.all([
+      fetchActiveLocations('id, name'),
       sb.from('profiles').select('preferred_pickup_location_id').eq('user_id', currentUser.id).maybeSingle(),
     ]);
-    const hasPickup = !!pickupLocs?.length;
+    const hasPickup = !!pickupLocs.length;
     pickupField.classList.toggle('hidden', !hasPickup);
     if (hasPickup) {
+      const canClub = hasMemberPricing();
+      const usable = l => canClub || !l.club_only;
       pickupSelect.innerHTML = '<option value="" disabled>Choose a pickup location</option>' +
-        pickupLocs.map(l => `<option value="${escHtml(l.id)}">${escHtml(l.name)}</option>`).join('');
-      pickupSelect.value = pickupLocs.some(l => l.id === prof?.preferred_pickup_location_id) ? prof.preferred_pickup_location_id : '';
+        pickupLocs.map(l => usable(l)
+          ? `<option value="${escHtml(l.id)}">${escHtml(l.name)}</option>`
+          : `<option value="${escHtml(l.id)}" disabled>${escHtml(l.name)} — Club members only</option>`).join('');
+      pickupSelect.value = pickupLocs.some(l => l.id === prof?.preferred_pickup_location_id && usable(l)) ? prof.preferred_pickup_location_id : '';
     }
     const pickupOk = () => !hasPickup || !!pickupSelect.value;
     const syncConfirm = () => {
@@ -769,19 +776,22 @@
     const firstName = document.getElementById('profile-first-name').value.trim();
     const lastName = document.getElementById('profile-last-name').value.trim();
     const phone = document.getElementById('profile-phone').value.trim();
-    const birthday = document.getElementById('profile-birthday').value || null;
     const btn = document.getElementById('save-profile-btn');
     btn.disabled = true;
     btn.textContent = 'Saving…';
-    const { error } = await sb.from('profiles').upsert(
-      { user_id: currentUser.id, first_name: firstName, last_name: lastName, phone, birthday, updated_at: new Date().toISOString() },
-      { onConflict: 'user_id' }
-    );
+    const row = { user_id: currentUser.id, first_name: firstName, last_name: lastName, phone, updated_at: new Date().toISOString() };
+    // Birthday is set once by the customer; after that only Christina can change it
+    const newBirthday = !userBirthday ? (document.getElementById('profile-birthday').value || null) : null;
+    if (newBirthday) row.birthday = newBirthday;
+    const { error } = await sb.from('profiles').upsert(row, { onConflict: 'user_id' });
     btn.disabled = false;
     btn.textContent = 'Save Changes';
     if (error) { showToast(error.message, true); return; }
-    userBirthday = birthday;
-    renderBirthdayBlock();
+    if (newBirthday) {
+      userBirthday = newBirthday;
+      lockProfileBirthday();
+      renderBirthdayBlock();
+    }
     const fullName = [firstName, lastName].filter(Boolean).join(' ');
     const updatePayload = { data: { display_name: fullName, full_name: fullName, first_name: firstName, last_name: lastName, phone } };
     const { error: authError } = await sb.auth.updateUser(updatePayload);
@@ -792,36 +802,51 @@
     showToast('Profile saved');
   });
 
+  // Active locations with their Club-only flag (falls back to "open to all"
+  // if the club_only column isn't in the database yet)
+  async function fetchActiveLocations(cols) {
+    const q = c => sb.from('pickup_locations').select(c).eq('active', true).order('sort_order');
+    const { data, error } = await q(cols + ', club_only');
+    if (!error) return data || [];
+    const { data: plain } = await q(cols);
+    return (plain || []).map(l => ({ ...l, club_only: false }));
+  }
+
   // Delivery / pickup location preference (Christina's named locations — there is no delivery zone)
-  async function loadPickupLocations(preferredId) {
+  let lastPreferredPickupId = null;
+  async function loadPickupLocations(preferredId = lastPreferredPickupId) {
+    lastPreferredPickupId = preferredId;
     const listEl = document.getElementById('pickup-locations-list');
     if (!listEl) return;
 
-    const { data: locations, error } = await sb
-      .from('pickup_locations')
-      .select('id, name, address, hours, notes')
-      .eq('active', true)
-      .order('sort_order');
+    const locations = await fetchActiveLocations('id, name, address, hours, notes');
 
-    if (error || !locations?.length) {
+    if (!locations.length) {
       listEl.innerHTML = '<p class="pickup-location-empty">No pickup locations configured yet.</p>';
       document.getElementById('save-pickup-btn')?.classList.add('hidden');
       return;
     }
 
-    listEl.innerHTML = locations.map(loc => `
-      <label class="pickup-location-card${loc.id === preferredId ? ' selected' : ''}">
-        <input type="radio" name="pickup-location" value="${escHtml(loc.id)}" ${loc.id === preferredId ? 'checked' : ''} />
+    // Club delivery stops stay visible to non-members (they advertise the
+    // Club) but can't be chosen; checkout enforces the same rule.
+    const canClub = hasMemberPricing();
+    listEl.innerHTML = locations.map(loc => {
+      const locked = loc.club_only && !canClub;
+      const selected = loc.id === preferredId && !locked;
+      return `
+      <label class="pickup-location-card${selected ? ' selected' : ''}${locked ? ' locked' : ''}">
+        <input type="radio" name="pickup-location" value="${escHtml(loc.id)}" ${selected ? 'checked' : ''} ${locked ? 'disabled' : ''} />
         <div class="pickup-location-info">
-          <span class="pickup-location-name">${escHtml(loc.name)}</span>
+          <span class="pickup-location-name">${escHtml(loc.name)}${loc.club_only ? ' <span class="pickup-club-only">Club members only</span>' : ''}</span>
+          ${locked ? '<a class="pickup-club-join" href="account.html?tab=club">Join the Bread Box Club for $4.99/mo to get delivery here</a>' : ''}
           <span class="pickup-location-address">${escHtml(loc.address)}</span>
           ${loc.hours ? `<span class="pickup-location-hours">${escHtml(loc.hours)}</span>` : ''}
           ${loc.notes ? `<span class="pickup-location-notes">${escHtml(loc.notes)}</span>` : ''}
         </div>
-      </label>
-    `).join('');
+      </label>`;
+    }).join('');
 
-    listEl.querySelectorAll('.pickup-location-card').forEach(card => {
+    listEl.querySelectorAll('.pickup-location-card:not(.locked)').forEach(card => {
       card.addEventListener('click', () => {
         listEl.querySelectorAll('.pickup-location-card').forEach(c => c.classList.remove('selected'));
         card.classList.add('selected');
@@ -976,9 +1001,11 @@
       document.getElementById('club-join-heading').textContent = 'Rejoin the Bread Box Club';
     }
 
-    // Free delivery = Christina's named locations, listed from Admin → Locations
-    const { data: locs } = await sb.from('pickup_locations').select('name').eq('active', true).order('sort_order');
-    const names = (locs || []).map(l => l.name).filter(Boolean);
+    // Free delivery = the Club delivery stops from Admin → Locations (all
+    // active locations if none are marked Club-only)
+    const locs = await fetchActiveLocations('name');
+    const clubStops = locs.filter(l => l.club_only);
+    const names = (clubStops.length ? clubStops : locs).map(l => l.name).filter(Boolean);
     if (names.length) {
       // Names can contain commas ("Rural King, Columbus") — separate with semicolons then
       const sep = names.some(n => n.includes(',')) ? ';' : ',';
@@ -1042,18 +1069,32 @@
     return new Date(2000, m - 1, d).toLocaleDateString('en-US', { month: 'long', day: 'numeric' });
   }
 
+  const BIRTHDAY_LOCKED_NOTE = 'Need to fix your birthday? Contact us and we’ll update it.';
+
+  // Profile tab: once a birthday is saved the field is read-only
+  function lockProfileBirthday() {
+    const input = document.getElementById('profile-birthday');
+    const note = document.getElementById('profile-birthday-note');
+    if (!input) return;
+    input.disabled = !!userBirthday;
+    if (note) {
+      note.textContent = userBirthday ? BIRTHDAY_LOCKED_NOTE : '';
+      note.classList.toggle('hidden', !userBirthday);
+    }
+  }
+
   function renderBirthdayBlock() {
     const text = document.getElementById('club-birthday-text');
+    const form = document.getElementById('club-birthday-form');
     const input = document.getElementById('club-birthday-input');
-    const saveBtn = document.getElementById('club-birthday-save');
     if (!text || !input) return;
     input.value = userBirthday || '';
     if (userBirthday) {
-      text.textContent = `Your birthday is ${birthdayWeekLabel(userBirthday)}. Any order you place within 3 days of it gets one free item of your choice — your order ticket is flagged automatically, so just tell us your pick at pickup.`;
-      saveBtn.textContent = 'Update Birthday';
+      text.textContent = `Your birthday is ${birthdayWeekLabel(userBirthday)}. Your first order in the 30 days starting on your birthday gets one free item of your choice — your order ticket is flagged automatically, so just tell us your pick at pickup. ${BIRTHDAY_LOCKED_NOTE}`;
+      form?.classList.add('hidden');
     } else {
-      text.textContent = 'Add your birthday and any order you place within 3 days of it gets one free item of your choice. Your order ticket is flagged automatically, so just tell us your pick at pickup.';
-      saveBtn.textContent = 'Save Birthday';
+      text.textContent = 'Add your birthday and your first order in the 30 days starting on your birthday gets one free item of your choice. Your order ticket is flagged automatically, so just tell us your pick at pickup. Your birthday can only be set once, so double-check it.';
+      form?.classList.remove('hidden');
     }
   }
 
@@ -1078,6 +1119,7 @@
     document.getElementById('club-birthday-save').addEventListener('click', async () => {
       const value = document.getElementById('club-birthday-input').value || null;
       if (!value) { showToast('Choose your birthday first', true); return; }
+      if (!confirm(`Save ${birthdayWeekLabel(value)} as your birthday? It can only be set once.`)) return;
       const btn = document.getElementById('club-birthday-save');
       btn.disabled = true;
       const { error } = await sb.from('profiles').upsert(
@@ -1088,6 +1130,7 @@
       if (error) { showToast('Could not save birthday: ' + error.message, true); return; }
       userBirthday = value;
       document.getElementById('profile-birthday').value = value;
+      lockProfileBirthday();
       renderBirthdayBlock();
       showToast('Birthday saved');
     });
