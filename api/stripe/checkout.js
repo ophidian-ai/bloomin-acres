@@ -24,15 +24,14 @@ export default async function handler(req, res) {
       ? createClient(supabaseUrl, supabaseServiceKey)
       : null;
 
-    // The signed-in account (from the session token) is what earns member
-    // pricing. The body's user_id is kept only as a fallback for attributing
-    // the order when an older cached page doesn't send the token.
+    // The account comes only from the session token — never from the request
+    // body, which anyone could set to another customer's id. Signed-out buyers
+    // use guest checkout, which resolves the account server-side.
     const authUser = await getRequestUser(req, sb);
-    if (req.headers['authorization'] && !authUser) {
-      // An expired session would otherwise silently drop the member discount
+    if (!authUser) {
       return res.status(401).json({ error: 'Your session expired — please sign in again to check out.' });
     }
-    const user_id = authUser?.id || req.body.user_id || null;
+    const user_id = authUser.id;
 
     // Validate stock before proceeding
     const productIds = items.map(i => i.stripe_product_id);

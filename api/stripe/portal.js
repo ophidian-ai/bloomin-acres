@@ -35,8 +35,11 @@ export default async function handler(req, res) {
       subscription = await stripe.subscriptions.retrieve(member.stripe_subscription_id).catch(() => null);
     }
 
-    // Self-heal: find a Club subscription for this email and link it.
-    if (!subscription && user.email) {
+    // Self-heal: find a Club subscription for this email and link it. Only for
+    // accounts that have proved they own the address (clicked the confirmation
+    // link), so nobody can claim someone else's subscription by signing up
+    // with their email.
+    if (!subscription && user.email && user.email_confirmed_at) {
       const priceId = await resolveClubPriceId(stripe);
       const customers = await stripe.customers.list({ email: user.email, limit: 10 });
       for (const c of customers.data) {

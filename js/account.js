@@ -556,7 +556,7 @@
     const r = await fetch('/api/stripe/checkout', {
       method: 'POST',
       headers: await authHeaders(),
-      body: JSON.stringify({ items, user_id: currentUser.id, pickup_location_id: document.getElementById('review-pickup-location').value || null }),
+      body: JSON.stringify({ items, pickup_location_id: document.getElementById('review-pickup-location').value || null }),
     }).catch(() => null);
     if (!r || !r.ok) { btn.disabled = false; btn.textContent = 'Confirm & Pay'; overlay.classList.add('hidden'); showToast(await readError(r, 'Checkout failed'), true); return; }
     const { url, error } = await r.json();
