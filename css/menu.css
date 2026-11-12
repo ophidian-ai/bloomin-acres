@@ -473,3 +473,43 @@ body.print-mode .print-variation-row .item-name {
     print-color-adjust: exact;
   }
 }
+
+/* ── Print mode: "Save as Image" sheet (phones/tablets) ── */
+.menu-image-overlay {
+  position: fixed; inset: 0; z-index: 10000;
+  display: flex; align-items: center; justify-content: center;
+  padding: 1rem;
+  background: rgba(30,20,14,.78);
+}
+.menu-image-sheet {
+  display: flex; flex-direction: column; gap: .85rem;
+  width: min(560px, 100%);
+  max-height: calc(100vh - 2rem);
+  max-height: calc(100dvh - 2rem);
+  padding: 1rem;
+  border-radius: 14px;
+  background: #2C1810;
+  box-shadow: 0 20px 60px rgba(0,0,0,.45);
+}
+.menu-image-tip {
+  margin: 0;
+  color: var(--farm-cream, #faf0e6);
+  font-family: 'DM Sans', sans-serif;
+  font-size: .9rem; line-height: 1.45;
+  text-align: center;
+}
+.menu-image-preview {
+  display: block;
+  width: 100%; min-height: 0;
+  flex: 1 1 auto;
+  object-fit: contain;
+  border-radius: 8px;
+  background: #FAF0E6;
+  -webkit-touch-callout: default; /* keep iOS "Save to Photos" on long-press */
+}
+.menu-image-actions { display: flex; gap: .75rem; justify-content: center; }
+.menu-image-actions .print-toolbar-btn { min-height: 44px; padding: .6rem 1.4rem; font-size: .9rem; }
+.menu-image-save { background: rgba(237,163,57,.35); border-color: rgba(237,163,57,.75); }
+.print-toolbar-btn:focus-visible { outline: 2px solid #EDA339; outline-offset: 2px; }
+.print-toolbar-btn:active { transform: translateY(1px); }
+@media print { .menu-image-overlay { display: none !important; } }

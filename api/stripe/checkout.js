@@ -1,12 +1,11 @@
 import Stripe from 'stripe';
 import { createClient } from '@supabase/supabase-js';
+import { setCors, getRequestUser } from '../_lib/auth.js';
+import { resolveClubCouponId, MEMBER_STATUSES } from '../_lib/club.js';
 
 export default async function handler(req, res) {
   console.log('[checkout] handler invoked', req.method);
-  const allowedOrigin = (process.env.ALLOWED_ORIGIN || (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'http://localhost:3000')).trim();
-  res.setHeader('Access-Control-Allow-Origin', allowedOrigin);
-  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+  setCors(res);
 
   if (req.method === 'OPTIONS') return res.status(200).end();
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
@@ -14,7 +13,7 @@ export default async function handler(req, res) {
   const secretKey = process.env.STRIPE_SECRET_KEY;
   if (!secretKey) return res.status(500).json({ error: 'STRIPE_SECRET_KEY not set' });
 
-  const { items, user_id, is_club_member, referral_code } = req.body;
+  const { items, referral_code } = req.body;
   if (!items || !items.length) return res.status(400).json({ error: 'No items provided' });
 
   try {
@@ -24,6 +23,16 @@ export default async function handler(req, res) {
     const sb = supabaseUrl && supabaseServiceKey
       ? createClient(supabaseUrl, supabaseServiceKey)
       : null;
+
+    // The signed-in account (from the session token) is what earns member
+    // pricing. The body's user_id is kept only as a fallback for attributing
+    // the order when an older cached page doesn't send the token.
+    const authUser = await getRequestUser(req, sb);
+    if (req.headers['authorization'] && !authUser) {
+      // An expired session would otherwise silently drop the member discount
+      return res.status(401).json({ error: 'Your session expired — please sign in again to check out.' });
+    }
+    const user_id = authUser?.id || req.body.user_id || null;
 
     // Validate stock before proceeding
     const productIds = items.map(i => i.stripe_product_id);
@@ -92,23 +101,25 @@ export default async function handler(req, res) {
     };
 
     // Always set client_reference_id so webhook can attribute the order
+    sessionParams.metadata = {};
     if (user_id) {
       sessionParams.client_reference_id = user_id;
-      sessionParams.metadata = { user_id };
+      sessionParams.metadata.user_id = user_id;
     }
 
     // Determine discounts to apply (only one discount allowed per Stripe session)
     let appliedDiscount = null;
 
-    // Club member discount: 5% off every order — no minimum
-    const clubDiscountCoupon = process.env.STRIPE_CLUB_DISCOUNT_ID;
-    if (is_club_member && user_id && sb && clubDiscountCoupon) {
-      // Verify club membership server-side (also allow admins)
+    // Club member discount: 5% off every order — no minimum. Membership is
+    // checked server-side for the signed-in account (admins included).
+    let clubDiscountCoupon = null;
+    if (authUser && sb) {
       const [{ data: memberRow }, { data: adminRow }] = await Promise.all([
-        sb.from('club_members').select('status').eq('user_id', user_id).maybeSingle(),
-        sb.from('admins').select('user_id').eq('user_id', user_id).maybeSingle(),
+        sb.from('club_members').select('status').eq('user_id', authUser.id).maybeSingle(),
+        sb.from('admins').select('user_id').eq('user_id', authUser.id).maybeSingle(),
       ]);
-      if (memberRow?.status === 'active' || adminRow) {
+      if (MEMBER_STATUSES.includes(memberRow?.status) || adminRow) {
+        clubDiscountCoupon = await resolveClubCouponId(stripe);
         appliedDiscount = { coupon: clubDiscountCoupon };
         sessionParams.metadata.discount_type = 'club_member';
       }

@@ -3,3 +3,6 @@ node_modules/
 .DS_Store
 temporary screenshots/
 .vercel
+
+# Supabase CLI link (local only)
+supabase/.temp/

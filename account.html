@@ -147,6 +147,8 @@
         <div class="field-error" id="signin-error"></div>
       </div>
       <button class="btn-primary" id="signin-btn">Sign In</button>
+      <button type="button" class="auth-forgot-link" id="forgot-password-btn">Forgot password?</button>
+      <p class="auth-forgot-note hidden" id="forgot-password-note" role="status"></p>
     </div>
 
     <!-- Sign Up panel -->
@@ -166,6 +168,10 @@
         <input type="tel" id="signup-phone" autocomplete="tel" placeholder="(555) 555-5555" />
       </div>
       <div class="field">
+        <label for="signup-birthday">Birthday <span class="optional-label">(optional — Club members get a birthday treat)</span></label>
+        <input type="date" id="signup-birthday" autocomplete="bday" />
+      </div>
+      <div class="field">
         <label for="signup-email">Email</label>
         <input type="email" id="signup-email" autocomplete="email" placeholder="you@example.com" />
       </div>
@@ -179,9 +185,6 @@
         <div class="field-error" id="signup-error"></div>
       </div>
       <button class="btn-primary" id="signup-btn">Create Account</button>
-      <p class="auth-terms">
-        By creating an account you agree to our terms of service.
-      </p>
     </div>
   </div>
 </div>
@@ -285,35 +288,9 @@
         </div>
         <button class="btn-primary btn-primary-180" id="save-profile-btn">Save Changes</button>
       </div>
-      <div class="profile-section">
-        <h3>Delivery Address</h3>
-        <p class="field-hint">Club members get free delivery within our delivery zone.</p>
-        <div class="field">
-          <label for="profile-address">Street Address</label>
-          <input type="text" id="profile-address" placeholder="123 Main St" autocomplete="street-address" />
-        </div>
-        <div class="profile-name-grid">
-          <div class="field">
-            <label for="profile-city">City</label>
-            <input type="text" id="profile-city" placeholder="Hope" autocomplete="address-level2" />
-          </div>
-          <div class="field">
-            <label for="profile-state">State</label>
-            <input type="text" id="profile-state" placeholder="IN" maxlength="2" autocomplete="address-level1" />
-          </div>
-          <div class="field">
-            <label for="profile-zip">ZIP</label>
-            <input type="text" id="profile-zip" placeholder="47246" maxlength="10" autocomplete="postal-code" />
-          </div>
-        </div>
-        <div class="delivery-check-row">
-          <button type="button" class="btn-secondary" id="check-delivery-btn">Check Delivery Zone</button>
-          <span class="delivery-status" id="delivery-status"></span>
-        </div>
-      </div>
       <div class="profile-section" id="pickup-location-section">
-        <h3>Preferred Pickup Location</h3>
-        <p class="field-hint">Choose where you'd like to pick up your orders.</p>
+        <h3>Delivery &amp; Pickup Location</h3>
+        <p class="field-hint">We deliver to these locations — choose the one you'd like your orders sent to. Bread Box Club members get free delivery to any of them.</p>
         <div id="pickup-locations-list" class="pickup-locations-list">
           <div class="pickup-location-loading">Loading locations…</div>
         </div>
@@ -352,15 +329,25 @@
         <div class="spinner"></div>
       </div>
 
+      <!-- Membership is being activated (just returned from Stripe Checkout) -->
+      <div id="club-activating" class="club-join-card hidden" role="status">
+        <div class="spinner"></div>
+        <h3>Activating your membership…</h3>
+        <p>Thanks for joining! This usually takes a few seconds.</p>
+      </div>
+
       <!-- Not a member -->
       <div id="club-non-member" class="hidden">
-        <div class="empty-state">
-          <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>
-          <p>You're not a Bread Box Club member yet.</p>
-          <a href="club.html">Learn About the Club</a>
-        </div>
-        <div class="club-join-cta">
+        <div class="club-join-card">
+          <h3 id="club-join-heading">Join the Bread Box Club</h3>
+          <p class="club-join-price">$4.99<span>/month</span> · cancel any time</p>
+          <ul class="club-join-perks">
+            <li>5% off every order, applied automatically at checkout</li>
+            <li>Free delivery to <span id="club-join-locations">any of our pickup locations</span></li>
+            <li>A birthday treat, a punch card (10 orders = a free item), and referral rewards</li>
+          </ul>
           <button type="button" class="btn-primary btn-primary-auto" id="join-club-btn">Join the Club</button>
+          <a href="club.html" class="club-join-learn">Learn more about the Club</a>
         </div>
       </div>
 
@@ -372,8 +359,21 @@
           <div class="club-status-left">
             <span class="club-status-badge" id="club-status-badge">Active Member</span>
             <span class="club-status-name">Bread Box Club</span>
+            <span class="club-status-detail" id="club-status-detail"></span>
           </div>
           <button type="button" class="btn-secondary" id="manage-billing-btn">Manage Billing</button>
+        </div>
+        <p class="club-billing-note" id="club-billing-note">Update your card, see invoices, or cancel any time from Manage Billing.</p>
+
+        <!-- Birthday treat -->
+        <div class="club-section-block" id="club-birthday-block">
+          <h3>Birthday Treat</h3>
+          <p class="punch-card-desc" id="club-birthday-text">Add your birthday and any order you place within 3 days of it gets one free item of your choice. Your order ticket is flagged automatically, so just tell us your pick at pickup.</p>
+          <div class="club-birthday-row" id="club-birthday-form">
+            <label class="sr-only" for="club-birthday-input">Your birthday</label>
+            <input type="date" id="club-birthday-input" autocomplete="bday" />
+            <button type="button" class="btn-secondary" id="club-birthday-save">Save Birthday</button>
+          </div>
         </div>
 
         <!-- Punch Card -->
@@ -464,7 +464,7 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <script src="/js/supabase-client.js"></script>
 <script src="/js/cart.js?v=2"></script>
-<script src="/js/account.js?v=2"></script>
+<script src="/js/account.js?v=3"></script>
 </main>
 
 <footer class="site-footer">

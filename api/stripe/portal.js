@@ -1,46 +1,89 @@
 import Stripe from 'stripe';
-import { createClient } from '@supabase/supabase-js';
+import { setCors, serviceClient, getRequestUser, requestOrigin } from '../_lib/auth.js';
+import { isClubSubscription, resolveClubPriceId, syncClubSubscription, memberStatusFromStripe } from '../_lib/club.js';
 
+// GET  → the signed-in member's live subscription status (for the account Club tab)
+// POST → opens a Stripe billing portal session (update card, invoices, cancel)
+//
+// Both resolve the member from their session token. If the membership row is
+// missing but Stripe has a Club subscription under the account's email (e.g. a
+// Payment Link signup before the webhook matched it), it is linked here.
 export default async function handler(req, res) {
-  const allowedOrigin = (process.env.ALLOWED_ORIGIN || (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'http://localhost:3000')).trim();
-  res.setHeader('Access-Control-Allow-Origin', allowedOrigin);
-  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
-
+  setCors(res, 'GET, POST, OPTIONS');
   if (req.method === 'OPTIONS') return res.status(200).end();
-  if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
+  if (req.method !== 'GET' && req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
   const secretKey = process.env.STRIPE_SECRET_KEY;
-  const supabaseUrl = process.env.SUPABASE_URL;
-  const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  const sb = serviceClient();
+  if (!secretKey || !sb) return res.status(500).json({ error: 'Billing is not configured' });
 
-  if (!secretKey) return res.status(500).json({ error: 'STRIPE_SECRET_KEY not set' });
-
-  const { user_id } = req.body;
-  if (!user_id) return res.status(400).json({ error: 'user_id required' });
+  const user = await getRequestUser(req, sb);
+  if (!user) return res.status(401).json({ error: 'Please sign in again to manage billing.' });
 
   try {
-    const sb = createClient(supabaseUrl, supabaseServiceKey);
+    const stripe = new Stripe(secretKey);
     const { data: member } = await sb
       .from('club_members')
-      .select('stripe_customer_id')
-      .eq('user_id', user_id)
+      .select('status, stripe_customer_id, stripe_subscription_id')
+      .eq('user_id', user.id)
       .maybeSingle();
 
-    if (!member?.stripe_customer_id) {
-      return res.status(404).json({ error: 'No active membership found' });
+    let customerId = member?.stripe_customer_id || null;
+    let subscription = null;
+
+    if (member?.stripe_subscription_id) {
+      subscription = await stripe.subscriptions.retrieve(member.stripe_subscription_id).catch(() => null);
     }
 
-    const stripe = new Stripe(secretKey);
-    const origin = req.headers.origin || `https://${process.env.VERCEL_URL}` || 'http://localhost:3000';
+    // Self-heal: find a Club subscription for this email and link it.
+    if (!subscription && user.email) {
+      const priceId = await resolveClubPriceId(stripe);
+      const customers = await stripe.customers.list({ email: user.email, limit: 10 });
+      for (const c of customers.data) {
+        const subs = await stripe.subscriptions.list({ customer: c.id, status: 'all', limit: 20 });
+        const clubSub = subs.data
+          .filter(s => isClubSubscription(s) || s.items.data.some(i => i.price?.id === priceId))
+          .sort((a, b) => b.created - a.created)[0];
+        if (clubSub) {
+          await syncClubSubscription(sb, stripe, clubSub, { userIdHint: user.id, email: user.email });
+          subscription = clubSub;
+          customerId = c.id;
+          break;
+        }
+      }
+    }
 
-    const session = await stripe.billingPortal.sessions.create({
-      customer: member.stripe_customer_id,
-      return_url: `${origin}/account.html?tab=club`,
-    });
+    if (subscription && !customerId) {
+      customerId = typeof subscription.customer === 'string' ? subscription.customer : subscription.customer?.id;
+    }
 
+    if (req.method === 'GET') {
+      if (!subscription) return res.json({ subscription: null });
+      // Keep the stored status in step with Stripe (covers a missed webhook)
+      const status = memberStatusFromStripe(subscription.status);
+      if (member && member.status !== status) {
+        await sb.from('club_members').update({ status }).eq('user_id', user.id);
+      }
+      return res.json({
+        subscription: {
+          status,
+          stripe_status: subscription.status,
+          cancel_at_period_end: !!subscription.cancel_at_period_end,
+          current_period_end: subscription.current_period_end ? new Date(subscription.current_period_end * 1000).toISOString() : null,
+        },
+      });
+    }
+
+    if (!customerId) {
+      return res.status(404).json({ error: `We couldn't find a Bread Box Club subscription for ${user.email}.` });
+    }
+
+    const params = { customer: customerId, return_url: `${requestOrigin(req)}/account.html?tab=club` };
+    if (process.env.STRIPE_PORTAL_CONFIG_ID) params.configuration = process.env.STRIPE_PORTAL_CONFIG_ID.trim();
+    const session = await stripe.billingPortal.sessions.create(params);
     res.json({ url: session.url });
   } catch (err) {
+    console.error('[portal] error:', err);
     res.status(500).json({ error: err.message });
   }
 }

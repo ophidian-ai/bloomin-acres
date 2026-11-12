@@ -686,10 +686,23 @@
 
       // ── Print mode: add download toolbar ──
       if (_isPrintMode) {
-        // Load html2canvas for image export
-        const h2cScript = document.createElement('script');
-        h2cScript.src = 'https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js';
-        document.head.appendChild(h2cScript);
+        // html2canvas for image export — loaded once, with a real failure path
+        // (the old code polled forever if the script never arrived).
+        let h2cPromise = null;
+        const loadHtml2Canvas = () => {
+          if (window.html2canvas) return Promise.resolve(window.html2canvas);
+          if (!h2cPromise) {
+            h2cPromise = new Promise((resolve, reject) => {
+              const s = document.createElement('script');
+              s.src = 'https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js';
+              s.onload = () => window.html2canvas ? resolve(window.html2canvas) : reject(new Error('The image tool did not load.'));
+              s.onerror = () => { h2cPromise = null; reject(new Error('Could not load the image tool — check your connection and try again.')); };
+              document.head.appendChild(s);
+            });
+          }
+          return h2cPromise;
+        };
+        loadHtml2Canvas().catch(() => {}); // warm up so the first tap is fast
 
         const toolbar = document.createElement('div');
         toolbar.className = 'print-toolbar';
@@ -715,27 +728,130 @@
           }, 100);
         });
 
+        // Why the old button failed on phones:
+        //  • iOS ignores <a download> on data: URLs, and a download started after
+        //    seconds of rendering is no longer tied to the tap, so nothing happened.
+        //  • Downloads on iOS go to Files, not Photos.
+        //  • The capture used the phone's narrow layout.
+        // Now: render the menu at a fixed desktop layout width, then on touch
+        // devices show the image with a "Save Image" button. That tap is fresh,
+        // so the iOS/Android share sheet opens ("Save Image" → Photos); pressing
+        // and holding the picture works as a fallback. Desktop downloads directly.
+        const MENU_LAYOUT_WIDTH = 860;      // .page-wrap caps the card at 780px
+        const MAX_CANVAS_PIXELS = 16000000; // iOS Safari refuses canvases over ~16.7M px
+        const FILE_NAME = 'bloomin-acres-menu.png';
+        const isTouchDevice = window.matchMedia('(pointer: coarse)').matches;
+
+        async function renderMenuBlob() {
+          const h2c = await loadHtml2Canvas();
+          if (document.fonts?.ready) await document.fonts.ready;
+          const menuCard = document.querySelector('.menu-card');
+          if (!menuCard) throw new Error('The menu is not on the page yet.');
+
+          // Estimate the card's size at the desktop layout width to pick a safe scale
+          const rect = menuCard.getBoundingClientRect();
+          const estWidth = Math.min(780, MENU_LAYOUT_WIDTH);
+          const estHeight = rect.height * (rect.width ? Math.max(1, rect.width / estWidth) : 1);
+          const scale = Math.max(1, Math.min(2, Math.sqrt(MAX_CANVAS_PIXELS / (estWidth * estHeight))));
+
+          const canvas = await h2c(menuCard, {
+            scale,
+            useCORS: true,
+            backgroundColor: '#FAF0E6',
+            logging: false,
+            windowWidth: MENU_LAYOUT_WIDTH,
+            scrollX: 0,
+            scrollY: 0,
+          });
+          const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
+          if (!blob) throw new Error('This device could not create the image.');
+          return blob;
+        }
+
+        function downloadBlob(blob) {
+          const url = URL.createObjectURL(blob);
+          const link = document.createElement('a');
+          link.href = url;
+          link.download = FILE_NAME;
+          document.body.appendChild(link);
+          link.click();
+          link.remove();
+          setTimeout(() => URL.revokeObjectURL(url), 60000);
+        }
+
+        function showImageSheet(blob) {
+          const file = new File([blob], FILE_NAME, { type: 'image/png' });
+          const url = URL.createObjectURL(blob);
+          const canShareFile = !!(navigator.canShare && navigator.canShare({ files: [file] }));
+
+          const overlay = document.createElement('div');
+          overlay.className = 'menu-image-overlay';
+          overlay.setAttribute('role', 'dialog');
+          overlay.setAttribute('aria-modal', 'true');
+          overlay.setAttribute('aria-label', 'Menu image');
+
+          const sheet = document.createElement('div');
+          sheet.className = 'menu-image-sheet';
+
+          const tip = document.createElement('p');
+          tip.className = 'menu-image-tip';
+          tip.textContent = canShareFile
+            ? 'Tap "Save Image", then choose "Save Image" to put it in your Photos. You can also press and hold the picture.'
+            : 'Press and hold the picture, then choose "Save to Photos" (or "Download image").';
+
+          const img = document.createElement('img');
+          img.src = url;
+          img.alt = "Bloomin' Acres menu";
+          img.className = 'menu-image-preview';
+
+          const actions = document.createElement('div');
+          actions.className = 'menu-image-actions';
+          const saveBtn = document.createElement('button');
+          saveBtn.type = 'button';
+          saveBtn.className = 'print-toolbar-btn menu-image-save';
+          saveBtn.textContent = canShareFile ? 'Save Image' : 'Download';
+          const closeBtn = document.createElement('button');
+          closeBtn.type = 'button';
+          closeBtn.className = 'print-toolbar-btn';
+          closeBtn.textContent = 'Close';
+          actions.append(saveBtn, closeBtn);
+          sheet.append(tip, img, actions);
+          overlay.appendChild(sheet);
+          document.body.appendChild(overlay);
+          saveBtn.focus();
+
+          const close = () => {
+            overlay.remove();
+            URL.revokeObjectURL(url);
+            document.removeEventListener('keydown', onKey);
+            imgBtn.focus();
+          };
+          const onKey = e => { if (e.key === 'Escape') close(); };
+          document.addEventListener('keydown', onKey);
+          closeBtn.addEventListener('click', close);
+          overlay.addEventListener('click', e => { if (e.target === overlay) close(); });
+
+          saveBtn.addEventListener('click', async () => {
+            if (!canShareFile) { downloadBlob(blob); return; }
+            try {
+              await navigator.share({ files: [file], title: "Bloomin' Acres menu" });
+            } catch (err) {
+              if (err.name !== 'AbortError') downloadBlob(blob); // share unavailable → plain download
+            }
+          });
+        }
+
         imgBtn.addEventListener('click', async () => {
           imgBtn.disabled = true;
-          imgBtn.textContent = 'Generating...';
-          toolbar.style.display = 'none';
+          imgBtn.textContent = 'Creating image…';
           try {
-            while (typeof html2canvas === 'undefined') await new Promise(r => setTimeout(r, 100));
-            const menuCard = document.querySelector('.menu-card');
-            const canvas = await html2canvas(menuCard, {
-              scale: 2,
-              useCORS: true,
-              backgroundColor: null,
-              logging: false,
-            });
-            const link = document.createElement('a');
-            link.download = 'bloomin-acres-menu.png';
-            link.href = canvas.toDataURL('image/png');
-            link.click();
+            const blob = await renderMenuBlob();
+            if (isTouchDevice) showImageSheet(blob);
+            else downloadBlob(blob);
           } catch (err) {
-            alert('Could not generate image: ' + err.message);
+            const msg = 'Could not create the image: ' + err.message;
+            if (typeof showToast === 'function') showToast(msg, true); else alert(msg);
           }
-          toolbar.style.display = '';
           imgBtn.disabled = false;
           imgBtn.textContent = 'Save as Image';
         });
