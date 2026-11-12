@@ -535,3 +535,14 @@ body::after {
 }
 #toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
 #toast.error { background: var(--berry-red); }
+
+/* Reward text placeholder until the saved wording loads (avoids a flash of default text) */
+.milestone-reward.is-loading {
+  min-height: 1.1em;
+  min-width: 12rem;
+  border-radius: 4px;
+  background: rgba(213,176,123,.2);
+  animation: reward-pulse 1.2s ease-in-out infinite;
+}
+@keyframes reward-pulse { 0%,100% { opacity: .5; } 50% { opacity: 1; } }
+@media (prefers-reduced-motion: reduce) { .milestone-reward.is-loading { animation: none; } }

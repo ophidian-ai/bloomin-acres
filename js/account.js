@@ -6,9 +6,36 @@
   let favItems = [];
   let menuProductIds = new Set(); // currently published menu items
   let isSigningUp = false;
+  let userBirthday = null;
+  // Read before supabase-js consumes (and clears) the URL hash from the reset email link
+  const cameFromPasswordReset = /type=recovery/.test(window.location.hash);
 
   // ── Helpers ──────────────────────────────────────────────────────────────
   const fmt = formatPrice;
+  const CLUB_DISCOUNT_PCT = 5;
+  const MEMBER_STATUSES = ['active', 'past_due'];
+
+  // Headers for our API routes — the server identifies the account from the token
+  async function authHeaders() {
+    const { data: { session } } = await sb.auth.getSession();
+    const headers = { 'Content-Type': 'application/json' };
+    if (session?.access_token) headers.Authorization = `Bearer ${session.access_token}`;
+    return headers;
+  }
+
+  async function readError(r, fallback) {
+    if (!r) return 'Network error — please check your connection and try again.';
+    try { const body = await r.json(); return body.error || fallback; } catch { return fallback; }
+  }
+
+  function isClubMember() {
+    return !!clubMembership && MEMBER_STATUSES.includes(clubMembership.status);
+  }
+  // Admins get member pricing too (matches the server's checkout rule)
+  function hasMemberPricing() { return isAdminUser || isClubMember(); }
+  function memberDiscount(totalCents) {
+    return hasMemberPricing() ? Math.round(totalCents * CLUB_DISCOUNT_PCT / 100) : 0;
+  }
 
   function setLoading(on) {
     document.getElementById('loading').classList.toggle('hidden', !on);
@@ -159,6 +186,7 @@
         phone: meta.phone || '',
         updated_at: new Date().toISOString(),
       };
+      if (meta.birthday) seed.birthday = meta.birthday;
       const { data: seeded } = await sb.from('profiles').upsert(seed, { onConflict: 'user_id' }).select().single();
       if (seeded) profile = seeded;
     }
@@ -169,17 +197,7 @@
     document.getElementById('profile-last-name').value = lastName;
     document.getElementById('profile-phone').value = profile?.phone || '';
     document.getElementById('profile-birthday').value = profile?.birthday || '';
-    document.getElementById('profile-address').value = profile?.address || '';
-    document.getElementById('profile-city').value = profile?.city || '';
-    document.getElementById('profile-state').value = profile?.state || '';
-    document.getElementById('profile-zip').value = profile?.zip || '';
-    if (profile?.delivery_eligible === true) {
-      document.getElementById('delivery-status').textContent = 'In delivery zone';
-      document.getElementById('delivery-status').className = 'delivery-status eligible';
-    } else if (profile?.delivery_eligible === false) {
-      document.getElementById('delivery-status').textContent = 'Outside delivery zone';
-      document.getElementById('delivery-status').className = 'delivery-status ineligible';
-    }
+    userBirthday = profile?.birthday || null;
 
     // Load pickup locations (non-blocking)
     loadPickupLocations(profile?.preferred_pickup_location_id || null);
@@ -223,6 +241,16 @@
       activeTab.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
     }
 
+    // Returned from a "Forgot password" email: the reset link signs them in,
+    // so point them straight at the new-password fields.
+    if (cameFromPasswordReset) {
+      document.querySelector('.dash-tab[data-panel="profile"]')?.click();
+      const pw = document.getElementById('new-password');
+      pw?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      pw?.focus();
+      showToast('Choose a new password below');
+    }
+
     await loadProducts();
 
     // Basket tab shows a cross-link to the Club box builder for members — fetched
@@ -239,10 +267,9 @@
     isAdminUser = !!adminRow;
 
     const basketClubHint = document.getElementById('basket-club-hint');
-    if (basketClubHint) {
-      const isMember = isAdminUser || (clubMembership && clubMembership.status !== 'cancelled');
-      basketClubHint.classList.toggle('hidden', !isMember);
-    }
+    if (basketClubHint) basketClubHint.classList.toggle('hidden', !hasMemberPricing());
+    // Basket rendered before membership was known — redraw with the member discount line
+    renderCart();
 
     // Load club data if club tab requested or already active
     if (targetTab === 'club') {
@@ -374,9 +401,20 @@
     // Footer
     const footer = document.createElement('div');
     footer.className = 'basket-footer';
+    const discount = memberDiscount(total);
+    if (discount) {
+      const discountEl = document.createElement('div');
+      discountEl.className = 'basket-discount';
+      const label = document.createElement('span');
+      label.textContent = `Bread Box Club ${CLUB_DISCOUNT_PCT}% off`;
+      const amount = document.createElement('span');
+      amount.textContent = '−' + fmt(discount);
+      discountEl.append(label, amount);
+      frag.appendChild(discountEl);
+    }
     const totalEl = document.createElement('div');
     totalEl.className = 'basket-total';
-    totalEl.textContent = 'Total: ' + fmt(total);
+    totalEl.textContent = 'Total: ' + fmt(total - discount);
     const actionsEl = document.createElement('div');
     actionsEl.className = 'basket-actions';
     const addMore = document.createElement('a');
@@ -466,9 +504,21 @@
       frag.appendChild(row);
     });
 
+    const discount = memberDiscount(total);
+    if (discount) {
+      const dRow = document.createElement('div');
+      dRow.className = 'order-review-row order-review-discount';
+      const dLabel = document.createElement('span');
+      dLabel.textContent = `Bread Box Club ${CLUB_DISCOUNT_PCT}% off`;
+      const dAmt = document.createElement('span');
+      dAmt.textContent = '−' + fmt(discount);
+      dRow.append(dLabel, dAmt);
+      frag.appendChild(dRow);
+    }
+
     itemsEl.textContent = '';
     itemsEl.appendChild(frag);
-    totalEl.textContent = 'Total: ' + fmt(total);
+    totalEl.textContent = 'Total: ' + fmt(total - discount);
     overlay.classList.remove('hidden');
 
     const pickupField = document.getElementById('order-review-pickup');
@@ -505,10 +555,10 @@
     const items = cartItems.map(i => ({ stripe_product_id: i.stripe_product_id, quantity: i.quantity, variation_name: i.variation_name || '', variation_delta: i.variation_delta || 0 }));
     const r = await fetch('/api/stripe/checkout', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: await authHeaders(),
       body: JSON.stringify({ items, user_id: currentUser.id, pickup_location_id: document.getElementById('review-pickup-location').value || null }),
     }).catch(() => null);
-    if (!r || !r.ok) { btn.disabled = false; btn.textContent = 'Confirm & Pay'; overlay.classList.add('hidden'); showToast('Checkout failed', true); return; }
+    if (!r || !r.ok) { btn.disabled = false; btn.textContent = 'Confirm & Pay'; overlay.classList.add('hidden'); showToast(await readError(r, 'Checkout failed'), true); return; }
     const { url, error } = await r.json();
     if (error || !url) { btn.disabled = false; btn.textContent = 'Confirm & Pay'; overlay.classList.add('hidden'); showToast(error || 'Checkout failed', true); return; }
     window.location.href = url;
@@ -645,6 +695,7 @@
     const firstName = document.getElementById('signup-first-name').value.trim();
     const lastName = document.getElementById('signup-last-name').value.trim();
     const phone = document.getElementById('signup-phone').value.trim();
+    const birthday = document.getElementById('signup-birthday')?.value || null;
     const email = document.getElementById('signup-email').value.trim();
     const password = document.getElementById('signup-password').value;
     const confirm = document.getElementById('signup-confirm').value;
@@ -657,16 +708,45 @@
     btn.disabled = true; btn.textContent = 'Creating account…';
     isSigningUp = true;
     const displayName = [firstName, lastName].filter(Boolean).join(' ');
-    const { data, error } = await sb.auth.signUp({ email, password, options: { emailRedirectTo: 'https://bloominacresmarket.com/account.html?tab=profile', data: { display_name: displayName, full_name: displayName, first_name: firstName, last_name: lastName, phone } } });
+    // Someone who clicked "Join the Club" lands back on the Club tab after confirming
+    const joining = sessionStorage.getItem('club_join_intent') === '1';
+    const emailRedirectTo = `https://bloominacresmarket.com/account.html?tab=${joining ? 'club&join=1' : 'profile'}`;
+    const meta = { display_name: displayName, full_name: displayName, first_name: firstName, last_name: lastName, phone };
+    if (birthday) meta.birthday = birthday;
+    const { data, error } = await sb.auth.signUp({ email, password, options: { emailRedirectTo, data: meta } });
     btn.disabled = false; btn.textContent = 'Create Account';
     if (error) { isSigningUp = false; errEl.textContent = error.message; errEl.classList.add('visible'); return; }
     if (data.user) {
-      await sb.from('profiles').upsert(
-        { user_id: data.user.id, first_name: firstName, last_name: lastName, phone, updated_at: new Date().toISOString() },
-        { onConflict: 'user_id' }
-      );
+      const row = { user_id: data.user.id, first_name: firstName, last_name: lastName, phone, updated_at: new Date().toISOString() };
+      if (birthday) row.birthday = birthday;
+      await sb.from('profiles').upsert(row, { onConflict: 'user_id' });
     }
     showToast('Account created! Check your email to confirm.');
+  });
+
+  // Forgot password — emails a reset link that signs them in on account.html,
+  // where enterDashboard() opens the Change Password fields.
+  document.getElementById('forgot-password-btn')?.addEventListener('click', async () => {
+    const email = document.getElementById('signin-email').value.trim();
+    const note = document.getElementById('forgot-password-note');
+    const errEl = document.getElementById('signin-error');
+    errEl.classList.remove('visible');
+    if (!email) {
+      errEl.textContent = 'Enter your email above, then tap "Forgot password?" again.';
+      errEl.classList.add('visible');
+      document.getElementById('signin-email').focus();
+      return;
+    }
+    const btn = document.getElementById('forgot-password-btn');
+    btn.disabled = true;
+    // Same URL the signup confirmation already uses (it's on Supabase's redirect allow-list)
+    const { error } = await sb.auth.resetPasswordForEmail(email, {
+      redirectTo: 'https://bloominacresmarket.com/account.html?tab=profile',
+    });
+    btn.disabled = false;
+    if (error) { errEl.textContent = error.message; errEl.classList.add('visible'); return; }
+    note.textContent = `If an account exists for ${email}, a password reset link is on its way. Check your inbox (and spam folder).`;
+    note.classList.remove('hidden');
   });
 
   async function signOut() {
@@ -690,20 +770,18 @@
     const lastName = document.getElementById('profile-last-name').value.trim();
     const phone = document.getElementById('profile-phone').value.trim();
     const birthday = document.getElementById('profile-birthday').value || null;
-    const address = document.getElementById('profile-address').value.trim();
-    const city = document.getElementById('profile-city').value.trim();
-    const state = document.getElementById('profile-state').value.trim();
-    const zip = document.getElementById('profile-zip').value.trim();
     const btn = document.getElementById('save-profile-btn');
     btn.disabled = true;
     btn.textContent = 'Saving…';
     const { error } = await sb.from('profiles').upsert(
-      { user_id: currentUser.id, first_name: firstName, last_name: lastName, phone, birthday, address, city, state, zip, updated_at: new Date().toISOString() },
+      { user_id: currentUser.id, first_name: firstName, last_name: lastName, phone, birthday, updated_at: new Date().toISOString() },
       { onConflict: 'user_id' }
     );
     btn.disabled = false;
     btn.textContent = 'Save Changes';
     if (error) { showToast(error.message, true); return; }
+    userBirthday = birthday;
+    renderBirthdayBlock();
     const fullName = [firstName, lastName].filter(Boolean).join(' ');
     const updatePayload = { data: { display_name: fullName, full_name: fullName, first_name: firstName, last_name: lastName, phone } };
     const { error: authError } = await sb.auth.updateUser(updatePayload);
@@ -714,55 +792,7 @@
     showToast('Profile saved');
   });
 
-  // Check delivery zone
-  document.getElementById('check-delivery-btn')?.addEventListener('click', async () => {
-    const address = document.getElementById('profile-address').value.trim();
-    const city = document.getElementById('profile-city').value.trim();
-    const state = document.getElementById('profile-state').value.trim();
-    const zip = document.getElementById('profile-zip').value.trim();
-    const fullAddress = [address, city, state, zip].filter(Boolean).join(', ');
-    if (!fullAddress) { showToast('Please enter an address first', true); return; }
-
-    const btn = document.getElementById('check-delivery-btn');
-    const statusEl = document.getElementById('delivery-status');
-    btn.disabled = true; btn.textContent = 'Checking…';
-    statusEl.textContent = ''; statusEl.className = 'delivery-status';
-
-    const res = await fetch('/api/geo-fence', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ address: fullAddress }),
-    }).catch(() => null);
-
-    btn.disabled = false; btn.textContent = 'Check Delivery Zone';
-
-    if (!res || !res.ok) {
-      statusEl.textContent = 'Could not check — try again';
-      statusEl.className = 'delivery-status ineligible';
-      return;
-    }
-
-    const data = await res.json();
-    if (data.eligible) {
-      statusEl.textContent = `In delivery zone (${data.distance} mi)`;
-      statusEl.className = 'delivery-status eligible';
-    } else {
-      statusEl.textContent = data.distance
-        ? `Outside delivery zone (${data.distance} mi — max ${data.radius} mi)`
-        : (data.error || 'Address not found');
-      statusEl.className = 'delivery-status ineligible';
-    }
-
-    // Save lat/lng and eligibility to profile
-    await sb.from('profiles').upsert({
-      user_id: currentUser.id,
-      delivery_lat: data.lat || null,
-      delivery_lng: data.lng || null,
-      delivery_eligible: data.eligible ?? null,
-    }, { onConflict: 'user_id' });
-  });
-
-  // Pickup location preference
+  // Delivery / pickup location preference (Christina's named locations — there is no delivery zone)
   async function loadPickupLocations(preferredId) {
     const listEl = document.getElementById('pickup-locations-list');
     if (!listEl) return;
@@ -828,56 +858,93 @@
   });
 
   // ── Club ──────────────────────────────────────────────────────────────────
-  let clubMembership = null;
+  let clubMembership = null;   // club_members row (status: active | past_due | cancelled | incomplete)
+  let clubSubscription = null; // live Stripe status from /api/stripe/portal (GET)
   let isAdminUser = false;
   let boxSelections = [];
+  let productVariations = null; // stripe_product_id → [{ name, price_delta, quantity, available }]
   let myReferralCode = null;
   let referralCount = 0;
-  const clubMinCents = 2500; // $25
+  let clubWired = false;
+  const REFERRAL_MILESTONES = [1, 3, 5]; // same ladder as the public Club page and the webhook rewards
+
+  async function refreshMembership() {
+    const { data } = await sb.from('club_members').select('*').eq('user_id', currentUser.id).maybeSingle();
+    clubMembership = data || null;
+    return clubMembership;
+  }
+
+  // Live subscription details from Stripe. The endpoint also links a Club
+  // subscription it finds under this account's email (Payment Link signups).
+  async function fetchSubscription() {
+    const r = await fetch('/api/stripe/portal', { headers: await authHeaders() }).catch(() => null);
+    if (r && r.ok) {
+      const body = await r.json().catch(() => ({}));
+      clubSubscription = body.subscription || null;
+    }
+    await refreshMembership();
+    return clubSubscription;
+  }
+
+  const fmtDate = iso => new Date(iso).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
 
   async function loadClub() {
-    document.getElementById('club-loading-state').classList.remove('hidden');
-    document.getElementById('club-non-member').classList.add('hidden');
-    document.getElementById('club-member-view').classList.add('hidden');
+    const loadingEl = document.getElementById('club-loading-state');
+    const nonMemberEl = document.getElementById('club-non-member');
+    const memberEl = document.getElementById('club-member-view');
+    const activatingEl = document.getElementById('club-activating');
+    loadingEl.classList.remove('hidden');
+    nonMemberEl.classList.add('hidden');
+    memberEl.classList.add('hidden');
+    activatingEl.classList.add('hidden');
 
-    // enterDashboard() always fetches membership/admin status (both call sites
-    // below run after that fetch resolves), so reuse it here instead of
-    // re-querying the same rows — keeps a single source of truth for "is this
-    // user a member" shared with the basket-tab hint.
-    const [{ data: boxData }, { data: codeRow }] = await Promise.all([
-      sb.from('box_selections').select('items').eq('user_id', currentUser.id).maybeSingle(),
-      sb.from('referral_codes').select('code').eq('user_id', currentUser.id).maybeSingle(),
-    ]);
+    const params = new URLSearchParams(window.location.search);
 
-    const member = clubMembership;
-    boxSelections = boxData?.items || [];
-    myReferralCode = codeRow?.code || null;
+    // Just back from Stripe Checkout — the webhook can take a few seconds to land
+    if (params.get('subscribed') === '1' && !isClubMember()) {
+      loadingEl.classList.add('hidden');
+      activatingEl.classList.remove('hidden');
+      for (let i = 0; i < 8 && !isClubMember(); i++) {
+        await new Promise(r => setTimeout(r, 2000));
+        await refreshMembership();
+      }
+      activatingEl.classList.add('hidden');
+      loadingEl.classList.remove('hidden');
+    }
 
-    const isMember = isAdminUser || (member && member.status !== 'cancelled');
+    await fetchSubscription();
 
-    document.getElementById('club-loading-state').classList.add('hidden');
+    if (params.get('subscribed') === '1') {
+      const url = new URL(window.location);
+      url.searchParams.delete('subscribed');
+      history.replaceState(null, '', url);
+      if (isClubMember()) showToast('Welcome to the Bread Box Club!');
+      else showToast('Your payment went through — your membership will show here shortly. Refresh in a minute.', true);
+    }
 
-    if (!isMember) {
-      document.getElementById('club-non-member').classList.remove('hidden');
-      document.getElementById('join-club-btn').addEventListener('click', startClubJoin);
+    loadingEl.classList.add('hidden');
+    document.getElementById('basket-club-hint')?.classList.toggle('hidden', !hasMemberPricing());
+    renderCart();
+
+    if (!hasMemberPricing()) {
+      await renderNonMember(params);
       return;
     }
 
-    document.getElementById('club-member-view').classList.remove('hidden');
+    const [{ data: boxData, error: boxErr }, { data: codeRow }] = await Promise.all([
+      sb.from('box_selections').select('items').eq('user_id', currentUser.id).maybeSingle(),
+      sb.from('referral_codes').select('code').eq('user_id', currentUser.id).maybeSingle(),
+    ]);
+    if (boxErr) console.error('Box load failed:', boxErr.message);
+    boxSelections = boxData?.items || [];
+    myReferralCode = codeRow?.code || null;
 
-    // Status badge
-    const badge = document.getElementById('club-status-badge');
-    if (isAdminUser && !member) {
-      badge.textContent = 'Admin Access';
-      badge.className = 'club-status-badge admin';
-    } else {
-      const statusMap = { active: 'Active Member', past_due: 'Payment Due', cancelled: 'Cancelled' };
-      badge.textContent = statusMap[member?.status] || member?.status || 'Active';
-      badge.className = `club-status-badge ${member?.status || 'active'}`;
-    }
+    memberEl.classList.remove('hidden');
+    renderMembershipStatus();
+    renderBirthdayBlock();
 
     // Punch card
-    const punchCount = member?.punch_count || 0;
+    const punchCount = clubMembership?.punch_count || 0;
     const punchGrid = document.getElementById('punch-card-grid');
     if (punchGrid) {
       punchGrid.innerHTML = Array.from({ length: 10 }, (_, i) =>
@@ -886,56 +953,158 @@
       document.getElementById('punch-card-label').textContent = `${punchCount} / 10`;
     }
 
-    // Manage billing
-    document.getElementById('manage-billing-btn').addEventListener('click', async () => {
-      const btn = document.getElementById('manage-billing-btn');
-      btn.disabled = true; btn.textContent = 'Loading…';
-      const r = await fetch('/api/stripe/portal', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ user_id: currentUser.id }),
-      }).catch(() => null);
-      btn.disabled = false; btn.textContent = 'Manage Billing';
-      if (!r || !r.ok) { showToast('Could not open billing portal', true); return; }
-      const { url, error } = await r.json();
-      if (error || !url) { showToast(error || 'Portal unavailable', true); return; }
-      window.location.href = url;
-    });
-
-    // Box builder
+    await loadProductVariations();
     renderBoxBuilder();
+    wireClubControls();
 
-    // Add items button
-    document.getElementById('add-to-box-btn').addEventListener('click', () => {
-      const picker = document.getElementById('club-product-picker');
-      const wasHidden = picker.classList.toggle('hidden');
-      if (!wasHidden) renderProductPicker();
-    });
-    document.getElementById('picker-close-btn').addEventListener('click', () => {
-      document.getElementById('club-product-picker').classList.add('hidden');
-    });
-    document.getElementById('picker-search').addEventListener('input', renderProductPicker);
-
-    // Order box button
-    document.getElementById('order-box-btn').addEventListener('click', orderMyBox);
-
-    // Ensure referral code exists (auto-create if needed)
-    if (!myReferralCode) {
-      await createReferralCode();
-    }
+    // Referral link — members only
+    if (!myReferralCode) await createReferralCode();
     if (myReferralCode) {
-      const shareUrl = `${window.location.origin}/club.html?ref=${myReferralCode}`;
-      document.getElementById('my-ref-code-input').value = shareUrl;
-    }
-
-    // Load referral count
-    if (myReferralCode) {
+      document.getElementById('my-ref-code-input').value = `${window.location.origin}/club.html?ref=${myReferralCode}`;
       const { count } = await sb.from('referral_uses')
         .select('id', { count: 'exact', head: true })
         .eq('code', myReferralCode);
       referralCount = count || 0;
     }
     renderReferralDashboard();
+  }
+
+  async function renderNonMember(params) {
+    const el = document.getElementById('club-non-member');
+    el.classList.remove('hidden');
+    if (clubMembership?.status === 'cancelled') {
+      document.getElementById('club-join-heading').textContent = 'Rejoin the Bread Box Club';
+    }
+
+    // Free delivery = Christina's named locations, listed from Admin → Locations
+    const { data: locs } = await sb.from('pickup_locations').select('name').eq('active', true).order('sort_order');
+    const names = (locs || []).map(l => l.name).filter(Boolean);
+    if (names.length) {
+      // Names can contain commas ("Rural King, Columbus") — separate with semicolons then
+      const sep = names.some(n => n.includes(',')) ? ';' : ',';
+      const list = names.length === 1 ? names[0]
+        : `${names.slice(0, -1).join(sep + ' ')}${names.length > 2 ? sep : ''} or ${names[names.length - 1]}`;
+      document.getElementById('club-join-locations').textContent = list;
+    }
+
+    const joinBtn = document.getElementById('join-club-btn');
+    if (!joinBtn.dataset.wired) {
+      joinBtn.dataset.wired = '1';
+      joinBtn.addEventListener('click', startClubJoin);
+    }
+
+    // Arrived from "Join the Club" (club page, or the confirm-email link) → go straight to checkout
+    const intent = sessionStorage.getItem('club_join_intent') === '1' || params.get('join') === '1';
+    if (intent) {
+      sessionStorage.removeItem('club_join_intent');
+      const url = new URL(window.location);
+      url.searchParams.delete('join');
+      history.replaceState(null, '', url);
+      startClubJoin();
+    }
+  }
+
+  function renderMembershipStatus() {
+    const badge = document.getElementById('club-status-badge');
+    const detail = document.getElementById('club-status-detail');
+    const billingBtn = document.getElementById('manage-billing-btn');
+    const billingNote = document.getElementById('club-billing-note');
+    detail.textContent = '';
+
+    if (isAdminUser && !isClubMember()) {
+      badge.textContent = 'Admin Access';
+      badge.className = 'club-status-badge admin';
+      detail.textContent = 'Admin accounts see member pricing for testing — there is no subscription to bill.';
+      billingBtn.classList.add('hidden');
+      billingNote.classList.add('hidden');
+      return;
+    }
+
+    billingBtn.classList.remove('hidden');
+    billingNote.classList.remove('hidden');
+    const status = clubSubscription?.status || clubMembership?.status;
+    const labels = { active: 'Active Member', past_due: 'Payment Due', cancelled: 'Cancelled' };
+    badge.textContent = labels[status] || 'Active Member';
+    badge.className = `club-status-badge ${status || 'active'}`;
+
+    if (status === 'past_due') {
+      detail.textContent = 'Your last payment didn’t go through — update your card in Manage Billing to keep your perks.';
+    } else if (clubSubscription?.cancel_at_period_end && clubSubscription.current_period_end) {
+      badge.textContent = 'Cancelling';
+      detail.textContent = `Cancels on ${fmtDate(clubSubscription.current_period_end)} — your perks continue until then. Changed your mind? Use Manage Billing to keep your membership.`;
+    } else if (clubSubscription?.current_period_end) {
+      detail.textContent = `$4.99/month · renews ${fmtDate(clubSubscription.current_period_end)}`;
+    }
+  }
+
+  function birthdayWeekLabel(iso) {
+    const [, m, d] = iso.split('-').map(Number);
+    return new Date(2000, m - 1, d).toLocaleDateString('en-US', { month: 'long', day: 'numeric' });
+  }
+
+  function renderBirthdayBlock() {
+    const text = document.getElementById('club-birthday-text');
+    const input = document.getElementById('club-birthday-input');
+    const saveBtn = document.getElementById('club-birthday-save');
+    if (!text || !input) return;
+    input.value = userBirthday || '';
+    if (userBirthday) {
+      text.textContent = `Your birthday is ${birthdayWeekLabel(userBirthday)}. Any order you place within 3 days of it gets one free item of your choice — your order ticket is flagged automatically, so just tell us your pick at pickup.`;
+      saveBtn.textContent = 'Update Birthday';
+    } else {
+      text.textContent = 'Add your birthday and any order you place within 3 days of it gets one free item of your choice. Your order ticket is flagged automatically, so just tell us your pick at pickup.';
+      saveBtn.textContent = 'Save Birthday';
+    }
+  }
+
+  function wireClubControls() {
+    if (clubWired) return;
+    clubWired = true;
+
+    document.getElementById('manage-billing-btn').addEventListener('click', async () => {
+      const btn = document.getElementById('manage-billing-btn');
+      btn.disabled = true; btn.textContent = 'Opening…';
+      const r = await fetch('/api/stripe/portal', { method: 'POST', headers: await authHeaders() }).catch(() => null);
+      if (!r || !r.ok) {
+        btn.disabled = false; btn.textContent = 'Manage Billing';
+        showToast(await readError(r, 'Could not open billing — please try again.'), true);
+        return;
+      }
+      const { url, error } = await r.json();
+      if (error || !url) { btn.disabled = false; btn.textContent = 'Manage Billing'; showToast(error || 'Billing is unavailable right now', true); return; }
+      window.location.href = url;
+    });
+
+    document.getElementById('club-birthday-save').addEventListener('click', async () => {
+      const value = document.getElementById('club-birthday-input').value || null;
+      if (!value) { showToast('Choose your birthday first', true); return; }
+      const btn = document.getElementById('club-birthday-save');
+      btn.disabled = true;
+      const { error } = await sb.from('profiles').upsert(
+        { user_id: currentUser.id, birthday: value, updated_at: new Date().toISOString() },
+        { onConflict: 'user_id' }
+      );
+      btn.disabled = false;
+      if (error) { showToast('Could not save birthday: ' + error.message, true); return; }
+      userBirthday = value;
+      document.getElementById('profile-birthday').value = value;
+      renderBirthdayBlock();
+      showToast('Birthday saved');
+    });
+
+    document.getElementById('add-to-box-btn').addEventListener('click', () => {
+      const picker = document.getElementById('club-product-picker');
+      const nowHidden = picker.classList.toggle('hidden');
+      if (!nowHidden) {
+        renderProductPicker();
+        picker.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      }
+    });
+    document.getElementById('picker-close-btn').addEventListener('click', () => {
+      document.getElementById('club-product-picker').classList.add('hidden');
+    });
+    document.getElementById('picker-search').addEventListener('input', renderProductPicker);
+    document.getElementById('order-box-btn').addEventListener('click', orderMyBox);
 
     document.getElementById('copy-ref-btn').addEventListener('click', () => {
       const input = document.getElementById('my-ref-code-input');
@@ -954,12 +1123,23 @@
     myReferralCode = data?.code || null;
   }
 
+  async function loadProductVariations() {
+    if (productVariations) return;
+    productVariations = {};
+    const { data } = await sb.from('product_details').select('stripe_product_id, variations');
+    (data || []).forEach(row => { productVariations[row.stripe_product_id] = row.variations || []; });
+  }
+
+  function boxItemPrice(item) {
+    return (products[item.stripe_product_id]?.unit_amount ?? 0) + (item.variation_delta || 0);
+  }
+
   function renderBoxBuilder() {
     const el = document.getElementById('box-items-list');
     const footer = document.getElementById('box-footer');
 
     if (!boxSelections.length) {
-      el.innerHTML = '<p class="box-empty-msg">Your box is empty. Click "+ Add Items" to get started.</p>';
+      el.innerHTML = '<p class="box-empty-msg">Your box is empty. Tap "+ Add Items" to choose what goes in it.</p>';
       footer.classList.add('hidden');
       return;
     }
@@ -967,14 +1147,14 @@
     let total = 0;
     el.innerHTML = boxSelections.map((item, idx) => {
       const p = products[item.stripe_product_id];
-      const price = (p?.unit_amount ?? 0) + (item.variation_delta ?? 0);
+      const price = boxItemPrice(item);
       total += price * item.quantity;
       return `<div class="box-item-row">
-        <div class="box-item-name">${p?.name || item.stripe_product_id}${item.variation_name ? ` — ${item.variation_name}` : ''}</div>
+        <div class="box-item-name">${escHtml(p?.name || item.stripe_product_id)}${item.variation_name ? ` — ${escHtml(item.variation_name)}` : ''}</div>
         <div class="box-item-controls">
-          <button type="button" class="qty-sm" data-idx="${idx}" data-action="dec">−</button>
+          <button type="button" class="qty-sm" data-idx="${idx}" data-action="dec" aria-label="One less">−</button>
           <span class="qty-sm-num">${item.quantity}</span>
-          <button type="button" class="qty-sm" data-idx="${idx}" data-action="inc">+</button>
+          <button type="button" class="qty-sm" data-idx="${idx}" data-action="inc" aria-label="One more">+</button>
         </div>
         <div class="box-item-price">${fmt(price * item.quantity)}</div>
         <button type="button" class="box-remove-btn" data-idx="${idx}" aria-label="Remove">
@@ -984,114 +1164,122 @@
     }).join('');
 
     el.querySelectorAll('.qty-sm').forEach(btn => {
-      btn.addEventListener('click', () => updateBoxQty(parseInt(btn.dataset.idx), btn.dataset.action));
+      btn.addEventListener('click', () => updateBoxQty(parseInt(btn.dataset.idx, 10), btn.dataset.action));
     });
     el.querySelectorAll('.box-remove-btn').forEach(btn => {
-      btn.addEventListener('click', () => removeBoxItem(parseInt(btn.dataset.idx)));
+      btn.addEventListener('click', () => removeBoxItem(parseInt(btn.dataset.idx, 10)));
     });
 
-    // Total / discount hint
     footer.classList.remove('hidden');
-    const totalLabel = document.getElementById('box-total-label');
+    const discount = memberDiscount(total);
+    document.getElementById('box-total-label').textContent = `Total: ${fmt(total - discount)}`;
+    document.getElementById('box-total-label').className = 'box-total-amount qualified';
     const hint = document.getElementById('box-min-hint');
-    totalLabel.textContent = `Total: ${fmt(total)}`;
-    totalLabel.className = `box-total-amount${total >= clubMinCents ? ' qualified' : ''}`;
-    if (total > 0 && total < clubMinCents) {
-      hint.textContent = `Add ${fmt(clubMinCents - total)} more to unlock 5% member discount`;
-      hint.className = 'box-min-hint warning';
-    } else if (total >= clubMinCents) {
-      hint.textContent = '5% member discount will be applied at checkout';
-      hint.className = 'box-min-hint success';
-    } else {
-      hint.textContent = '';
-    }
+    hint.textContent = discount ? `Includes your ${CLUB_DISCOUNT_PCT}% member discount (−${fmt(discount)}), applied at checkout` : '';
+    hint.className = 'box-min-hint success';
   }
 
-  async function saveBoxSelections() {
-    await sb.from('box_selections').upsert(
+  // Saves the box and reads it back, so what's shown is what's stored.
+  // On failure the previous box is restored and the error is shown.
+  async function saveBoxSelections(previous) {
+    const { data, error } = await sb.from('box_selections').upsert(
       { user_id: currentUser.id, items: boxSelections, updated_at: new Date().toISOString() },
       { onConflict: 'user_id' }
-    );
+    ).select('items').single();
+    if (error) {
+      boxSelections = previous;
+      renderBoxBuilder();
+      if (!document.getElementById('club-product-picker').classList.contains('hidden')) renderProductPicker();
+      showToast('Couldn’t save your box: ' + error.message, true);
+      return false;
+    }
+    boxSelections = data?.items || boxSelections;
+    return true;
   }
+
+  const cloneBox = () => boxSelections.map(i => ({ ...i }));
 
   async function updateBoxQty(idx, action) {
     const item = boxSelections[idx];
     if (!item) return;
     if (action === 'dec' && item.quantity <= 1) return removeBoxItem(idx);
-    if (action === 'inc') item.quantity++;
-    else item.quantity--;
-    await saveBoxSelections();
+    const previous = cloneBox();
+    item.quantity += action === 'inc' ? 1 : -1;
     renderBoxBuilder();
+    if (await saveBoxSelections(previous)) renderBoxBuilder();
   }
 
   async function removeBoxItem(idx) {
+    const previous = cloneBox();
     boxSelections.splice(idx, 1);
-    await saveBoxSelections();
     renderBoxBuilder();
-    showToast('Removed from box');
+    if (await saveBoxSelections(previous)) {
+      renderBoxBuilder();
+      if (!document.getElementById('club-product-picker').classList.contains('hidden')) renderProductPicker();
+      showToast('Removed from box');
+    }
+  }
+
+  // One choice per product, or one per variation (flavor/size) when it has them
+  function pickerChoices() {
+    const q = document.getElementById('picker-search').value.trim().toLowerCase();
+    const onMenu = id => !menuProductIds.size || menuProductIds.has(id);
+    const choices = [];
+    Object.entries(products).forEach(([id, p]) => {
+      if (!onMenu(id)) return;
+      const variations = (productVariations?.[id] || [])
+        .filter(v => v.available !== false && (v.quantity === undefined || v.quantity === null || v.quantity > 0));
+      if (variations.length) {
+        variations.forEach(v => choices.push({ id, name: p.name, vname: v.name, delta: v.price_delta || 0, base: p.unit_amount }));
+      } else {
+        choices.push({ id, name: p.name, vname: '', delta: 0, base: p.unit_amount });
+      }
+    });
+    return choices.filter(c => !q || `${c.name} ${c.vname}`.toLowerCase().includes(q));
   }
 
   function renderProductPicker() {
     const grid = document.getElementById('picker-grid');
-    const q = document.getElementById('picker-search').value.trim().toLowerCase();
-    const menuItems = [...menuProductIds];
-    const filtered = Object.entries(products).filter(([id, p]) => {
-      if (menuItems.length && !menuProductIds.has(id)) return false;
-      if (q && !p.name.toLowerCase().includes(q)) return false;
-      return true;
-    });
-
-    if (!filtered.length) {
+    const choices = pickerChoices();
+    if (!choices.length) {
       grid.innerHTML = '<p class="picker-empty">No menu items found.</p>';
       return;
     }
-
-    grid.innerHTML = filtered.map(([id, p]) => {
-      const inBox = boxSelections.find(i => i.stripe_product_id === id && !i.variation_name);
-      return `<button type="button" class="picker-item${inBox ? ' in-box' : ''}" data-pid="${id}">
-        <span class="picker-item-name">${p.name}</span>
-        <span class="picker-item-price">${fmt(p.unit_amount)}</span>
-        ${inBox ? '<span class="picker-in-box">In Box ✓</span>' : ''}
+    grid.innerHTML = choices.map((c, i) => {
+      const inBox = boxSelections.find(b => b.stripe_product_id === c.id && (b.variation_name || '') === c.vname);
+      return `<button type="button" class="picker-item${inBox ? ' in-box' : ''}" data-i="${i}">
+        <span class="picker-item-name">${escHtml(c.name)}${c.vname ? ` — ${escHtml(c.vname)}` : ''}</span>
+        <span class="picker-item-price">${fmt((c.base ?? 0) + c.delta)}</span>
+        ${inBox ? `<span class="picker-in-box">In Box ×${inBox.quantity}</span>` : ''}
       </button>`;
     }).join('');
-
     grid.querySelectorAll('.picker-item').forEach(btn => {
-      btn.addEventListener('click', () => addToBox(btn.dataset.pid));
+      btn.addEventListener('click', () => addToBox(choices[parseInt(btn.dataset.i, 10)]));
     });
   }
 
-  async function addToBox(productId) {
-    const existing = boxSelections.find(i => i.stripe_product_id === productId && !i.variation_name);
-    if (existing) {
-      existing.quantity++;
-    } else {
-      boxSelections.push({ stripe_product_id: productId, quantity: 1, variation_name: '', variation_delta: 0 });
-    }
-    await saveBoxSelections();
+  async function addToBox(choice) {
+    const previous = cloneBox();
+    const existing = boxSelections.find(i => i.stripe_product_id === choice.id && (i.variation_name || '') === choice.vname);
+    if (existing) existing.quantity++;
+    else boxSelections.push({ stripe_product_id: choice.id, quantity: 1, variation_name: choice.vname, variation_delta: choice.delta });
     renderBoxBuilder();
     renderProductPicker();
-    showToast('Added to box');
+    if (await saveBoxSelections(previous)) {
+      renderBoxBuilder();
+      renderProductPicker();
+      showToast('Added to box');
+    }
   }
 
   async function orderMyBox() {
     if (!boxSelections.length) { showToast('Your box is empty', true); return; }
     const btn = document.getElementById('order-box-btn');
-    btn.disabled = true; btn.textContent = 'Loading…';
+    btn.disabled = true; btn.textContent = 'Adding…';
 
-    // Check total for discount hint
-    const total = boxSelections.reduce((sum, item) => {
-      const p = products[item.stripe_product_id];
-      return sum + ((p?.unit_amount ?? 0) + (item.variation_delta ?? 0)) * item.quantity;
-    }, 0);
-
-    if (total < clubMinCents) {
-      const remaining = fmt(clubMinCents - total);
-      showToast(`Add ${remaining} more to unlock 5% member discount`, false);
-    }
-
-    // Upsert all box items into user_cart
+    let failed = null;
     for (const item of boxSelections) {
-      await sb.from('user_cart').upsert({
+      const { error } = await sb.from('user_cart').upsert({
         user_id: currentUser.id,
         stripe_product_id: item.stripe_product_id,
         variation_name: item.variation_name || '',
@@ -1099,17 +1287,18 @@
         quantity: item.quantity,
         updated_at: new Date().toISOString(),
       }, { onConflict: 'user_id,stripe_product_id,variation_name' });
+      if (error) { failed = error; break; }
     }
 
-    // Reload cart and switch to cart tab
     await loadCart();
     btn.disabled = false; btn.textContent = 'Order My Box →';
+    if (failed) { showToast('Couldn’t add your box to the basket: ' + failed.message, true); return; }
     document.querySelector('.dash-tab[data-panel="cart"]')?.click();
-    showToast('Box added to cart!');
+    showToast('Box added to your basket!');
   }
 
   function renderReferralDashboard() {
-    const milestones = [5, 15, 25];
+    const milestones = REFERRAL_MILESTONES;
     const nextMilestone = milestones.find(m => m > referralCount) || null;
     const prevMilestone = milestones.filter(m => m <= referralCount).pop() || 0;
 
@@ -1120,14 +1309,13 @@
       : 100;
     document.getElementById('ref-progress-fill').style.width = `${progress}%`;
     document.getElementById('ref-next-label').textContent = nextMilestone
-      ? `${nextMilestone - referralCount} more to next milestone`
+      ? `${nextMilestone - referralCount} more to your next reward`
       : 'All milestones reached!';
 
-    const chips = document.getElementById('milestone-chips');
-    chips.innerHTML = milestones.map(m => {
+    document.getElementById('milestone-chips').innerHTML = milestones.map(m => {
       const done = referralCount >= m;
       return `<div class="milestone-chip${done ? ' done' : ''}">
-        <span class="milestone-chip-num">${m === 25 ? '25+' : m}</span>
+        <span class="milestone-chip-num">${m}</span>
         <span class="milestone-chip-status">${done ? '✓' : `${m - Math.min(referralCount, m)} to go`}</span>
       </div>`;
     }).join('');
@@ -1135,17 +1323,21 @@
 
   async function startClubJoin() {
     const btn = document.getElementById('join-club-btn');
-    btn.disabled = true; btn.textContent = 'Redirecting…';
+    btn.disabled = true; btn.textContent = 'Taking you to secure checkout…';
     const referralCode = sessionStorage.getItem('referral_code') || '';
     const r = await fetch('/api/stripe/subscribe', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ user_id: currentUser.id, referral_code: referralCode }),
+      headers: await authHeaders(),
+      body: JSON.stringify({ referral_code: referralCode }),
     }).catch(() => null);
-    btn.disabled = false; btn.textContent = 'Join the Club';
-    if (!r || !r.ok) { showToast('Something went wrong', true); return; }
+    if (!r || !r.ok) {
+      btn.disabled = false; btn.textContent = 'Join the Club';
+      showToast(await readError(r, 'Something went wrong — please try again.'), true);
+      if (r?.status === 409) loadClub();
+      return;
+    }
     const { url, error } = await r.json();
-    if (error || !url) { showToast(error || 'Checkout failed', true); return; }
+    if (error || !url) { btn.disabled = false; btn.textContent = 'Join the Club'; showToast(error || 'Checkout failed', true); return; }
     window.location.href = url;
   }
 

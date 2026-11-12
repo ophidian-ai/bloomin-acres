@@ -1364,3 +1364,131 @@ body::after {
 .pickup-location-empty { font-size: .87rem; color: rgba(78,62,51,.45); font-style: italic; }
 .pickup-location-loading { font-size: .87rem; color: rgba(78,62,51,.45); }
 .btn-save-pickup { margin-top: .25rem; }
+
+/* ══════════════════════════════════════════════════════════
+   Site change #5 — Club join/status, birthday, member discount
+   ══════════════════════════════════════════════════════════ */
+
+/* Status badges: readable on the cream cards */
+.club-status-badge.active    { background: rgba(107,132,122,.18); color: #3F6357; }
+.club-status-badge.past_due  { background: rgba(200,149,108,.2);  color: #8A5A2E; }
+.club-status-badge.cancelled { background: rgba(158,62,62,.14);   color: #8E3434; }
+.club-status-badge.admin     { background: rgba(200,149,108,.2);  color: #8A5A2E; }
+.club-status-detail {
+  font-size: .84rem; line-height: 1.5;
+  color: rgba(78,62,51,.72);
+  max-width: 46ch;
+}
+.club-billing-note {
+  font-size: .8rem; color: rgba(78,62,51,.55);
+  margin: -1.1rem 0 1.75rem .25rem;
+}
+
+/* Join / activating card */
+.club-join-card {
+  background: #F6EADC;
+  border: 1px solid rgba(78,62,51,.12);
+  border-radius: 14px;
+  padding: 2rem 1.75rem;
+  box-shadow: var(--shadow-card);
+  text-align: center;
+  max-width: 520px;
+  margin: 0 auto;
+}
+.club-join-card h3 {
+  font-family: var(--font-display);
+  font-size: 1.4rem; font-weight: 600;
+  color: var(--earth-brown);
+  letter-spacing: -0.02em;
+  margin-bottom: .35rem;
+}
+.club-join-card .spinner { margin: 0 auto 1rem; }
+.club-join-card p { color: rgba(78,62,51,.7); font-size: .9rem; }
+.club-join-price {
+  font-family: var(--font-display);
+  font-size: 1.6rem !important; font-weight: 600;
+  color: #8A5A2E !important;
+  margin-bottom: 1rem;
+}
+.club-join-price span { font-family: var(--font-body); font-size: .85rem; font-weight: 500; color: rgba(78,62,51,.6); }
+.club-join-perks {
+  list-style: none;
+  text-align: left;
+  margin: 0 auto 1.5rem;
+  max-width: 400px;
+  display: flex; flex-direction: column; gap: .55rem;
+}
+.club-join-perks li {
+  position: relative;
+  padding-left: 1.5rem;
+  font-size: .9rem; line-height: 1.45;
+  color: var(--earth-brown);
+}
+.club-join-perks li::before {
+  content: '';
+  position: absolute; left: 0; top: .45em;
+  width: .6rem; height: .6rem; border-radius: 50%;
+  background: #C8956C;
+}
+.club-join-learn {
+  display: block;
+  margin-top: 1rem;
+  font-size: .82rem;
+  color: var(--sage-dark);
+  text-underline-offset: 3px;
+}
+.club-join-learn:hover { color: var(--earth-brown); }
+.club-join-learn:focus-visible { outline: 2px solid #C8956C; outline-offset: 3px; border-radius: 3px; }
+
+/* Birthday treat */
+.club-birthday-row {
+  display: flex; gap: .75rem; align-items: center; flex-wrap: wrap;
+}
+.club-birthday-row input[type="date"] {
+  padding: .55rem .75rem;
+  border: 1.5px solid var(--cream-dark);
+  border-radius: 8px;
+  background: var(--farm-cream);
+  color: var(--earth-brown);
+  font-family: var(--font-body);
+  font-size: .9rem;
+  min-height: 42px;
+}
+.club-birthday-row input[type="date"]:focus-visible { outline: 2px solid #C8956C; outline-offset: 2px; }
+
+/* Member 5% line — basket + order review */
+.basket-discount {
+  display: flex; justify-content: space-between; align-items: baseline;
+  margin-top: 1rem;
+  padding: .55rem .75rem;
+  border-radius: 8px;
+  background: rgba(107,132,122,.12);
+  color: #3F6357;
+  font-family: var(--font-body);
+  font-size: .9rem; font-weight: 600;
+}
+.order-review-row.order-review-discount { color: #3F6357; font-weight: 600; }
+
+/* Forgot password */
+.auth-forgot-link {
+  display: block;
+  margin: .9rem auto 0;
+  background: none; border: none;
+  font-family: var(--font-body);
+  font-size: .82rem;
+  color: var(--sage-dark);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
+  padding: .35rem .5rem;
+  border-radius: 4px;
+}
+.auth-forgot-link:hover { color: var(--earth-brown); }
+.auth-forgot-link:focus-visible { outline: 2px solid #C8956C; outline-offset: 2px; }
+.auth-forgot-link:disabled { opacity: .5; cursor: wait; }
+.auth-forgot-note {
+  margin-top: .75rem;
+  font-size: .82rem; line-height: 1.5;
+  text-align: center;
+  color: #3F6357;
+}

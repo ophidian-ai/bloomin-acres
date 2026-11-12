@@ -1,6 +1,7 @@
 import Stripe from 'stripe';
 import { createClient } from '@supabase/supabase-js';
 import crypto from 'crypto';
+import { findUserByEmail, fillProfileNameIfMissing } from '../_lib/auth.js';
 
 export default async function handler(req, res) {
   const allowedOrigin = (process.env.ALLOWED_ORIGIN || (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'http://localhost:3000')).trim();
@@ -39,39 +40,27 @@ export default async function handler(req, res) {
       pickupLocationName = chosen.name;
     }
 
-    // Find or create Supabase user
+    // Find or create Supabase user. findUserByEmail pages through every account
+    // (a single listUsers page silently caps the lookup).
     let userId;
-    const { data: existingUsers } = await sb.auth.admin.listUsers({ page: 1, perPage: 1000 });
-    const existingUser = (existingUsers?.users || []).find(u => u.email === guest_email.toLowerCase().trim());
+    const existingUser = await findUserByEmail(sb, guest_email);
 
     if (existingUser) {
       userId = existingUser.id;
-      if (guest_name) {
-        await sb.from('profiles').upsert({
-          id: userId,
-          first_name: guest_name.split(' ')[0] || '',
-          last_name: guest_name.split(' ').slice(1).join(' ') || '',
-        }, { onConflict: 'id' });
-      }
     } else {
       const tempPassword = crypto.randomBytes(24).toString('base64url');
       const { data: newUser, error: createErr } = await sb.auth.admin.createUser({
         email: guest_email.toLowerCase().trim(),
         password: tempPassword,
         email_confirm: true,
-        user_metadata: { is_guest: true },
+        user_metadata: { is_guest: true, created_via: 'guest_checkout' },
       });
       if (createErr) return res.status(400).json({ error: createErr.message });
       userId = newUser.user.id;
-
-      if (guest_name) {
-        await sb.from('profiles').upsert({
-          id: userId,
-          first_name: guest_name.split(' ')[0] || '',
-          last_name: guest_name.split(' ').slice(1).join(' ') || '',
-        }, { onConflict: 'id' });
-      }
     }
+
+    // profiles is keyed by user_id; only fills a name the account doesn't have yet
+    await fillProfileNameIfMissing(sb, userId, guest_name);
 
     // Validate stock before proceeding
     const productIds = items.map(i => i.stripe_product_id);

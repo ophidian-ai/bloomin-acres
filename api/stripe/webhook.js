@@ -1,6 +1,7 @@
 import Stripe from 'stripe';
 import { createClient } from '@supabase/supabase-js';
 import { Resend } from 'resend';
+import { isClubSubscription, syncClubSubscription, sendClubWelcomeOnce } from '../_lib/club.js';
 
 export const config = { api: { bodyParser: false } };
 
@@ -38,40 +39,21 @@ export default async function handler(req, res) {
 
   const sb = createClient(supabaseUrl, supabaseServiceKey);
 
-  // ── Subscription lifecycle ───────────────────────────────────────────────────
-  if (event.type === 'customer.subscription.created' || event.type === 'customer.subscription.updated') {
+  // ── Subscription lifecycle (Bread Box Club) ──────────────────────────────────
+  // Covers both our own Checkout (metadata.user_id) and the Stripe Payment Link,
+  // which carries no user id — those are matched to an account by email.
+  if (['customer.subscription.created', 'customer.subscription.updated', 'customer.subscription.deleted'].includes(event.type)) {
     const sub = event.data.object;
-    const userId = sub.metadata?.user_id || sub.client_reference_id;
-
-    // Try to look up user_id by customer if not in metadata
-    let resolvedUserId = userId;
-    if (!resolvedUserId) {
-      const { data: existing } = await sb
-        .from('club_members')
-        .select('user_id')
-        .eq('stripe_customer_id', sub.customer)
-        .maybeSingle();
-      resolvedUserId = existing?.user_id;
+    if (isClubSubscription(sub)) {
+      try {
+        // Welcome email is sent only from checkout.session.completed (below), so the
+        // two near-simultaneous events for a new subscription can't both send it.
+        await syncClubSubscription(sb, stripe, sub);
+      } catch (err) {
+        console.error('[webhook] club subscription sync failed:', err.message);
+        return res.status(500).json({ error: 'Club subscription sync failed' });
+      }
     }
-
-    if (resolvedUserId) {
-      const statusMap = { active: 'active', past_due: 'past_due', canceled: 'cancelled', unpaid: 'past_due' };
-      const status = statusMap[sub.status] || sub.status;
-      await sb.from('club_members').upsert({
-        user_id:               resolvedUserId,
-        stripe_customer_id:    sub.customer,
-        stripe_subscription_id: sub.id,
-        status,
-        cancelled_at: status === 'cancelled' ? new Date().toISOString() : null,
-      }, { onConflict: 'user_id' });
-    }
-  }
-
-  if (event.type === 'customer.subscription.deleted') {
-    const sub = event.data.object;
-    await sb.from('club_members')
-      .update({ status: 'cancelled', cancelled_at: new Date().toISOString() })
-      .eq('stripe_subscription_id', sub.id);
   }
 
   // ── Checkout session completed ───────────────────────────────────────────────
@@ -79,18 +61,36 @@ export default async function handler(req, res) {
     const session = event.data.object;
     const userId = session.client_reference_id || session.metadata?.user_id;
 
-    // Handle club subscription signup — store customer_id on the membership
-    if (session.mode === 'subscription' && userId) {
-      const referralCode = session.metadata?.referral_code || null;
-      await sb.from('club_members').upsert({
-        user_id:            userId,
-        stripe_customer_id: session.customer,
-        stripe_subscription_id: session.subscription,
-        status: 'active',
-        pending_referral_code: referralCode,
-      }, { onConflict: 'user_id' });
-      // Referral is NOT credited here — it requires subscribe + first order.
-      // The referral is stored as pending and credited when the first order is placed.
+    // Club subscription signup (our Checkout or the Payment Link)
+    if (session.mode === 'subscription' && session.subscription) {
+      try {
+        const sub = await stripe.subscriptions.retrieve(session.subscription);
+        if (isClubSubscription(sub)) {
+          // Trust only metadata.user_id here (set server-side by /api/stripe/subscribe).
+          // client_reference_id can be appended to a public Payment Link URL by anyone.
+          const linked = await syncClubSubscription(sb, stripe, sub, {
+            userIdHint: session.metadata?.user_id || null,
+            email: session.customer_details?.email || null,
+            name: session.customer_details?.name || null,
+          });
+          if (linked.userId) {
+            // Referral is NOT credited here — it requires subscribe + first order.
+            // It is stored as pending and credited when the first order is placed.
+            const referralCode = session.metadata?.referral_code || null;
+            if (referralCode) {
+              await sb.from('club_members').update({ pending_referral_code: referralCode }).eq('user_id', linked.userId);
+            }
+            // Keep the account id on the subscription for future lifecycle events
+            if (!sub.metadata?.user_id) {
+              await stripe.subscriptions.update(sub.id, { metadata: { ...sub.metadata, user_id: linked.userId } });
+            }
+            await sendClubWelcomeOnce(stripe, sub, linked);
+          }
+        }
+      } catch (err) {
+        console.error('[webhook] club checkout sync failed:', err.message);
+        return res.status(500).json({ error: 'Club checkout sync failed' });
+      }
     }
 
     // Handle one-time box order

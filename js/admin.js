@@ -15,6 +15,7 @@
         document.getElementById('topbar-user-email').textContent = 'preview@bloominacres.com';
         document.getElementById('account-email-display').textContent = 'preview@bloominacres.com';
         document.getElementById('account-avatar').textContent = 'P';
+        await loadProducts(); // public Stripe catalogue — lets the card layout be reviewed without signing in
         return;
       }
 
@@ -59,6 +60,7 @@
       document.getElementById('topbar-user-email').textContent = user.email;
       document.getElementById('account-email-display').textContent = user.email;
       document.getElementById('account-avatar').textContent = (user.email || 'A')[0].toUpperCase();
+      document.getElementById('topbar-user-email').title = user.email || '';
 
       // Load data in parallel
       await loadProducts(); // must complete before menu editor renders (populates allProducts for dropdowns)
@@ -75,13 +77,34 @@
       document.querySelector('[data-tab="club"]')?.addEventListener('click', async () => {
         if (!clubTabLoaded) { clubTabLoaded = true; await loadClubTab(); }
       }, { once: true });
+
+      // Lazy-load customers tab on first click
+      let customersTabLoaded = false;
+      document.querySelector('[data-tab="customers"]')?.addEventListener('click', async () => {
+        if (!customersTabLoaded) { customersTabLoaded = true; await loadCustomersTab(); }
+      }, { once: true });
     }
 
     // ── Logout ────────────────────────────────────────────────────────────────
-    document.getElementById('logout-btn').addEventListener('click', async () => {
-      await sb.auth.signOut();
+    async function signOutToAccount() {
+      await sb?.auth.signOut();
       window.location.href = 'account.html';
-    });
+    }
+    document.getElementById('logout-btn').addEventListener('click', signOutToAccount);
+    document.getElementById('band-signout-btn')?.addEventListener('click', signOutToAccount);
+
+    // Admin API calls carry the session token; the server checks the admins table.
+    async function adminFetch(path, options = {}) {
+      const { data: { session } } = await sb.auth.getSession();
+      const r = await fetch(path, {
+        ...options,
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session?.access_token || ''}`, ...(options.headers || {}) },
+      }).catch(() => null);
+      if (!r) throw new Error('Network error — please try again.');
+      const body = await r.json().catch(() => ({}));
+      if (!r.ok) throw new Error(body.error || `Request failed (${r.status})`);
+      return body;
+    }
 
     // Wire sidebar sign-out
     const sidebarSignout = document.getElementById('sidebar-signout-btn');
@@ -128,16 +151,17 @@
         grid.innerHTML = '<p class="grid-message">No active products found in your Stripe account.</p>';
         return;
       }
+      // Card face: photo, label, price — nothing else (site change #3).
+      // The price is the live Stripe default price from /api/stripe/products.
       grid.innerHTML = products.map(p => `
-        <a class="product-card" href="product.html?id=${encodeURIComponent(p.id)}">
-          ${p.images && p.images[0] ? `<img class="product-card-img" src="${escHtml(p.images[0])}" alt="${escHtml(p.name)}" loading="lazy" />` : ''}
-          <div class="product-name">${escHtml(p.name)}</div>
-          ${p.description ? `<div class="product-desc">${escHtml(p.description)}</div>` : ''}
-          <div class="product-footer">
-            <span class="product-price">${escHtml(p.price_formatted || '—')}</span>
-            <span class="product-id" title="${escHtml(p.id)}">${escHtml(p.id)}</span>
+        <a class="product-card" href="product.html?id=${encodeURIComponent(p.id)}" aria-label="Edit ${escHtml(p.name)}">
+          ${p.images && p.images[0]
+            ? `<img class="product-card-img" src="${escHtml(p.images[0])}" alt="" loading="lazy" />`
+            : `<div class="product-card-img product-card-img-empty" aria-hidden="true"></div>`}
+          <div class="product-card-body">
+            <div class="product-name">${escHtml(p.name)}</div>
+            <div class="product-price">${escHtml(p.price_formatted || '—')}</div>
           </div>
-          <div class="product-click-hint">Click to edit →</div>
         </a>
       `).join('');
     }
@@ -586,6 +610,32 @@
       });
     }
 
+    // Phone photos are often 3–10 MB and 4000px+. Shrink to web size and save as
+    // JPEG so uploads are fast, stay under bucket limits, and the homepage loads
+    // quickly. Falls back to the original file if the browser can't decode it.
+    async function prepareSitePhoto(file, maxSide = 1800) {
+      try {
+        const bitmap = await createImageBitmap(file, { imageOrientation: 'from-image' });
+        const scale = Math.min(1, maxSide / Math.max(bitmap.width, bitmap.height));
+        const w = Math.round(bitmap.width * scale);
+        const h = Math.round(bitmap.height * scale);
+        const canvas = document.createElement('canvas');
+        canvas.width = w;
+        canvas.height = h;
+        const ctx = canvas.getContext('2d');
+        ctx.fillStyle = '#FFFFFF'; // transparent PNGs get a white background, not black
+        ctx.fillRect(0, 0, w, h);
+        ctx.drawImage(bitmap, 0, 0, w, h);
+        bitmap.close?.();
+        const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/jpeg', 0.85));
+        if (blob) return { blob, ext: 'jpg', type: 'image/jpeg' };
+      } catch (err) {
+        console.warn('[landing] could not resize photo, uploading original:', err);
+      }
+      const ext = (file.name.split('.').pop() || 'jpg').toLowerCase();
+      return { blob: file, ext, type: file.type || 'image/jpeg' };
+    }
+
     // Image file inputs
     document.querySelectorAll('.lc-file-input').forEach(input => {
       input.addEventListener('change', () => {
@@ -610,14 +660,17 @@
         btn.disabled = true;
         btn.textContent = 'Saving…';
 
-        const ext  = file.name.split('.').pop();
-        const path = `${key}.${ext}`;
+        const img  = await prepareSitePhoto(file);
+        const path = `${key}.${img.ext}`;
         const { error: upErr } = await sb.storage
           .from('site-images')
-          .upload(path, file, { upsert: true, contentType: file.type });
+          .upload(path, img.blob, { upsert: true, contentType: img.type, cacheControl: '3600' });
 
         if (upErr) {
-          showToast('Upload failed: ' + upErr.message, true);
+          const blocked = /row-level security|unauthorized|403/i.test(upErr.message || '');
+          showToast(blocked
+            ? 'Upload blocked — photo uploads need to be switched on in the database (ask Eric).'
+            : 'Upload failed: ' + upErr.message, true);
           btn.disabled = false;
           btn.innerHTML = '<svg width="11" height="11" viewBox="0 0 14 14" fill="none"><path d="M2 7l3.5 3.5L12 3" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg> Save';
           return;
@@ -847,62 +900,107 @@
     }
 
     // ── Club Admin ────────────────────────────────────────────────────────────
+    // Members come from /api/admin/customers?view=club (service role + live
+    // Stripe status). Reading club_members from the browser only returned the
+    // admin's own row, which is why this tab used to show 0 members.
+    const REFERRAL_MILESTONES = [1, 3, 5];
+    let clubMembers = [];
+    const fmtShortDate = iso => iso ? new Date(iso).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : '—';
+
     async function loadClubTab() {
-      await Promise.all([loadClubMembers(), loadClubReferrals(), loadRewardTexts()]);
+      document.getElementById('club-member-search').addEventListener('input', renderClubMembers);
+      document.getElementById('club-sync-btn').addEventListener('click', syncClubFromStripe);
       setupRewardSaveButtons();
+      await Promise.all([loadClubMembers(), loadClubReferrals(), loadRewardTexts()]);
     }
 
     async function loadClubMembers() {
       const tbody = document.getElementById('club-members-tbody');
-      const countEl = document.getElementById('club-member-count');
+      try {
+        const data = await adminFetch('/api/admin/customers?view=club');
+        clubMembers = data.members || [];
 
-      // Fetch club_members with status active or past_due
-      const { data: members, error } = await sb
-        .from('club_members')
-        .select('user_id, status, started_at')
-        .in('status', ['active', 'past_due'])
-        .order('started_at', { ascending: false });
+        const plan = data.plan || {};
+        const amount = plan.amount != null ? fmtUSD.format(plan.amount / 100) : '$4.99';
+        const active = clubMembers.filter(m => m.status === 'active' || m.status === 'past_due').length;
+        document.getElementById('club-plan-line').textContent =
+          `${amount} / ${plan.interval || 'month'} · ${active} active member${active === 1 ? '' : 's'} · billed through Stripe`;
+        if (plan.payment_link) document.getElementById('club-payment-link').href = plan.payment_link;
 
-      if (error || !members) {
-        tbody.innerHTML = `<tr><td colspan="4" class="club-table-loading">Failed to load members</td></tr>`;
+        const unlinked = data.unlinked || [];
+        const box = document.getElementById('club-unlinked');
+        box.classList.toggle('hidden', !unlinked.length);
+        if (unlinked.length) {
+          const who = unlinked.map(u => u.name || u.email).filter(Boolean).join(', ');
+          document.getElementById('club-unlinked-text').textContent =
+            `${unlinked.length} Stripe subscription${unlinked.length === 1 ? ' isn’t' : 's aren’t'} linked to a site account yet${who ? ` (${who})` : ''}. Linking matches them by email — an account is created if none exists.`;
+        }
+        renderClubMembers();
+      } catch (err) {
+        tbody.innerHTML = `<tr><td colspan="6" class="club-table-loading">Could not load members: ${escHtml(err.message)}</td></tr>`;
+      }
+    }
+
+    function memberBillingText(m) {
+      if (!m.stripe) return m.status === 'cancelled' ? 'Ended' : 'No Stripe subscription';
+      if (m.stripe.status === 'canceled') return `Ended ${fmtShortDate(m.stripe.current_period_end)}`;
+      if (m.stripe.cancel_at_period_end) return `Cancels ${fmtShortDate(m.stripe.current_period_end)}`;
+      if (m.status === 'past_due') return 'Payment failed';
+      return `Renews ${fmtShortDate(m.stripe.current_period_end)}`;
+    }
+
+    function renderClubMembers() {
+      const tbody = document.getElementById('club-members-tbody');
+      const q = document.getElementById('club-member-search').value.trim().toLowerCase();
+      const rows = clubMembers.filter(m => !q || `${m.name} ${m.email}`.toLowerCase().includes(q));
+
+      if (!clubMembers.length) {
+        tbody.innerHTML = `<tr><td colspan="6" class="club-table-empty">No members yet — they appear here as soon as someone subscribes.</td></tr>`;
         return;
       }
-
-      countEl.textContent = members.length;
-
-      if (!members.length) {
-        tbody.innerHTML = `<tr><td colspan="4" class="club-table-empty">No active members yet</td></tr>`;
+      if (!rows.length) {
+        tbody.innerHTML = `<tr><td colspan="6" class="club-table-empty">No members match “${escHtml(q)}”.</td></tr>`;
         return;
       }
-
-      // Fetch profiles + emails for these user_ids
-      const userIds = members.map(m => m.user_id);
-      const [{ data: profiles }, { data: authUsers }] = await Promise.all([
-        sb.from('profiles').select('user_id, first_name, last_name').in('user_id', userIds),
-        sb.from('admins').select('user_id'), // just to get admin list for display
-      ]);
-
-      const profileMap = {};
-      (profiles || []).forEach(p => { profileMap[p.user_id] = p; });
-
-      tbody.innerHTML = members.map(m => {
-        const p = profileMap[m.user_id];
-        const name = p ? [p.first_name, p.last_name].filter(Boolean).join(' ') || '—' : '—';
-        const joined = new Date(m.started_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
-        const statusClass = m.status === 'active' ? 'status-active' : 'status-pastdue';
+      const pill = { active: ['status-active', 'Active'], past_due: ['status-pastdue', 'Past Due'], cancelled: ['status-cancelled', 'Cancelled'] };
+      tbody.innerHTML = rows.map(m => {
+        const [cls, label] = pill[m.status] || ['status-pastdue', m.status || '—'];
+        const stripeUrl = m.stripe_customer_id ? `https://dashboard.stripe.com/customers/${encodeURIComponent(m.stripe_customer_id)}` : null;
         return `<tr>
-          <td>${escHtml(name)}</td>
-          <td class="club-user-id">${escHtml(m.user_id.slice(0,8))}…</td>
-          <td>${escHtml(joined)}</td>
-          <td><span class="club-status-pill ${statusClass}">${m.status === 'past_due' ? 'Past Due' : 'Active'}</span></td>
+          <td>${escHtml(m.name || '—')}</td>
+          <td>${escHtml(m.email || '—')}</td>
+          <td>${escHtml(fmtShortDate(m.started_at))}</td>
+          <td><span class="club-status-pill ${cls}">${escHtml(label)}</span></td>
+          <td>${escHtml(memberBillingText(m))}</td>
+          <td class="club-row-actions">
+            <button type="button" class="btn-ghost-sm" data-customer="${escHtml(m.user_id)}">Customer</button>
+            ${stripeUrl ? `<a class="btn-ghost-sm" href="${stripeUrl}" target="_blank" rel="noopener">Stripe ↗</a>` : ''}
+          </td>
         </tr>`;
       }).join('');
+      tbody.querySelectorAll('[data-customer]').forEach(btn => {
+        btn.addEventListener('click', () => openCustomerFromElsewhere(btn.dataset.customer));
+      });
+    }
+
+    async function syncClubFromStripe() {
+      const btn = document.getElementById('club-sync-btn');
+      btn.disabled = true; btn.textContent = 'Linking…';
+      try {
+        const { linked = [], failed = [] } = await adminFetch('/api/admin/customers?action=sync-club', { method: 'POST' });
+        if (linked.length) showToast(`Linked ${linked.length} membership${linked.length === 1 ? '' : 's'}`);
+        if (failed.length) showToast(`${failed.length} could not be linked: ${failed[0].reason}`, true);
+        customersCache = null; // membership changed
+        await loadClubMembers();
+      } catch (err) {
+        showToast('Link failed: ' + err.message, true);
+      }
+      btn.disabled = false; btn.textContent = 'Link to accounts';
     }
 
     async function loadClubReferrals() {
       const tbody = document.getElementById('club-referral-tbody');
 
-      // Get all referral codes
       const { data: codes, error } = await sb
         .from('referral_codes')
         .select('user_id, code, created_at');
@@ -912,15 +1010,10 @@
         return;
       }
 
-      // Get use counts per code
-      const { data: uses } = await sb
-        .from('referral_uses')
-        .select('code');
-
+      const { data: uses } = await sb.from('referral_uses').select('code');
       const useCounts = {};
       (uses || []).forEach(u => { useCounts[u.code] = (useCounts[u.code] || 0) + 1; });
 
-      // Get profiles
       const userIds = codes.map(c => c.user_id);
       const { data: profiles } = await sb
         .from('profiles')
@@ -929,7 +1022,6 @@
       const profileMap = {};
       (profiles || []).forEach(p => { profileMap[p.user_id] = p; });
 
-      const milestones = [5, 15, 25];
       const rows = codes
         .map(c => ({ ...c, count: useCounts[c.code] || 0 }))
         .sort((a, b) => b.count - a.count)
@@ -943,8 +1035,8 @@
       tbody.innerHTML = rows.map(c => {
         const p = profileMap[c.user_id];
         const name = p ? [p.first_name, p.last_name].filter(Boolean).join(' ') || '—' : '—';
-        const reached = milestones.filter(m => c.count >= m).pop() || null;
-        const milestoneDisplay = reached ? `<span class="milestone-pill">${reached}+ ✓</span>` : '—';
+        const reached = REFERRAL_MILESTONES.filter(m => c.count >= m).pop() || null;
+        const milestoneDisplay = reached ? `<span class="milestone-pill">${reached} ✓</span>` : '—';
         return `<tr>
           <td>${escHtml(name)}</td>
           <td><code class="ref-code-pill">${escHtml(c.code)}</code></td>
@@ -954,32 +1046,154 @@
       }).join('');
     }
 
+    // Inputs stay disabled and blank until the saved text arrives, so they never
+    // show wording that differs from what's actually saved.
     async function loadRewardTexts() {
       const { data } = await sb.from('site_content')
         .select('key, value')
         .in('key', ['referral-reward-1', 'referral-reward-3', 'referral-reward-5']);
-      (data || []).forEach(row => {
-        const suffix = row.key.replace('referral-reward-', '');
-        const el = document.getElementById(`reward-text-${suffix}`);
-        if (el && row.value) el.value = row.value;
+      const saved = Object.fromEntries((data || []).map(r => [r.key, r.value]));
+      REFERRAL_MILESTONES.forEach(m => {
+        const input = document.getElementById(`reward-text-${m}`);
+        const btn = document.getElementById(`save-reward-${m}`);
+        if (!input) return;
+        input.value = saved[`referral-reward-${m}`] || '';
+        input.placeholder = 'Describe the reward…';
+        input.disabled = false;
+        if (btn) btn.disabled = false;
       });
     }
 
     function setupRewardSaveButtons() {
-      [['save-reward-1', 'reward-text-1', 'referral-reward-1'],
-       ['save-reward-3', 'reward-text-3', 'referral-reward-3'],
-       ['save-reward-5', 'reward-text-5', 'referral-reward-5']].forEach(([btnId, inputId, key]) => {
+      REFERRAL_MILESTONES.forEach(m => {
+        const btnId = `save-reward-${m}`;
         document.getElementById(btnId)?.addEventListener('click', async () => {
           const btn = document.getElementById(btnId);
-          const val = document.getElementById(inputId).value.trim();
+          const val = document.getElementById(`reward-text-${m}`).value.trim();
+          if (!val) { showToast('Reward text can’t be empty', true); return; }
           btn.disabled = true; btn.textContent = 'Saving…';
           const { error } = await sb.from('site_content')
-            .upsert({ key, value: val }, { onConflict: 'key' });
+            .upsert({ key: `referral-reward-${m}`, value: val }, { onConflict: 'key' });
           btn.disabled = false; btn.textContent = 'Save';
           if (error) showToast('Save failed: ' + error.message, true);
           else showToast('Reward text saved');
         });
       });
+    }
+
+    // ── Customers (site change #4) ────────────────────────────────────────────
+    // Read-only registry of every account (incl. guest-checkout accounts).
+    // Passwords are never fetched — only that the account exists.
+    let customersCache = null;
+    let customersLoading = null;
+
+    function getCustomers() {
+      if (customersCache) return Promise.resolve(customersCache);
+      if (!customersLoading) {
+        customersLoading = adminFetch('/api/admin/customers')
+          .then(d => { customersCache = d.customers || []; return customersCache; })
+          .finally(() => { customersLoading = null; });
+      }
+      return customersLoading;
+    }
+
+    async function loadCustomersTab() {
+      document.getElementById('customer-search').addEventListener('input', renderCustomerList);
+      document.getElementById('customer-back-btn').addEventListener('click', showCustomerList);
+      try {
+        await getCustomers();
+        renderCustomerList();
+      } catch (err) {
+        document.getElementById('customers-tbody').innerHTML =
+          `<tr><td colspan="6" class="club-table-loading">Could not load customers: ${escHtml(err.message)}</td></tr>`;
+      }
+    }
+
+    function customerBadges(c) {
+      const badges = [];
+      if (c.club_status === 'active' || c.club_status === 'past_due') badges.push('<span class="customer-badge badge-club">Club</span>');
+      if (c.is_guest) badges.push(`<span class="customer-badge badge-guest" title="Created automatically at ${c.created_via === 'club_payment_link' ? 'Club signup' : 'guest checkout'} — no password set by the customer yet">Guest</span>`);
+      return badges.join('');
+    }
+
+    function renderCustomerList() {
+      const tbody = document.getElementById('customers-tbody');
+      const list = customersCache || [];
+      const q = document.getElementById('customer-search').value.trim().toLowerCase();
+      const rows = list.filter(c => !q || `${c.name} ${c.email} ${c.phone}`.toLowerCase().includes(q));
+      const guests = list.filter(c => c.is_guest).length;
+      document.getElementById('customer-summary').textContent =
+        `${list.length} account${list.length === 1 ? '' : 's'} registered (${guests} created at guest checkout). Tap a customer to see their orders.`;
+
+      if (!rows.length) {
+        tbody.innerHTML = `<tr><td colspan="6" class="club-table-empty">${q ? `No account matches “${escHtml(q)}”.` : 'No accounts yet.'}</td></tr>`;
+        return;
+      }
+      tbody.innerHTML = rows.map(c => `
+        <tr class="customer-row" tabindex="0" data-id="${escHtml(c.id)}">
+          <td><span class="customer-name">${escHtml(c.name || '—')}</span>${customerBadges(c)}</td>
+          <td>${escHtml(c.email)}</td>
+          <td>${escHtml(c.phone || '—')}</td>
+          <td>${escHtml(fmtShortDate(c.created_at))}</td>
+          <td class="num">${c.order_count}</td>
+          <td class="num">${fmtUSD.format((c.lifetime_cents || 0) / 100)}</td>
+        </tr>`).join('');
+      tbody.querySelectorAll('.customer-row').forEach(row => {
+        const open = () => showCustomerDetail(row.dataset.id);
+        row.addEventListener('click', open);
+        row.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); open(); } });
+      });
+    }
+
+    function showCustomerList() {
+      document.getElementById('customer-detail-view').classList.add('hidden');
+      document.getElementById('customer-list-view').classList.remove('hidden');
+    }
+
+    async function showCustomerDetail(id) {
+      const c = (customersCache || []).find(x => x.id === id);
+      if (!c) return;
+      document.getElementById('customer-list-view').classList.add('hidden');
+      document.getElementById('customer-detail-view').classList.remove('hidden');
+
+      const clubLabel = { active: 'Active member', past_due: 'Member — payment due', cancelled: 'Former member' }[c.club_status] || 'Not a member';
+      const createdVia = { guest_checkout: 'Guest checkout', club_payment_link: 'Club payment link', signup: 'Created their own account' }[c.created_via] || c.created_via;
+      const fields = [
+        ['Email', c.email],
+        ['Phone', c.phone || '—'],
+        ['Account created', `${fmtShortDate(c.created_at)} · ${createdVia}`],
+        ['Last signed in', c.last_sign_in_at ? fmtShortDate(c.last_sign_in_at) : 'Never'],
+        ['Birthday', c.birthday ? new Date(c.birthday + 'T12:00:00').toLocaleDateString('en-US', { month: 'long', day: 'numeric' }) : '—'],
+        ['Bread Box Club', clubLabel],
+        ['Orders', `${c.order_count} · ${fmtUSD.format((c.lifetime_cents || 0) / 100)} lifetime`],
+      ];
+      document.getElementById('customer-detail-card').innerHTML = `
+        <div class="customer-detail-head">
+          <div class="sidebar-avatar" aria-hidden="true">${escHtml((c.name || c.email || '?')[0].toUpperCase())}</div>
+          <div><h3>${escHtml(c.name || c.email)}</h3>${customerBadges(c)}</div>
+        </div>
+        <dl class="customer-detail-grid">
+          ${fields.map(([k, v]) => `<div><dt>${escHtml(k)}</dt><dd>${escHtml(v)}</dd></div>`).join('')}
+        </dl>`;
+
+      const listEl = document.getElementById('customer-orders-list');
+      listEl.innerHTML = '<div class="skeleton-card"></div>';
+      if (!ordersLoaded) { ordersLoaded = true; await loadAllOrders(); }
+      const email = (c.email || '').toLowerCase();
+      const orders = allOrders.filter(o => o.user_id === c.id || (!o.user_id && email && (o.customer_email || '').toLowerCase() === email));
+      if (!orders.length) {
+        listEl.innerHTML = '<div class="empty-state">No orders yet.</div>';
+        return;
+      }
+      listEl.innerHTML = orders.map(orderCardHtml).join('');
+      wireOrderCards(listEl);
+    }
+
+    async function openCustomerFromElsewhere(id) {
+      document.querySelector('.tab-btn[data-tab="customers"]')?.click();
+      try { await getCustomers(); } catch (err) { showToast(err.message, true); return; }
+      renderCustomerList();
+      showCustomerDetail(id);
     }
 
     // ── Orders ─────────────────────────────────────────────────────────────────
@@ -1014,6 +1228,87 @@
 
       allOrders = (orders || []).map(o => ({ ...o, profiles: profileMap[o.user_id] || null }));
       applyOrderFilters();
+
+      // Club + birthday flags need the account registry (service role) — fill them in when it arrives
+      getCustomers().then(() => { if (document.getElementById('tab-orders').classList.contains('active')) renderAdminOrders(); }).catch(() => {});
+    }
+
+    // The account behind an order: by user_id, else by email (admin-entered orders)
+    function customerForOrder(order) {
+      if (!customersCache) return null;
+      const email = (order.customer_email || '').toLowerCase();
+      return customersCache.find(c => c.id === order.user_id)
+        || (email ? customersCache.find(c => (c.email || '').toLowerCase() === email) : null)
+        || null;
+    }
+
+    // True when the order date is within 3 days of the customer's birthday (any year)
+    function inBirthdayWindow(birthday, orderIso) {
+      if (!birthday) return false;
+      const [, m, d] = birthday.split('-').map(Number);
+      const od = new Date(orderIso); od.setHours(0, 0, 0, 0);
+      return [-1, 0, 1].some(dy => {
+        const b = new Date(od.getFullYear() + dy, m - 1, d);
+        return Math.abs(Math.round((od - b) / 86400000)) <= 3;
+      });
+    }
+
+    function orderFlags(order) {
+      const c = customerForOrder(order);
+      const member = c && (c.club_status === 'active' || c.club_status === 'past_due');
+      return { member: !!member, birthday: !!member && inBirthdayWindow(c.birthday, order.created_at) };
+    }
+
+    function orderCardHtml(order) {
+      const p = order.profiles;
+      const name = p ? [p.first_name, p.last_name].filter(Boolean).join(' ') || order.customer_name || 'Unknown' : order.customer_name || 'Unknown';
+      const phone = p?.phone || '';
+      const email = order.customer_email || '';
+      const date = new Date(order.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit' });
+      const flags = orderFlags(order);
+      const items = (order.order_items || []).map(i =>
+        `<div class="admin-order-item"><span>${escHtml(i.product_name || i.stripe_product_id)} &times; ${i.quantity}</span><span>${fmtUSD.format((i.unit_amount * i.quantity) / 100)}</span></div>`
+      ).join('');
+      return `<div class="admin-order-card" data-order-id="${escHtml(order.id)}">
+        <div class="admin-order-header">
+          <div class="admin-order-customer">
+            <strong>${escHtml(name)}</strong>
+            ${flags.member ? '<span class="customer-badge badge-club">Club</span>' : ''}
+            ${flags.birthday ? '<span class="customer-badge badge-birthday" title="Birthday week — add their free treat">🎂 Birthday treat</span>' : ''}
+            ${phone ? `<span class="admin-order-phone">${escHtml(phone)}</span>` : email ? `<span class="admin-order-phone">${escHtml(email)}</span>` : ''}
+          </div>
+          <div class="admin-order-meta">
+            <span class="admin-order-date">${escHtml(date)}</span>
+            <span class="admin-order-id">#${escHtml(order.id.slice(0,8))}</span>
+          </div>
+        </div>
+        <div class="admin-order-body">
+          <div class="admin-order-items">${items}</div>
+          ${order.pickup_location_name ? `<div class="admin-order-pickup">Pickup: ${escHtml(order.pickup_location_name)}</div>` : ''}
+          <div class="admin-order-footer">
+            <div class="admin-order-total">${fmtUSD.format((order.total_amount || 0) / 100)}</div>
+            <div class="admin-order-actions">
+              <select class="order-status-select status-${escHtml(order.status)}" data-id="${escHtml(order.id)}" aria-label="Order status">
+                ${['paid','fulfilled','picked_up','cancelled'].map(s =>
+                  `<option value="${s}" ${s === order.status ? 'selected' : ''}>${s === 'picked_up' ? 'Picked Up' : s.charAt(0).toUpperCase() + s.slice(1)}</option>`
+                ).join('')}
+              </select>
+              <button type="button" class="btn-print-single icon-btn" data-id="${escHtml(order.id)}" title="Print ticket" aria-label="Print order ticket">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>`;
+    }
+
+    function wireOrderCards(container) {
+      container.querySelectorAll('.order-status-select').forEach(sel => {
+        sel.addEventListener('change', () => updateOrderStatus(sel.dataset.id, sel.value));
+      });
+      container.querySelectorAll('.btn-print-single').forEach(btn => {
+        btn.addEventListener('click', () => openPrintDialog([allOrders.find(o => o.id === btn.dataset.id)]));
+      });
     }
 
     function applyOrderFilters() {
@@ -1062,53 +1357,8 @@
         list.innerHTML = '<div class="empty-state">No orders match your filters.</div>';
         return;
       }
-      list.innerHTML = filteredOrders.map(order => {
-        const p = order.profiles;
-        const name = p ? [p.first_name, p.last_name].filter(Boolean).join(' ') || order.customer_name || 'Unknown' : order.customer_name || 'Unknown';
-        const phone = p?.phone || '';
-        const email = order.customer_email || '';
-        const date = new Date(order.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit' });
-        const items = (order.order_items || []).map(i =>
-          `<div class="admin-order-item"><span>${escHtml(i.product_name || i.stripe_product_id)} &times; ${i.quantity}</span><span>${fmtUSD.format((i.unit_amount * i.quantity) / 100)}</span></div>`
-        ).join('');
-        return `<div class="admin-order-card" data-order-id="${escHtml(order.id)}">
-          <div class="admin-order-header">
-            <div class="admin-order-customer">
-              <strong>${escHtml(name)}</strong>
-              ${phone ? `<span class="admin-order-phone">${escHtml(phone)}</span>` : email ? `<span class="admin-order-phone">${escHtml(email)}</span>` : ''}
-            </div>
-            <div class="admin-order-meta">
-              <span class="admin-order-date">${escHtml(date)}</span>
-              <span class="admin-order-id">#${escHtml(order.id.slice(0,8))}</span>
-            </div>
-          </div>
-          <div class="admin-order-body">
-            <div class="admin-order-items">${items}</div>
-            <div class="admin-order-footer">
-              <div class="admin-order-total">${fmtUSD.format((order.total_amount || 0) / 100)}</div>
-              <div class="admin-order-actions">
-                <select class="order-status-select status-${escHtml(order.status)}" data-id="${escHtml(order.id)}" aria-label="Order status">
-                  ${['paid','fulfilled','picked_up','cancelled'].map(s =>
-                    `<option value="${s}" ${s === order.status ? 'selected' : ''}>${s === 'picked_up' ? 'Picked Up' : s.charAt(0).toUpperCase() + s.slice(1)}</option>`
-                  ).join('')}
-                </select>
-                <button class="btn-print-single icon-btn" data-id="${escHtml(order.id)}" title="Print ticket" aria-label="Print order ticket">
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>`;
-      }).join('');
-
-      // Wire status selects
-      list.querySelectorAll('.order-status-select').forEach(sel => {
-        sel.addEventListener('change', () => updateOrderStatus(sel.dataset.id, sel.value));
-      });
-      // Wire single print buttons
-      list.querySelectorAll('.btn-print-single').forEach(btn => {
-        btn.addEventListener('click', () => openPrintDialog([allOrders.find(o => o.id === btn.dataset.id)]));
-      });
+      list.innerHTML = filteredOrders.map(orderCardHtml).join('');
+      wireOrderCards(list);
     }
 
     async function updateOrderStatus(orderId, newStatus) {
@@ -1555,6 +1805,13 @@
           loc.textContent = `Pickup: ${order.pickup_location_name}`;
           ticket.appendChild(loc);
         }
+        const flags = orderFlags(order);
+        if (flags.member) {
+          const club = document.createElement('div');
+          club.className = 'ticket-club';
+          club.textContent = flags.birthday ? 'CLUB MEMBER · BIRTHDAY TREAT — add 1 free item' : 'CLUB MEMBER';
+          ticket.appendChild(club);
+        }
         if (fields.items) {
           ticket.appendChild(createDivider());
           items.forEach(i => {
@@ -1918,11 +2175,11 @@
       }).length;
       const churned = members.filter(m => {
         if (m.status !== 'cancelled') return false;
-        const d = new Date(m.updated_at || m.started_at);
+        const d = new Date(m.cancelled_at || m.started_at);
         return d >= start && d <= end;
       }).length;
       const periodReferrals = analyticsData.referralUses.filter(r => {
-        const d = new Date(r.created_at);
+        const d = new Date(r.used_at || r.created_at);
         return d >= start && d <= end;
       }).length;
 
