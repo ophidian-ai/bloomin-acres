@@ -4,8 +4,8 @@
   // the first thing a visitor sees is always the saved wording.
   const DEFAULT_REWARD_TEXT = {
     'referral-reward-1': '2% bonus discount — stacked on your 5% for 30 days',
-    'referral-reward-3': 'Free item credit — added to your account, no expiry',
-    'referral-reward-5': '10% off one order — promo code emailed, valid 90 days',
+    'referral-reward-3': 'Free item credit — added to your account, valid 30 days',
+    'referral-reward-5': '10% off one order — promo code emailed, valid 30 days',
   };
   const MEMBER_STATUSES = ['active', 'past_due'];
 
