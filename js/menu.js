@@ -239,6 +239,23 @@
         cartOverlay.setAttribute('aria-hidden', 'true');
       }
 
+      // Site change #7: only this week's posted menu can be ordered, and only
+      // while it's open. Off-menu lines (e.g. added from a product link) are
+      // flagged here and removed before checkout; the server checks again.
+      const liveMenuIds = _isDraft ? null : new Set(Object.values(itemsBySectionId).flat().map(i => i.stripe_product_id));
+      function cartLineBlocked(productId) {
+        if (!liveMenuIds) return '';
+        if (menuUnavailable) return 'Ordering is closed';
+        return liveMenuIds.has(productId) ? '' : 'Not on this week’s menu';
+      }
+      function dropBlockedCartLines(productIds) {
+        const ids = new Set(productIds);
+        const lines = cartGet().filter(i => ids.has(i.stripe_product_id));
+        lines.forEach(i => cartRemove(i.stripe_product_id, i.variation_name || ''));
+        renderCartPanel();
+        return lines.length;
+      }
+
       function renderCartPanel() {
         const items = cartGet();
 
@@ -263,10 +280,11 @@
           const currency = product?.currency || 'usd';
           const unitPrice = baseAmount + (ci.variation_delta || 0);
           const lineTotal = unitPrice * ci.quantity;
-          totalCents += lineTotal;
+          const blocked = cartLineBlocked(ci.stripe_product_id);
+          if (!blocked) totalCents += lineTotal;
 
           const row = document.createElement('div');
-          row.className = 'cart-panel-item';
+          row.className = 'cart-panel-item' + (blocked ? ' cart-item-unavailable' : '');
 
           // Info section
           const infoDiv = document.createElement('div');
@@ -282,6 +300,12 @@
             nameSpan.appendChild(varSpan);
           }
           infoDiv.appendChild(nameSpan);
+          if (blocked) {
+            const tag = document.createElement('span');
+            tag.className = 'cart-item-unavailable-tag';
+            tag.textContent = blocked;
+            infoDiv.appendChild(tag);
+          }
 
           const priceSpan = document.createElement('span');
           priceSpan.className = 'cart-item-price';
@@ -380,6 +404,11 @@
         const emailVal = document.getElementById('guest-email').value.trim();
         if (!nameVal || !emailVal) return;
 
+        if (menuUnavailable && liveMenuIds) { showToast('Ordering is closed right now — check back when the next menu opens.', true); return; }
+        const offMenu = cartGet().map(i => i.stripe_product_id).filter(id => cartLineBlocked(id));
+        const removed = dropBlockedCartLines(offMenu);
+        if (removed) showToast(`Removed ${removed} item${removed > 1 ? 's' : ''} not on this week’s menu`, true);
+
         const items = cartGet();
         if (items.length === 0) return;
 
@@ -406,7 +435,8 @@
           if (data.url) {
             window.location.href = data.url;
           } else {
-            showToast(data.error || 'Something went wrong. Please try again.');
+            if (data.off_menu?.length) dropBlockedCartLines(data.off_menu);
+            showToast(data.error || 'Something went wrong. Please try again.', !!(data.off_menu || data.menu_closed));
             guestSubmitBtn.disabled = false;
             guestSubmitBtn.textContent = 'Continue to Payment';
           }

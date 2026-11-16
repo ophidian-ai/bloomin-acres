@@ -41,3 +41,27 @@ function formatPrice(cents, currency = 'usd') {
   if (cents == null) return '\u2014';
   return new Intl.NumberFormat('en-US', { style: 'currency', currency }).format(cents / 100);
 }
+
+/**
+ * The current posted menu (site change #7): only these products can be
+ * ordered, and only while the menu window in Admin → Menu Editor is open.
+ * Same open/closed rule as menu.js; checkout enforces it again server-side.
+ * @param {object} sb - Supabase client
+ * @returns {Promise<{open: boolean, message: string, productIds: Set<string>, loaded: boolean}>}
+ */
+async function getActiveMenuState(sb) {
+  const [schedRes, itemsRes] = await Promise.all([
+    sb.from('menu_schedule').select('start_date,end_date,message').eq('id', 1).maybeSingle(),
+    sb.from('menu_items').select('stripe_product_id'),
+  ]);
+  const sched = schedRes.data;
+  const now = new Date();
+  const today = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+  const open = !sched || ((!sched.start_date || today >= sched.start_date) && (!sched.end_date || today <= sched.end_date));
+  return {
+    open,
+    message: sched?.message || '',
+    productIds: new Set((itemsRes.data || []).map(r => r.stripe_product_id)),
+    loaded: !schedRes.error && !itemsRes.error,
+  };
+}

@@ -513,3 +513,7 @@ body.print-mode .print-variation-row .item-name {
 .print-toolbar-btn:focus-visible { outline: 2px solid #EDA339; outline-offset: 2px; }
 .print-toolbar-btn:active { transform: translateY(1px); }
 @media print { .menu-image-overlay { display: none !important; } }
+
+/* Site change #7 — cart lines not on this week's menu */
+.cart-item-unavailable { opacity: .6; }
+.cart-item-unavailable-tag { font-size: .72rem; font-weight: 600; color: #8B3A3A; }
