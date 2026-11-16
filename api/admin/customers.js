@@ -24,6 +24,10 @@ export default async function handler(req, res) {
 
   try {
     if (req.method === 'POST' && req.query.action === 'sync-club') return res.json(await syncClub(sb));
+    if (req.method === 'POST' && req.query.action === 'set-birthday') {
+      const result = await setBirthday(sb, req.body || {});
+      return res.status(result.status || 200).json(result.body);
+    }
     if (req.method === 'GET' && req.query.view === 'club') return res.json(await clubView(sb));
     if (req.method === 'GET') return res.json(await customersView(sb));
     return res.status(405).json({ error: 'Method not allowed' });
@@ -192,6 +196,23 @@ async function clubView(sb) {
     members: memberList,
     unlinked,
   };
+}
+
+// Customers can only set their birthday once (DB trigger), so Christina
+// corrects it here. Runs with the service role, which the trigger allows.
+async function setBirthday(sb, { user_id, birthday }) {
+  if (typeof user_id !== 'string' || !/^[0-9a-f-]{36}$/i.test(user_id)) {
+    return { status: 400, body: { error: 'Missing customer' } };
+  }
+  if (birthday !== null && (typeof birthday !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(birthday) || isNaN(Date.parse(birthday)))) {
+    return { status: 400, body: { error: 'Choose a valid date' } };
+  }
+  const { data: found, error: userErr } = await sb.auth.admin.getUserById(user_id);
+  if (userErr || !found?.user) return { status: 404, body: { error: 'Customer not found' } };
+  const { error } = await sb.from('profiles')
+    .upsert({ user_id, birthday, updated_at: new Date().toISOString() }, { onConflict: 'user_id' });
+  if (error) throw error;
+  return { body: { ok: true, birthday } };
 }
 
 async function syncClub(sb) {

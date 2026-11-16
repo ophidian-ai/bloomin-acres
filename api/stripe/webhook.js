@@ -233,8 +233,8 @@ async function recordReferral(sb, code, referredUserId, type, discountPct) {
 
   const rewardMap = {
     1: { reward_type: 'bonus_discount', reward_value: '2% bonus discount for 30 days', ttlDays: 30 },
-    3: { reward_type: 'free_item',      reward_value: 'Free item credit — redeemable on any order', ttlDays: null },
-    5: { reward_type: 'promo_code',     reward_value: '10% off one order — single-use promo code', ttlDays: 90 },
+    3: { reward_type: 'free_item',      reward_value: 'Free item credit — redeemable on any order', ttlDays: 30 },
+    5: { reward_type: 'promo_code',     reward_value: '10% off one order — single-use promo code', ttlDays: 30 },
   };
 
   for (const [m, reward] of Object.entries(rewardMap)) {

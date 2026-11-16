@@ -4,8 +4,8 @@
   // the first thing a visitor sees is always the saved wording.
   const DEFAULT_REWARD_TEXT = {
     'referral-reward-1': '2% bonus discount — stacked on your 5% for 30 days',
-    'referral-reward-3': 'Free item credit — added to your account, no expiry',
-    'referral-reward-5': '10% off one order — promo code emailed, valid 90 days',
+    'referral-reward-3': 'Free item credit — added to your account, valid 30 days',
+    'referral-reward-5': '10% off one order — promo code emailed, valid 30 days',
   };
   const MEMBER_STATUSES = ['active', 'past_due'];
 
@@ -38,11 +38,14 @@
   // Public content: saved reward text + the named delivery locations
   const [{ data: rewards }, { data: locs }] = await Promise.all([
     sb.from('site_content').select('key, value').in('key', Object.keys(DEFAULT_REWARD_TEXT)),
-    sb.from('pickup_locations').select('name').eq('active', true).order('sort_order'),
+    sb.from('pickup_locations').select('name, club_only').eq('active', true).order('sort_order')
+      .then(r => r.error ? sb.from('pickup_locations').select('name').eq('active', true).order('sort_order') : r),
   ]);
   fillRewardText(Object.fromEntries((rewards || []).map(r => [r.key, r.value])));
 
-  const locationNames = (locs || []).map(l => l.name).filter(Boolean);
+  // The free-delivery perk names the Club delivery stops (all locations if none are marked)
+  const clubStops = (locs || []).filter(l => l.club_only);
+  const locationNames = (clubStops.length ? clubStops : (locs || [])).map(l => l.name).filter(Boolean);
   if (locationNames.length) {
     // Names can contain commas ("Rural King, Columbus") — separate with semicolons then
     const sep = locationNames.some(n => n.includes(',')) ? ';' : ',';

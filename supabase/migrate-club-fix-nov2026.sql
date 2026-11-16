@@ -96,6 +96,6 @@ end $$;
 -- Only seeds rows that don't exist yet; Christina's saved wording is never overwritten.
 insert into site_content (key, value) values
   ('referral-reward-1', '2% bonus discount — stacked on your 5% for 30 days'),
-  ('referral-reward-3', 'Free item credit — added to your account, no expiry'),
-  ('referral-reward-5', '10% off one order — promo code emailed, valid 90 days')
+  ('referral-reward-3', 'Free item credit — added to your account, valid 30 days'),
+  ('referral-reward-5', '10% off one order — promo code emailed, valid 30 days')
 on conflict (key) do nothing;

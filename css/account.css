@@ -1365,6 +1365,20 @@ body::after {
 .pickup-location-loading { font-size: .87rem; color: rgba(78,62,51,.45); }
 .btn-save-pickup { margin-top: .25rem; }
 
+/* Club-only delivery stops: visible to everyone, choosable by members */
+.pickup-club-only {
+  display: inline-block; margin-left: .4rem; padding: .05rem .5rem;
+  font-size: .7rem; font-weight: 600; letter-spacing: .02em; vertical-align: middle;
+  color: #8A5A2B; background: rgba(200,149,108,.18); border-radius: 999px;
+}
+.pickup-location-card.locked { cursor: default; opacity: .72; background: rgba(78,62,51,.04); }
+.pickup-location-card.locked:hover { border-color: rgba(78,62,51,.12); }
+.pickup-club-join { font-size: .8rem; color: #8A5A2B; text-decoration: underline; width: fit-content; }
+
+/* Locked birthday note */
+.field-note { margin-top: .35rem; font-size: .8rem; color: rgba(78,62,51,.6); }
+#profile-birthday:disabled { opacity: .75; cursor: not-allowed; }
+
 /* ══════════════════════════════════════════════════════════
    Site change #5 — Club join/status, birthday, member discount
    ══════════════════════════════════════════════════════════ */

@@ -763,6 +763,7 @@
             <div class="location-card-title">
               <strong>${escHtml(loc.name)}</strong>
               <span class="location-status-pill ${loc.active ? 'pill-active' : 'pill-inactive'}">${loc.active ? 'Active' : 'Inactive'}</span>
+              ${loc.club_only ? '<span class="location-status-pill pill-club">Club members only</span>' : ''}
             </div>
             <div class="location-card-actions">
               <button type="button" class="btn-ghost-sm btn-edit-location" data-id="${escHtml(loc.id)}">Edit</button>
@@ -840,6 +841,10 @@
               <label class="admin-label" for="loc-active">Active (visible to customers)</label>
               <input type="checkbox" id="loc-active" ${existing?.active !== false ? 'checked' : ''} />
             </div>
+            <div class="admin-field admin-field-inline">
+              <label class="admin-label" for="loc-club-only">Club members only <span class="admin-label-note">(Bread Box Club delivery stop — non-members see it greyed out)</span></label>
+              <input type="checkbox" id="loc-club-only" ${existing?.club_only ? 'checked' : ''} />
+            </div>
             <div class="admin-field">
               <label class="admin-label" for="loc-sort">Sort Order</label>
               <input type="number" class="admin-input admin-input-sm" id="loc-sort" min="0" max="999" value="${existing?.sort_order ?? 0}" />
@@ -873,6 +878,7 @@
           notes: modal.querySelector('#loc-notes').value.trim() || null,
           calendar_event_id: modal.querySelector('#loc-calendar').value.trim() || null,
           active: modal.querySelector('#loc-active').checked,
+          club_only: modal.querySelector('#loc-club-only').checked,
           sort_order: parseInt(modal.querySelector('#loc-sort').value, 10) || 0,
         };
 
@@ -1174,7 +1180,33 @@
         </div>
         <dl class="customer-detail-grid">
           ${fields.map(([k, v]) => `<div><dt>${escHtml(k)}</dt><dd>${escHtml(v)}</dd></div>`).join('')}
-        </dl>`;
+        </dl>
+        <div class="customer-birthday-edit">
+          <label class="admin-label" for="cust-bday-input">Correct birthday <span class="admin-label-note">(customers can only set it once)</span></label>
+          <div class="customer-birthday-row">
+            <input type="date" class="admin-input" id="cust-bday-input" value="${escHtml(c.birthday || '')}" />
+            <button type="button" class="btn-secondary" id="cust-bday-save">Save birthday</button>
+          </div>
+        </div>`;
+
+      document.getElementById('cust-bday-save').addEventListener('click', async () => {
+        const btn = document.getElementById('cust-bday-save');
+        const birthday = document.getElementById('cust-bday-input').value || null;
+        btn.disabled = true; btn.textContent = 'Saving…';
+        try {
+          await adminFetch('/api/admin/customers?action=set-birthday', {
+            method: 'POST',
+            body: JSON.stringify({ user_id: c.id, birthday }),
+          });
+          c.birthday = birthday;
+          treatMemo.customers = null; // re-check birthday flags on orders
+          showToast('Birthday saved');
+          showCustomerDetail(c.id);
+        } catch (err) {
+          showToast(err.message, true);
+          btn.disabled = false; btn.textContent = 'Save birthday';
+        }
+      });
 
       const listEl = document.getElementById('customer-orders-list');
       listEl.innerHTML = '<div class="skeleton-card"></div>';
@@ -1242,21 +1274,46 @@
         || null;
     }
 
-    // True when the order date is within 3 days of the customer's birthday (any year)
-    function inBirthdayWindow(birthday, orderIso) {
-      if (!birthday) return false;
+    // Birthday treat: one free item, good for 30 days starting on the birthday.
+    // Returns that window's start date (YYYY-MM-DD) when the order falls in it.
+    const BIRTHDAY_WINDOW_DAYS = 30;
+    function birthdayWindowStart(birthday, orderIso) {
+      if (!birthday) return null;
       const [, m, d] = birthday.split('-').map(Number);
       const od = new Date(orderIso); od.setHours(0, 0, 0, 0);
-      return [-1, 0, 1].some(dy => {
-        const b = new Date(od.getFullYear() + dy, m - 1, d);
-        return Math.abs(Math.round((od - b) / 86400000)) <= 3;
-      });
+      for (const y of [od.getFullYear(), od.getFullYear() - 1]) { // late-Dec birthdays run into January
+        const b = new Date(y, m - 1, d);
+        const days = Math.round((od - b) / 86400000);
+        if (days >= 0 && days < BIRTHDAY_WINDOW_DAYS) return `${y}-${m}-${d}`;
+      }
+      return null;
+    }
+
+    // Only a member's FIRST (non-cancelled) order in each birthday window gets
+    // the treat. Recomputed whenever the order list or customer registry changes.
+    let treatMemo = { orders: null, customers: null, ids: new Set() };
+    function birthdayTreatOrderIds() {
+      if (treatMemo.orders === allOrders && treatMemo.customers === customersCache) return treatMemo.ids;
+      const ids = new Set();
+      const claimed = new Set();
+      [...allOrders]
+        .filter(o => o.status !== 'cancelled')
+        .sort((a, b) => (a.created_at || '').localeCompare(b.created_at || ''))
+        .forEach(o => {
+          const c = customerForOrder(o);
+          const start = c && birthdayWindowStart(c.birthday, o.created_at);
+          if (!start || claimed.has(c.id + '|' + start)) return;
+          claimed.add(c.id + '|' + start);
+          ids.add(o.id);
+        });
+      treatMemo = { orders: allOrders, customers: customersCache, ids };
+      return ids;
     }
 
     function orderFlags(order) {
       const c = customerForOrder(order);
       const member = c && (c.club_status === 'active' || c.club_status === 'past_due');
-      return { member: !!member, birthday: !!member && inBirthdayWindow(c.birthday, order.created_at) };
+      return { member: !!member, birthday: !!member && birthdayTreatOrderIds().has(order.id) };
     }
 
     function orderCardHtml(order) {
@@ -1274,7 +1331,7 @@
           <div class="admin-order-customer">
             <strong>${escHtml(name)}</strong>
             ${flags.member ? '<span class="customer-badge badge-club">Club</span>' : ''}
-            ${flags.birthday ? '<span class="customer-badge badge-birthday" title="Birthday week — add their free treat">🎂 Birthday treat</span>' : ''}
+            ${flags.birthday ? '<span class="customer-badge badge-birthday" title="First order in their 30-day birthday window — add their free treat">🎂 Birthday treat</span>' : ''}
             ${phone ? `<span class="admin-order-phone">${escHtml(phone)}</span>` : email ? `<span class="admin-order-phone">${escHtml(email)}</span>` : ''}
           </div>
           <div class="admin-order-meta">
@@ -1369,6 +1426,7 @@
       }
       const order = allOrders.find(o => o.id === orderId);
       if (order) order.status = newStatus;
+      treatMemo.orders = null; // a cancelled order can pass the birthday treat to the next one
       showToast(`Order marked as ${newStatus === 'picked_up' ? 'Picked Up' : newStatus}`);
       applyOrderFilters();
     }
