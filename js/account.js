@@ -303,11 +303,35 @@
     list.forEach(p => { products[p.id] = p; });
   }
 
-  // ── Menu items (for availability check) ──────────────────────────────────
+  // ── Active menu (site change #7) ─────────────────────────────────────────
+  // Only items on this week's posted menu can be ordered, and only while the
+  // menu is open. The basket, My Box and checkout all read this one state.
+  let menuState = null;
   async function loadMenuItems() {
-    const { data } = await sb.from('menu_items').select('stripe_product_id');
-    (data || []).forEach(r => menuProductIds.add(r.stripe_product_id));
+    menuState = await getActiveMenuState(sb);
+    menuState.productIds.forEach(id => menuProductIds.add(id));
     renderFavorites(); // re-render once menu data is available
+    renderCart();
+    if (boxSelections.length) renderBoxBuilder();
+    if (!document.getElementById('club-product-picker')?.classList.contains('hidden')) renderProductPicker();
+  }
+
+  // Why a product can't be ordered right now, or '' when it can
+  function unavailableReason(productId) {
+    if (!menuState?.loaded) return '';
+    if (!menuState.open) return 'Ordering is closed';
+    return menuState.productIds.has(productId) ? '' : 'Not on this week’s menu';
+  }
+
+  // Drops basket lines that can't be ordered (off the menu) and says so
+  async function removeUnorderableCartItems(productIds) {
+    const ids = new Set(productIds);
+    const rows = cartItems.filter(i => ids.has(i.stripe_product_id));
+    if (!rows.length) return 0;
+    await sb.from('user_cart').delete().in('id', rows.map(r => r.id));
+    cartItems = cartItems.filter(i => !ids.has(i.stripe_product_id));
+    renderCart();
+    return rows.length;
   }
 
   // ── Cart ──────────────────────────────────────────────────────────────────
@@ -347,6 +371,7 @@
     }
 
     let total = 0;
+    let orderableCount = 0;
     // NOTE: product names come from our Stripe account (admin-controlled), not user input
     const frag = document.createDocumentFragment();
     cartItems.forEach(item => {
@@ -354,10 +379,11 @@
       const name = pr?.name || item.stripe_product_id;
       const varLabel = item.variation_name ? ' \u2014 ' + item.variation_name : '';
       const price = (pr?.unit_amount ?? 0) + (item.variation_delta || 0);
-      total += price * item.quantity;
+      const blocked = unavailableReason(item.stripe_product_id);
+      if (!blocked) { total += price * item.quantity; orderableCount++; }
 
       const row = document.createElement('div');
-      row.className = 'basket-item';
+      row.className = 'basket-item' + (blocked ? ' basket-item-unavailable' : '');
       row.dataset.id = item.id;
 
       const bullet = document.createElement('span');
@@ -366,6 +392,12 @@
       const nameEl = document.createElement('span');
       nameEl.className = 'basket-item-name';
       nameEl.textContent = name + varLabel;
+      if (blocked) {
+        const tag = document.createElement('span');
+        tag.className = 'basket-item-unavailable-tag';
+        tag.textContent = blocked;
+        nameEl.appendChild(tag);
+      }
 
       const qtyWrap = document.createElement('span');
       qtyWrap.className = 'basket-item-qty';
@@ -429,8 +461,17 @@
     checkoutBtn.className = 'basket-btn-checkout';
     checkoutBtn.id = 'checkout-btn';
     checkoutBtn.textContent = 'Checkout';
+    if (!orderableCount) checkoutBtn.disabled = true;
     actionsEl.append(addMore, checkoutBtn);
     footer.append(totalEl, actionsEl);
+    if (orderableCount < cartItems.length) {
+      const note = document.createElement('p');
+      note.className = 'basket-unavailable-note';
+      note.textContent = menuState && !menuState.open
+        ? 'Ordering is closed right now — your basket will be here when the next menu opens.'
+        : 'Items not on this week’s menu can’t be ordered and will be removed at checkout.';
+      footer.appendChild(note);
+    }
     frag.appendChild(footer);
 
     el.textContent = '';
@@ -465,6 +506,21 @@
     const itemsEl = document.getElementById('order-review-items');
     const totalEl = document.getElementById('order-review-total');
     const confirmBtn = document.getElementById('review-confirm-btn');
+
+    // Re-check the menu (it may have closed or changed since the page loaded)
+    // and drop anything that isn't on it before showing the review
+    menuState = await getActiveMenuState(sb);
+    if (menuState.loaded && !menuState.open) {
+      renderCart();
+      showToast('Ordering is closed right now — check back when the next menu opens.', true);
+      return;
+    }
+    if (menuState.loaded) {
+      const offMenu = cartItems.map(i => i.stripe_product_id).filter(id => !menuState.productIds.has(id));
+      const removed = await removeUnorderableCartItems(offMenu);
+      if (removed) showToast(`Removed ${removed} item${removed > 1 ? 's' : ''} not on this week’s menu`, true);
+      if (!cartItems.length) return;
+    }
 
     // Fetch current stock for all cart products
     const productIds = [...new Set(cartItems.map(i => i.stripe_product_id))];
@@ -565,7 +621,15 @@
       headers: await authHeaders(),
       body: JSON.stringify({ items, pickup_location_id: document.getElementById('review-pickup-location').value || null }),
     }).catch(() => null);
-    if (!r || !r.ok) { btn.disabled = false; btn.textContent = 'Confirm & Pay'; overlay.classList.add('hidden'); showToast(await readError(r, 'Checkout failed'), true); return; }
+    if (!r || !r.ok) {
+      btn.disabled = false; btn.textContent = 'Confirm & Pay'; overlay.classList.add('hidden');
+      const body = r ? await r.json().catch(() => ({})) : {};
+      // Server found lines that aren't on this week's menu: take them out of the basket
+      if (body.off_menu?.length) await removeUnorderableCartItems(body.off_menu);
+      if (body.menu_closed) { menuState = await getActiveMenuState(sb); renderCart(); }
+      showToast(body.error || (r ? 'Checkout failed' : 'Network error — please check your connection and try again.'), true);
+      return;
+    }
     const { url, error } = await r.json();
     if (error || !url) { btn.disabled = false; btn.textContent = 'Confirm & Pay'; overlay.classList.add('hidden'); showToast(error || 'Checkout failed', true); return; }
     window.location.href = url;
@@ -1188,12 +1252,16 @@
     }
 
     let total = 0;
+    let unavailableCount = 0;
     el.innerHTML = boxSelections.map((item, idx) => {
       const p = products[item.stripe_product_id];
       const price = boxItemPrice(item);
-      total += price * item.quantity;
-      return `<div class="box-item-row">
-        <div class="box-item-name">${escHtml(p?.name || item.stripe_product_id)}${item.variation_name ? ` — ${escHtml(item.variation_name)}` : ''}</div>
+      // Saved items that came off the menu stay listed (so members see what
+      // changed) but are marked unavailable and left out of the order
+      const blocked = unavailableReason(item.stripe_product_id);
+      if (blocked) unavailableCount++; else total += price * item.quantity;
+      return `<div class="box-item-row${blocked ? ' box-item-unavailable' : ''}">
+        <div class="box-item-name">${escHtml(p?.name || item.stripe_product_id)}${item.variation_name ? ` — ${escHtml(item.variation_name)}` : ''}${blocked ? `<span class="basket-item-unavailable-tag">${escHtml(blocked)}</span>` : ''}</div>
         <div class="box-item-controls">
           <button type="button" class="qty-sm" data-idx="${idx}" data-action="dec" aria-label="One less">−</button>
           <span class="qty-sm-num">${item.quantity}</span>
@@ -1218,8 +1286,15 @@
     document.getElementById('box-total-label').textContent = `Total: ${fmt(total - discount)}`;
     document.getElementById('box-total-label').className = 'box-total-amount qualified';
     const hint = document.getElementById('box-min-hint');
-    hint.textContent = discount ? `Includes your ${CLUB_DISCOUNT_PCT}% member discount (−${fmt(discount)}), applied at checkout` : '';
+    const parts = [];
+    if (discount) parts.push(`Includes your ${CLUB_DISCOUNT_PCT}% member discount (−${fmt(discount)}), applied at checkout`);
+    if (unavailableCount) parts.push(menuState && !menuState.open
+      ? 'Ordering is closed right now — your box is saved for when the next menu opens.'
+      : `${unavailableCount} item${unavailableCount > 1 ? 's aren’t' : ' isn’t'} on this week’s menu and won’t be ordered.`);
+    hint.textContent = parts.join(' ');
     hint.className = 'box-min-hint success';
+    const orderBtn = document.getElementById('order-box-btn');
+    if (orderBtn) orderBtn.disabled = unavailableCount === boxSelections.length;
   }
 
   // Saves the box and reads it back, so what's shown is what's stored.
@@ -1263,13 +1338,15 @@
     }
   }
 
-  // One choice per product, or one per variation (flavor/size) when it has them
+  // One choice per product, or one per variation (flavor/size) when it has them.
+  // Built from the active menu only (site change #7) — never the full catalog,
+  // so an empty or unloaded menu offers nothing rather than everything.
   function pickerChoices() {
     const q = document.getElementById('picker-search').value.trim().toLowerCase();
-    const onMenu = id => !menuProductIds.size || menuProductIds.has(id);
     const choices = [];
-    Object.entries(products).forEach(([id, p]) => {
-      if (!onMenu(id)) return;
+    [...(menuState?.productIds || [])].forEach(id => {
+      const p = products[id];
+      if (!p) return;
       const variations = (productVariations?.[id] || [])
         .filter(v => v.available !== false && (v.quantity === undefined || v.quantity === null || v.quantity > 0));
       if (variations.length) {
@@ -1285,7 +1362,8 @@
     const grid = document.getElementById('picker-grid');
     const choices = pickerChoices();
     if (!choices.length) {
-      grid.innerHTML = '<p class="picker-empty">No menu items found.</p>';
+      grid.innerHTML = `<p class="picker-empty">${!menuState ? 'Loading this week’s menu…'
+        : menuState.productIds.size ? 'No menu items found.' : 'This week’s menu hasn’t been posted yet.'}</p>`;
       return;
     }
     grid.innerHTML = choices.map((c, i) => {
@@ -1317,11 +1395,16 @@
 
   async function orderMyBox() {
     if (!boxSelections.length) { showToast('Your box is empty', true); return; }
+    // Only what's on this week's menu goes in the basket
+    menuState = await getActiveMenuState(sb);
+    if (menuState.loaded && !menuState.open) { renderBoxBuilder(); showToast('Ordering is closed right now — check back when the next menu opens.', true); return; }
+    const orderable = boxSelections.filter(i => !unavailableReason(i.stripe_product_id));
+    if (!orderable.length) { renderBoxBuilder(); showToast('Nothing in your box is on this week’s menu', true); return; }
     const btn = document.getElementById('order-box-btn');
     btn.disabled = true; btn.textContent = 'Adding…';
 
     let failed = null;
-    for (const item of boxSelections) {
+    for (const item of orderable) {
       const { error } = await sb.from('user_cart').upsert({
         user_id: currentUser.id,
         stripe_product_id: item.stripe_product_id,
@@ -1337,7 +1420,8 @@
     btn.disabled = false; btn.textContent = 'Order My Box →';
     if (failed) { showToast('Couldn’t add your box to the basket: ' + failed.message, true); return; }
     document.querySelector('.dash-tab[data-panel="cart"]')?.click();
-    showToast('Box added to your basket!');
+    const skipped = boxSelections.length - orderable.length;
+    showToast(skipped ? `Box added to your basket — ${skipped} item${skipped > 1 ? 's' : ''} not on this week’s menu left out` : 'Box added to your basket!');
   }
 
   function renderReferralDashboard() {

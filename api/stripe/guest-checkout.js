@@ -3,6 +3,7 @@ import { createClient } from '@supabase/supabase-js';
 import crypto from 'crypto';
 import { findUserByEmail, fillProfileNameIfMissing } from '../_lib/auth.js';
 import { activePickupLocations, CLUB_ONLY_LOCATION_ERROR } from '../_lib/club.js';
+import { getActiveMenu, menuProblem } from '../_lib/menu.js';
 
 export default async function handler(req, res) {
   const allowedOrigin = (process.env.ALLOWED_ORIGIN || (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'http://localhost:3000')).trim();
@@ -31,6 +32,10 @@ export default async function handler(req, res) {
   try {
     const stripe = new Stripe(secretKey);
     const sb = createClient(supabaseUrl, supabaseServiceKey);
+
+    // Only the current posted menu can be ordered, and only while it's open
+    const menuBlock = menuProblem(await getActiveMenu(sb), items);
+    if (menuBlock) return res.status(menuBlock.status).json(menuBlock.body);
 
     // Pickup location is required whenever any location is configured
     let pickupLocationName = null;

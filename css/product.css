@@ -487,3 +487,11 @@ body {
 }
 
 /* ── Footer (uses global.css glass footer) ─────────────── */
+
+/* Off-menu product (site change #7): viewable, not orderable */
+.product-unavailable-note {
+  margin: 0; padding: .7rem .95rem; border-radius: 8px;
+  background: rgba(200,149,108,.14); color: #6B4A2B; font-size: .9rem; line-height: 1.45;
+}
+.product-unavailable-link { display: inline-block; margin-top: .5rem; font-size: .88rem; color: #8B3A3A; text-decoration: underline; }
+.product-actions:has(.product-unavailable-note) { flex-direction: column; align-items: flex-start; }
