@@ -186,7 +186,20 @@ export default async function handler(req, res) {
       }
     }
 
-    const session = await stripe.checkout.sessions.create(sessionParams);
+    let session;
+    try {
+      session = await stripe.checkout.sessions.create(sessionParams);
+    } catch (err) {
+      // If Stripe rejects the configured member coupon, retry once with our
+      // own unrestricted 5% coupon rather than blocking the member's order.
+      const isClubCouponError = sessionParams.metadata.discount_type === 'club_member' && /coupon/i.test(err.message || '');
+      if (!isClubCouponError) throw err;
+      console.error('[checkout] member coupon rejected, retrying with BREADBOX-CLUB-5:', err.message);
+      const ownCoupon = await resolveClubCouponId(stripe, { skipEnv: true });
+      if (ownCoupon === sessionParams.discounts?.[0]?.coupon) throw err;
+      sessionParams.discounts = [{ coupon: ownCoupon }];
+      session = await stripe.checkout.sessions.create(sessionParams);
+    }
     res.json({ url: session.url });
   } catch (err) {
     console.error('[checkout] error:', err);

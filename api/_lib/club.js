@@ -27,17 +27,39 @@ export async function resolveClubPriceId(stripe) {
   return cachedPriceId;
 }
 
-// The 5% member coupon. Uses STRIPE_CLUB_DISCOUNT_ID when it points at a real
-// coupon; otherwise creates (once) a fixed-id 5%-forever coupon in Stripe.
+// Why a coupon can't be used for the member discount on product orders, or
+// null when it can. Stripe only returns `applies_to` when it is expanded, so a
+// product-restricted coupon looks unrestricted in a plain lookup. A restricted
+// coupon fails at checkout with "does not apply to anything in this order",
+// because variation line items are sent as ad-hoc products.
+export function clubCouponProblem(c) {
+  if (!c?.valid) return 'not valid';
+  if (c.percent_off !== CLUB_DISCOUNT_PCT) return `is ${c.percent_off ?? c.amount_off + ' off'} not ${CLUB_DISCOUNT_PCT}%`;
+  if (c.applies_to?.products?.length) return `is limited to ${c.applies_to.products.length} product(s)`;
+  if (c.max_redemptions && c.times_redeemed >= c.max_redemptions) return 'has used up its redemptions';
+  if (c.redeem_by && c.redeem_by * 1000 <= Date.now()) return 'has expired';
+  return null;
+}
+
+// The 5% member coupon. Uses STRIPE_CLUB_DISCOUNT_ID when it is a usable
+// 5%-off coupon for every product; otherwise our own fixed-id coupon, created
+// once in Stripe. `skipEnv` forces our own coupon (used to retry a checkout
+// that Stripe rejected because of the configured coupon).
 let cachedCouponId = null;
-export async function resolveClubCouponId(stripe) {
-  if (cachedCouponId) return cachedCouponId;
-  const envId = (process.env.STRIPE_CLUB_DISCOUNT_ID || '').trim();
+export async function resolveClubCouponId(stripe, { skipEnv = false } = {}) {
+  if (cachedCouponId && !(skipEnv && cachedCouponId !== CLUB_COUPON_ID)) return cachedCouponId;
+  const envId = skipEnv ? '' : (process.env.STRIPE_CLUB_DISCOUNT_ID || '').trim();
   for (const id of [envId, CLUB_COUPON_ID].filter(Boolean)) {
     try {
-      const c = await stripe.coupons.retrieve(id);
-      if (c.valid) { cachedCouponId = c.id; return cachedCouponId; }
-    } catch { /* not found — try next */ }
+      const c = await stripe.coupons.retrieve(id, { expand: ['applies_to'] });
+      const problem = clubCouponProblem(c);
+      if (!problem) { cachedCouponId = c.id; return cachedCouponId; }
+      console.warn(`[club] coupon ${id} ${problem} — not using it for the member discount`);
+      if (id === CLUB_COUPON_ID) throw new Error(`Club coupon ${CLUB_COUPON_ID} ${problem} — fix it in Stripe`);
+    } catch (err) {
+      if (id === CLUB_COUPON_ID && /fix it in Stripe/.test(err.message)) throw err;
+      /* not found — try next */
+    }
   }
   try {
     const created = await stripe.coupons.create({
