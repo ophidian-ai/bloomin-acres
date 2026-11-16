@@ -2,6 +2,7 @@ import Stripe from 'stripe';
 import { createClient } from '@supabase/supabase-js';
 import { setCors, getRequestUser } from '../_lib/auth.js';
 import { resolveClubCouponId, MEMBER_STATUSES, activePickupLocations, CLUB_ONLY_LOCATION_ERROR } from '../_lib/club.js';
+import { getActiveMenu, menuProblem } from '../_lib/menu.js';
 
 export default async function handler(req, res) {
   console.log('[checkout] handler invoked', req.method);
@@ -32,6 +33,12 @@ export default async function handler(req, res) {
       return res.status(401).json({ error: 'Your session expired — please sign in again to check out.' });
     }
     const user_id = authUser.id;
+
+    // Only the current posted menu can be ordered, and only while it's open
+    // (site change #7) — this also covers stale carts and direct product links
+    if (!sb) return res.status(500).json({ error: 'Supabase environment variables not set' });
+    const menuBlock = menuProblem(await getActiveMenu(sb), items);
+    if (menuBlock) return res.status(menuBlock.status).json(menuBlock.body);
 
     // Validate stock before proceeding
     const productIds = items.map(i => i.stripe_product_id);

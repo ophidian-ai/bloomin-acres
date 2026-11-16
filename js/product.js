@@ -63,7 +63,7 @@
       }
       productDetails = detailsRes.data || null;
 
-      renderProduct();
+      await renderProduct();
     }
 
     function getSelectedVariation() {
@@ -72,7 +72,7 @@
       return { name: checked.dataset.name, delta: parseInt(checked.value, 10) };
     }
 
-    function renderProduct() {
+    async function renderProduct() {
       const card = document.getElementById('product-card');
       const name = stripeProduct ? stripeProduct.name : 'Product';
       const baseAmount = stripeProduct?.unit_amount ?? null;
@@ -238,8 +238,22 @@
         });
       });
 
-      // Wire up cart (always available)
-      if (productId) {
+      // Ordering is limited to this week's posted menu (site change #7). Off-menu
+      // products — e.g. packaging QR links — stay viewable but can't be added.
+      const menuState = await getActiveMenuState(sb);
+      const orderable = !menuState.loaded || (menuState.open && menuState.productIds.has(productId));
+      if (!orderable) {
+        const note = document.createElement('p');
+        note.className = 'product-unavailable-note';
+        note.textContent = menuState.open
+          ? 'Not on this week’s menu — check the menu page for what’s available now.'
+          : 'Ordering is closed right now — check back when the next menu opens.';
+        const link = document.createElement('a');
+        link.href = 'menu.html';
+        link.className = 'product-unavailable-link';
+        link.textContent = 'See this week’s menu';
+        document.getElementById('btn-cart')?.replaceWith(note, link);
+      } else if (productId) {
         wireCart();
       }
       // Wire up favorites (logged-in only)
