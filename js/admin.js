@@ -1122,6 +1122,47 @@
       return badges.join('');
     }
 
+    // Customers CSV (Order Sheet export): every account, plus booth customers
+    // who ordered in person without an account (deduped by email, then phone)
+    async function exportCustomersCsv() {
+      const btn = document.getElementById('customers-csv-btn');
+      btn.disabled = true;
+      try {
+        const accounts = await getCustomers();
+        if (!ordersLoaded) { ordersLoaded = true; await loadAllOrders(); }
+        const seen = new Set();
+        const rows = [['Name', 'Phone', 'Email', 'Type', 'Orders', 'Lifetime total']];
+        const keyOf = (email, phone) => (email || '').trim().toLowerCase() || (phone || '').replace(/\D/g, '');
+        accounts.forEach(c => {
+          seen.add(keyOf(c.email, c.phone));
+          rows.push([c.name, c.phone, c.email, c.is_guest ? 'Guest account' : 'Account', String(c.order_count), centsToDollars(c.lifetime_cents || 0)]);
+        });
+        const booth = new Map();
+        allOrders.filter(o => o.source === 'booth').forEach(o => {
+          const key = keyOf(o.customer_email, o.phone) || (o.customer_name || '').trim().toLowerCase();
+          if (!key || seen.has(key)) return;
+          const cur = booth.get(key) || { name: o.customer_name || '', phone: o.phone || '', email: o.customer_email || '', orders: 0, cents: 0 };
+          cur.orders += 1;
+          if (o.status !== 'cancelled') cur.cents += o.total_amount || 0;
+          booth.set(key, cur);
+        });
+        booth.forEach(c => rows.push([c.name, c.phone, c.email, 'Booth (no account)', String(c.orders), centsToDollars(c.cents)]));
+        // Prefix cells that a spreadsheet would read as a formula
+        const cell = v => { const s = String(v ?? ''); return `"${(/^[=+\-@]/.test(s) ? "'" + s : s).replace(/"/g, '""')}"`; };
+        const url = URL.createObjectURL(new Blob([rows.map(r => r.map(cell).join(',')).join('\n')], { type: 'text/csv' }));
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `bloomin-acres-customers-${isoDate(new Date())}.csv`;
+        a.click();
+        URL.revokeObjectURL(url);
+      } catch (err) {
+        showToast(err.message || 'Export failed', true);
+      } finally {
+        btn.disabled = false;
+      }
+    }
+    document.getElementById('customers-csv-btn')?.addEventListener('click', exportCustomersCsv);
+
     function renderCustomerList() {
       const tbody = document.getElementById('customers-tbody');
       const list = customersCache || [];
@@ -1156,9 +1197,11 @@
       document.getElementById('customer-list-view').classList.remove('hidden');
     }
 
+    let currentCustomerId = null;
     async function showCustomerDetail(id) {
       const c = (customersCache || []).find(x => x.id === id);
       if (!c) return;
+      currentCustomerId = id;
       document.getElementById('customer-list-view').classList.add('hidden');
       document.getElementById('customer-detail-view').classList.remove('hidden');
 
@@ -1319,10 +1362,12 @@
     function orderCardHtml(order) {
       const p = order.profiles;
       const name = p ? [p.first_name, p.last_name].filter(Boolean).join(' ') || order.customer_name || 'Unknown' : order.customer_name || 'Unknown';
-      const phone = p?.phone || '';
+      const phone = order.phone || p?.phone || '';
       const email = order.customer_email || '';
       const date = new Date(order.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit' });
       const flags = orderFlags(order);
+      const isBooth = order.source === 'booth';
+      const unpaid = order.paid === false;
       const items = (order.order_items || []).map(i =>
         `<div class="admin-order-item"><span>${escHtml(i.product_name || i.stripe_product_id)} &times; ${i.quantity}</span><span>${fmtUSD.format((i.unit_amount * i.quantity) / 100)}</span></div>`
       ).join('');
@@ -1330,6 +1375,8 @@
         <div class="admin-order-header">
           <div class="admin-order-customer">
             <strong>${escHtml(name)}</strong>
+            <span class="customer-badge ${isBooth ? 'badge-booth' : 'badge-website'}">${isBooth ? 'Booth' : 'Website'}</span>
+            ${unpaid ? '<span class="customer-badge badge-unpaid">Unpaid</span>' : ''}
             ${flags.member ? '<span class="customer-badge badge-club">Club</span>' : ''}
             ${flags.birthday ? '<span class="customer-badge badge-birthday" title="First order in their 30-day birthday window — add their free treat">🎂 Birthday treat</span>' : ''}
             ${phone ? `<span class="admin-order-phone">${escHtml(phone)}</span>` : email ? `<span class="admin-order-phone">${escHtml(email)}</span>` : ''}
@@ -1341,10 +1388,12 @@
         </div>
         <div class="admin-order-body">
           <div class="admin-order-items">${items}</div>
-          ${order.pickup_location_name ? `<div class="admin-order-pickup">Pickup: ${escHtml(order.pickup_location_name)}</div>` : ''}
+          ${order.pickup_location_name || order.pickup_date ? `<div class="admin-order-pickup">Pickup: ${escHtml([fmtPickupDate(order.pickup_date), order.pickup_location_name].filter(Boolean).join(' · '))}</div>` : ''}
+          ${order.notes ? `<div class="admin-order-notes">Note: ${escHtml(order.notes)}</div>` : ''}
           <div class="admin-order-footer">
             <div class="admin-order-total">${fmtUSD.format((order.total_amount || 0) / 100)}</div>
             <div class="admin-order-actions">
+              ${isBooth ? `<button type="button" class="btn-ghost-sm btn-toggle-paid" data-id="${escHtml(order.id)}" data-paid="${unpaid ? 'false' : 'true'}">${unpaid ? 'Mark paid' : 'Mark unpaid'}</button>` : ''}
               <select class="order-status-select status-${escHtml(order.status)}" data-id="${escHtml(order.id)}" aria-label="Order status">
                 ${['paid','fulfilled','picked_up','cancelled'].map(s =>
                   `<option value="${s}" ${s === order.status ? 'selected' : ''}>${s === 'picked_up' ? 'Picked Up' : s.charAt(0).toUpperCase() + s.slice(1)}</option>`
@@ -1366,6 +1415,20 @@
       container.querySelectorAll('.btn-print-single').forEach(btn => {
         btn.addEventListener('click', () => openPrintDialog([allOrders.find(o => o.id === btn.dataset.id)]));
       });
+      container.querySelectorAll('.btn-toggle-paid').forEach(btn => {
+        btn.addEventListener('click', () => setOrderPaid(btn.dataset.id, btn.dataset.paid !== 'true'));
+      });
+    }
+
+    async function setOrderPaid(orderId, paid) {
+      const { error } = await sb.from('orders').update({ paid }).eq('id', orderId);
+      if (error) { showToast('Couldn’t update payment: ' + error.message, true); return; }
+      const order = allOrders.find(o => o.id === orderId);
+      if (order) order.paid = paid;
+      showToast(paid ? 'Marked paid' : 'Marked unpaid');
+      applyOrderFilters();
+      const detail = document.getElementById('customer-detail-view');
+      if (detail && !detail.classList.contains('hidden') && currentCustomerId) showCustomerDetail(currentCustomerId);
     }
 
     function applyOrderFilters() {
@@ -1396,7 +1459,8 @@
           const stripeName = (o.customer_name || '').toLowerCase();
           const email = (o.customer_email || '').toLowerCase();
           const id = o.id.toLowerCase();
-          if (!name.includes(search) && !stripeName.includes(search) && !email.includes(search) && !id.includes(search)) return false;
+          const phone = (o.phone || p?.phone || '').toLowerCase();
+          if (!name.includes(search) && !stripeName.includes(search) && !email.includes(search) && !id.includes(search) && !phone.includes(search)) return false;
         }
         return true;
       });
@@ -1465,6 +1529,41 @@
         adminProductDetails = {};
         (data || []).forEach(row => { adminProductDetails[row.stripe_product_id] = row.variations || []; });
       }
+      // This week's menu, listed first in booth order / Sold Today pickers
+      const { data: menuRows } = await sb.from('menu_items').select('stripe_product_id');
+      adminMenuProductIds = new Set((menuRows || []).map(r => r.stripe_product_id));
+    }
+    let adminMenuProductIds = new Set();
+
+    // Local calendar date helpers (the iPad's own day, like the Muse app)
+    const isoDate = d => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+    function nextSaturdayIso(from = new Date()) {
+      const d = new Date(from); d.setHours(0, 0, 0, 0);
+      d.setDate(d.getDate() + ((6 - d.getDay() + 7) % 7));
+      return isoDate(d);
+    }
+    const fmtPickupDate = iso => iso
+      ? new Date(iso + 'T12:00:00').toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })
+      : '';
+    // Dollars typed by Christina → cents (null when it isn't a price)
+    function dollarsToCents(text) {
+      const t = String(text ?? '').replace(/[$,\s]/g, '');
+      if (t === '') return null;
+      const n = Number(t);
+      return Number.isFinite(n) && n >= 0 ? Math.round(n * 100) : null;
+    }
+    const centsToDollars = c => (c / 100).toFixed(2);
+    // Gluten-free lines are flagged on the Prep List (same rule as the Order Sheet)
+    const isGfName = name => /gluten\s*free|\bgf\b/i.test(name || '');
+
+    // <option> list: this week's menu first, then the rest of the catalog
+    function productOptionsHtml(includeCustom = true) {
+      const opt = p => `<option value="${escHtml(p.id)}" data-price="${p.unit_amount || 0}" data-name="${escHtml(p.name)}">${escHtml(p.name)} — ${p.price_formatted || '$?'}</option>`;
+      const onMenu = (adminProducts || []).filter(p => adminMenuProductIds.has(p.id));
+      const rest = (adminProducts || []).filter(p => !adminMenuProductIds.has(p.id));
+      return (onMenu.length ? `<optgroup label="This week’s menu">${onMenu.map(opt).join('')}</optgroup>` : '')
+        + (rest.length ? `<optgroup label="${onMenu.length ? 'Everything else' : 'Products'}">${rest.map(opt).join('')}</optgroup>` : '')
+        + (includeCustom ? '<optgroup label="Other"><option value="custom" data-price="" data-name="">Custom item (type a name and price)</option></optgroup>' : '');
     }
 
     document.getElementById('create-order-btn').addEventListener('click', async () => {
@@ -1482,34 +1581,54 @@
       modal.innerHTML = `
         <div class="modal-panel" style="max-width:600px;width:100%">
           <div class="modal-header">
-            <h3 class="modal-title">Create Order</h3>
+            <h3 class="modal-title">New Booth / Phone Order</h3>
             <button class="modal-close" aria-label="Close">&times;</button>
           </div>
           <div class="modal-body" style="display:flex;flex-direction:column;gap:1.25rem">
 
             <div>
-              <label class="admin-label">Customer</label>
-              <input type="text" class="admin-input" id="co-customer-search" placeholder="Search by name or phone…" autocomplete="off" />
+              <label class="admin-label" for="co-customer-search">Customer</label>
+              <input type="text" class="admin-input" id="co-customer-search" placeholder="Search existing customers by name or phone…" autocomplete="off" />
               <ul id="co-customer-results" style="list-style:none;margin:0;padding:0;border:1px solid #ddd;border-top:none;border-radius:0 0 6px 6px;display:none;max-height:160px;overflow-y:auto;background:#fff;"></ul>
-              <div style="display:flex;gap:.75rem;margin-top:.5rem">
-                <input type="text" class="admin-input" id="co-customer-name" placeholder="Full name *" style="flex:1" />
-                <input type="email" class="admin-input" id="co-customer-email" placeholder="Email (optional)" style="flex:1" />
+              <div class="co-grid">
+                <input type="text" class="admin-input" id="co-customer-name" placeholder="Full name *" aria-label="Customer name" />
+                <input type="tel" class="admin-input" id="co-customer-phone" placeholder="Phone" aria-label="Customer phone" />
+                <input type="email" class="admin-input" id="co-customer-email" placeholder="Email (optional)" aria-label="Customer email" />
               </div>
               <input type="hidden" id="co-customer-user-id" />
             </div>
 
+            <div class="co-grid co-grid-2">
+              <div>
+                <label class="admin-label" for="co-pickup-date">Pickup date</label>
+                <input type="date" class="admin-input" id="co-pickup-date" value="${nextSaturdayIso()}" />
+              </div>
+              <div>
+                <label class="admin-label" for="co-pickup-location">Pickup location</label>
+                <select class="admin-input" id="co-pickup-location">
+                  <option value="">— None / Not specified —</option>
+                  ${locationOptions}
+                </select>
+              </div>
+            </div>
+
             <div>
-              <label class="admin-label">Pickup Location</label>
-              <select class="admin-input" id="co-pickup-location">
-                <option value="">— None / Not specified —</option>
-                ${locationOptions}
-              </select>
+              <span class="admin-label">Payment</span>
+              <div class="co-paid-toggle" role="group" aria-label="Payment">
+                <button type="button" class="co-paid-btn" data-paid="false" aria-pressed="false">Unpaid</button>
+                <button type="button" class="co-paid-btn active" data-paid="true" aria-pressed="true">Paid</button>
+              </div>
             </div>
 
             <div>
               <label class="admin-label">Items</label>
               <div id="co-items-list" style="display:flex;flex-direction:column;gap:.5rem"></div>
               <button type="button" class="btn-ghost-sm" id="co-add-item-btn" style="margin-top:.5rem">+ Add Item</button>
+            </div>
+
+            <div>
+              <label class="admin-label" for="co-notes">Notes (optional)</label>
+              <input type="text" class="admin-input" id="co-notes" maxlength="500" placeholder="e.g. slice the bread, call when ready" />
             </div>
 
             <div style="text-align:right;font-weight:600;font-size:.95rem" id="co-total-display">Total: $0.00</div>
@@ -1523,24 +1642,38 @@
       `;
       document.body.appendChild(modal);
 
-      // Product dropdown HTML helper
-      const productOptions = (adminProducts || []).map(p =>
-        `<option value="${escHtml(p.id)}" data-price="${p.unit_amount || 0}" data-name="${escHtml(p.name)}">${escHtml(p.name)} — ${p.price_formatted || '$?'}</option>`
-      ).join('');
+      // Product dropdown: this week's menu first, then everything else, then Custom
+      const productOptions = productOptionsHtml(true);
+
+      // Payment toggle
+      let coPaid = true;
+      modal.querySelectorAll('.co-paid-btn').forEach(b => b.addEventListener('click', () => {
+        coPaid = b.dataset.paid === 'true';
+        modal.querySelectorAll('.co-paid-btn').forEach(x => {
+          const on = x === b;
+          x.classList.toggle('active', on);
+          x.setAttribute('aria-pressed', on ? 'true' : 'false');
+        });
+      }));
 
       function addItemRow(product = null) {
         const row = document.createElement('div');
         row.className = 'co-item-entry';
         row.style.cssText = 'display:flex;flex-direction:column;gap:.25rem';
         row.innerHTML = `
-          <div style="display:flex;align-items:center;gap:.5rem">
-            <select class="admin-input co-product-select" style="flex:2">
+          <div class="co-item-main">
+            <select class="admin-input co-product-select" aria-label="Product">
               <option value="">Select product…</option>
               ${productOptions}
             </select>
-            <input type="number" class="admin-input co-qty-input" value="1" min="1" style="width:64px;text-align:center" aria-label="Quantity" />
-            <span class="co-item-price" style="min-width:56px;text-align:right;font-size:.875rem;color:#666">$0.00</span>
+            <input type="number" class="admin-input co-qty-input" value="1" min="1" max="999" aria-label="Quantity" />
+            <label class="co-price-wrap"><span aria-hidden="true">$</span>
+              <input type="text" inputmode="decimal" class="admin-input co-price-input" placeholder="0.00" aria-label="Price each" />
+            </label>
             <button type="button" class="modal-close" aria-label="Remove item" style="font-size:1rem;line-height:1">×</button>
+          </div>
+          <div class="co-custom-row" style="display:none">
+            <input type="text" class="admin-input co-custom-name" maxlength="200" placeholder="Custom item name *" aria-label="Custom item name" style="width:100%" />
           </div>
           <div class="co-variation-row" style="display:none">
             <select class="admin-input co-variation-select" style="width:100%">
@@ -1551,16 +1684,28 @@
         if (product) {
           const sel = row.querySelector('.co-product-select');
           sel.value = product.id;
-          row.querySelector('.co-item-price').textContent = product.price_formatted || '$0.00';
+          row.querySelector('.co-price-input').value = centsToDollars(product.unit_amount || 0);
         }
 
         const productSel = row.querySelector('.co-product-select');
         const variationRow = row.querySelector('.co-variation-row');
         const variationSel = row.querySelector('.co-variation-select');
-        const priceDisplay = row.querySelector('.co-item-price');
+        const priceInput = row.querySelector('.co-price-input');
+        const customRow = row.querySelector('.co-custom-row');
+        // Price shown is the website price; Christina can type a different one for this line
+        const priceDisplay = { set textContent(text) { priceInput.value = String(text).replace(/[$,]/g, ''); } };
 
         function updateVariations() {
           const productId = productSel.value;
+          const isCustom = productId === 'custom';
+          customRow.style.display = isCustom ? '' : 'none';
+          if (isCustom) {
+            variationRow.style.display = 'none';
+            priceInput.value = '';
+            row.querySelector('.co-custom-name').focus();
+            recalcTotal();
+            return;
+          }
           const basePrice = parseInt(productSel.selectedOptions[0]?.dataset.price || '0', 10);
           const variations = (adminProductDetails || {})[productId] || [];
           const active = variations.filter(v => v.available !== false && (v.quantity === undefined || v.quantity > 0));
@@ -1592,6 +1737,7 @@
         });
 
         row.querySelector('.co-qty-input').addEventListener('input', recalcTotal);
+        priceInput.addEventListener('input', recalcTotal);
         row.querySelector('[aria-label="Remove item"]').addEventListener('click', () => {
           row.remove();
           recalcTotal();
@@ -1607,12 +1753,8 @@
       function recalcTotal() {
         let cents = 0;
         modal.querySelectorAll('#co-items-list > .co-item-entry').forEach(row => {
-          const sel = row.querySelector('.co-product-select');
-          const varSel = row.querySelector('.co-variation-select');
           const qty = parseInt(row.querySelector('.co-qty-input').value, 10) || 0;
-          const basePrice = parseInt(sel?.selectedOptions[0]?.dataset.price || '0', 10);
-          const delta = parseInt(varSel?.selectedOptions[0]?.dataset.delta || '0', 10);
-          cents += (basePrice + delta) * qty;
+          cents += (dollarsToCents(row.querySelector('.co-price-input').value) ?? 0) * qty;
         });
         modal.querySelector('#co-total-display').textContent = `Total: ${formatPrice(cents)}`;
         modal._totalCents = cents;
@@ -1634,11 +1776,14 @@
           if (!data || !data.length) { results.style.display = 'none'; return; }
           results.innerHTML = data.map(p => {
             const name = `${p.first_name || ''} ${p.last_name || ''}`.trim() || '(no name)';
-            return `<li data-uid="${escHtml(p.user_id)}" data-name="${escHtml(name)}" style="padding:.5rem .75rem;cursor:pointer;border-bottom:1px solid #eee">${escHtml(name)}${p.phone ? ' — ' + escHtml(p.phone) : ''}</li>`;
+            return `<li data-uid="${escHtml(p.user_id)}" data-name="${escHtml(name)}" data-phone="${escHtml(p.phone || '')}" style="padding:.5rem .75rem;cursor:pointer;border-bottom:1px solid #eee">${escHtml(name)}${p.phone ? ' — ' + escHtml(p.phone) : ''}</li>`;
           }).join('');
           results.style.display = 'block';
           results.querySelectorAll('li').forEach(li => {
             li.addEventListener('click', () => {
+              if (li.dataset.phone) modal.querySelector('#co-customer-phone').value = li.dataset.phone;
+              const known = (customersCache || []).find(c => c.id === li.dataset.uid);
+              if (known?.email && !modal.querySelector('#co-customer-email').value) modal.querySelector('#co-customer-email').value = known.email;
               modal.querySelector('#co-customer-name').value = li.dataset.name;
               modal.querySelector('#co-customer-user-id').value = li.dataset.uid;
               modal.querySelector('#co-customer-search').value = li.dataset.name;
@@ -1668,29 +1813,37 @@
         }
 
         const items = [];
-        let valid = true;
+        let problem = '';
         modal.querySelectorAll('#co-items-list > .co-item-entry').forEach(row => {
+          if (problem) return;
           const sel = row.querySelector('.co-product-select');
           const varSel = row.querySelector('.co-variation-select');
           const qty = parseInt(row.querySelector('.co-qty-input').value, 10) || 0;
           const opt = sel?.selectedOptions[0];
           const varOpt = varSel?.selectedOptions[0];
-          if (!sel?.value) { valid = false; return; }
-          const basePrice = parseInt(opt?.dataset.price || '0', 10);
-          const variationVisible = row.querySelector('.co-variation-row')?.style.display !== 'none';
-          const variationName = variationVisible ? (varOpt?.value || '') : '';
-          const variationDelta = variationVisible ? parseInt(varOpt?.dataset.delta || '0', 10) : 0;
-          const productName = (opt?.dataset.name || sel.value) + (variationName ? ` — ${variationName}` : '');
+          if (!sel?.value) { problem = 'Please select a product for every item row'; return; }
+          if (qty < 1) { problem = 'Every item needs a quantity'; return; }
+          const unitAmount = dollarsToCents(row.querySelector('.co-price-input').value);
+          if (unitAmount == null) { problem = 'Every item needs a price — type it on the line'; return; }
+          let productName;
+          if (sel.value === 'custom') {
+            productName = row.querySelector('.co-custom-name').value.trim();
+            if (!productName) { problem = 'Type a name for the custom item'; return; }
+          } else {
+            const variationVisible = row.querySelector('.co-variation-row')?.style.display !== 'none';
+            const variationName = variationVisible ? (varOpt?.value || '') : '';
+            productName = (opt?.dataset.name || sel.value) + (variationName ? ` — ${variationName}` : '');
+          }
           items.push({
             stripe_product_id: sel.value,
             product_name: productName,
             quantity: qty,
-            unit_amount: basePrice + variationDelta,
+            unit_amount: unitAmount,
           });
         });
 
-        if (!valid || !items.length) {
-          showToast('Please select a product for every item row', true);
+        if (problem || !items.length) {
+          showToast(problem || 'Add at least one item', true);
           return;
         }
 
@@ -1712,7 +1865,10 @@
               customer_user_id: customerUserId,
               items,
               pickup_location_name: pickupLocationName,
-              total_amount: modal._totalCents || null,
+              pickup_date: modal.querySelector('#co-pickup-date').value || null,
+              phone: modal.querySelector('#co-customer-phone').value.trim() || null,
+              notes: modal.querySelector('#co-notes').value.trim() || null,
+              paid: coPaid,
             }),
           });
           if (res.ok) {
@@ -1733,6 +1889,208 @@
         }
       });
     }
+
+    // ── Sold Today (walk-up booth sales, from Christina's Order Sheet) ──────────
+    // One tap = one sale of one item at the website price (or the "price for
+    // next taps" override). Products with flavors/sizes ask which one first.
+    // Rows live in booth_sales (admin-only RLS); today = this iPad's date.
+    let soldRows = [];          // last 60 days, oldest first
+    let soldLoaded = false;
+    let soldUserId = null;
+
+    document.querySelector('[data-tab="sold"]')?.addEventListener('click', async () => {
+      if (soldLoaded) return;
+      soldLoaded = true;
+      await loadAdminOrderAssets();
+      const { data: { session } } = await sb.auth.getSession();
+      soldUserId = session?.user?.id || null;
+      await refreshSold();
+      renderSoldTiles();
+    });
+
+    async function refreshSold() {
+      const since = new Date(); since.setDate(since.getDate() - 60);
+      const { data, error } = await sb.from('booth_sales')
+        .select('id, sale_date, stripe_product_id, product_name, quantity, unit_amount, created_at')
+        .gte('sale_date', isoDate(since))
+        .order('created_at', { ascending: true });
+      if (error) { showToast('Couldn’t load sales: ' + error.message, true); return; }
+      soldRows = data || [];
+      renderSoldSummary();
+    }
+
+    function soldProducts() {
+      const all = document.getElementById('sold-show-all').checked;
+      const list = (adminProducts || []).filter(p => all || adminMenuProductIds.has(p.id));
+      return list.sort((a, b) => a.name.localeCompare(b.name));
+    }
+
+    function renderSoldTiles() {
+      const el = document.getElementById('sold-tiles');
+      const today = isoDate(new Date());
+      const countsById = {};
+      soldRows.filter(r => r.sale_date === today).forEach(r => {
+        countsById[r.stripe_product_id || 'custom'] = (countsById[r.stripe_product_id || 'custom'] || 0) + r.quantity;
+      });
+      const products = soldProducts();
+      const tile = (id, name, sub, extraClass = '') => `
+        <button type="button" class="sold-tile${extraClass}" data-id="${escHtml(id)}" aria-label="Sold one ${escHtml(name)}">
+          ${countsById[id] ? `<span class="sold-tile-count">×${countsById[id]} today</span>` : ''}
+          <span class="sold-tile-name">${escHtml(name)}${isGfName(name) ? ' <span class="prep-gf">GF</span>' : ''}</span>
+          <span class="sold-tile-sub">${escHtml(sub)}</span>
+        </button>`;
+      el.innerHTML = (products.length ? '' : `<p class="empty-state">${adminMenuProductIds.size ? 'No products match.' : 'This week’s menu is empty — tick “Show all products”.'}</p>`)
+        + products.map(p => {
+          const variations = activeVariations(p.id);
+          return tile(p.id, p.name, variations.length ? `${variations.length} options · from ${p.price_formatted || ''}` : (p.price_formatted || ''));
+        }).join('')
+        + tile('custom', 'Custom item', 'type a name and price', ' sold-tile-custom');
+      el.querySelectorAll('.sold-tile').forEach(btn => btn.addEventListener('click', () => onSoldTap(btn.dataset.id)));
+    }
+
+    function activeVariations(productId) {
+      return ((adminProductDetails || {})[productId] || [])
+        .filter(v => v.available !== false && (v.quantity === undefined || v.quantity === null || v.quantity > 0));
+    }
+
+    function soldOverrideCents() {
+      return dollarsToCents(document.getElementById('sold-price-override').value);
+    }
+
+    function onSoldTap(id) {
+      const sheet = document.getElementById('sold-sheet');
+      if (id === 'custom') {
+        sheet.innerHTML = `
+          <div class="sold-sheet-title">Custom item</div>
+          <div class="co-grid co-grid-2">
+            <input type="text" class="admin-input" id="sold-custom-name" maxlength="200" placeholder="Item name *" aria-label="Custom item name" />
+            <span class="co-price-wrap"><span aria-hidden="true">$</span><input type="text" inputmode="decimal" class="admin-input" id="sold-custom-price" placeholder="Price *" aria-label="Custom item price" value="${soldOverrideCents() != null ? centsToDollars(soldOverrideCents()) : ''}" /></span>
+          </div>
+          <div class="sold-sheet-actions">
+            <button type="button" class="btn-ghost-sm" id="sold-sheet-cancel">Cancel</button>
+            <button type="button" class="btn-secondary" id="sold-custom-add">Add sale</button>
+          </div>`;
+        sheet.classList.remove('hidden');
+        sheet.querySelector('#sold-custom-name').focus();
+        sheet.querySelector('#sold-sheet-cancel').addEventListener('click', closeSoldSheet);
+        sheet.querySelector('#sold-custom-add').addEventListener('click', () => {
+          const name = sheet.querySelector('#sold-custom-name').value.trim();
+          const cents = dollarsToCents(sheet.querySelector('#sold-custom-price').value);
+          if (!name) { showToast('Type the item name', true); return; }
+          if (cents == null) { showToast('Type the price', true); return; }
+          closeSoldSheet();
+          recordSale(null, name, cents);
+        });
+        return;
+      }
+      const product = (adminProducts || []).find(p => p.id === id);
+      if (!product) return;
+      const variations = activeVariations(id);
+      if (!variations.length) {
+        closeSoldSheet();
+        recordSale(id, product.name, soldOverrideCents() ?? (product.unit_amount || 0));
+        return;
+      }
+      sheet.innerHTML = `
+        <div class="sold-sheet-title">${escHtml(product.name)} — which one?</div>
+        <div class="sold-variations">${variations.map((v, i) => {
+          const cents = soldOverrideCents() ?? ((product.unit_amount || 0) + (parseInt(v.price_delta || 0, 10) || 0));
+          return `<button type="button" class="sold-variation" data-i="${i}">${escHtml(v.name)}<span>${formatPrice(cents)}</span></button>`;
+        }).join('')}</div>
+        <div class="sold-sheet-actions"><button type="button" class="btn-ghost-sm" id="sold-sheet-cancel">Cancel</button></div>`;
+      sheet.classList.remove('hidden');
+      sheet.querySelector('#sold-sheet-cancel').addEventListener('click', closeSoldSheet);
+      sheet.querySelectorAll('.sold-variation').forEach(btn => btn.addEventListener('click', () => {
+        const v = variations[parseInt(btn.dataset.i, 10)];
+        const cents = soldOverrideCents() ?? ((product.unit_amount || 0) + (parseInt(v.price_delta || 0, 10) || 0));
+        closeSoldSheet();
+        recordSale(id, `${product.name} — ${v.name}`, cents);
+      }));
+      sheet.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+
+    function closeSoldSheet() {
+      const sheet = document.getElementById('sold-sheet');
+      sheet.classList.add('hidden');
+      sheet.replaceChildren();
+    }
+
+    async function recordSale(productId, productName, unitAmount) {
+      const { data, error } = await sb.from('booth_sales').insert({
+        sale_date: isoDate(new Date()),
+        stripe_product_id: productId,
+        product_name: productName,
+        quantity: 1,
+        unit_amount: unitAmount,
+        created_by: soldUserId,
+      }).select('id, sale_date, stripe_product_id, product_name, quantity, unit_amount, created_at').single();
+      if (error) { showToast('Sale not saved: ' + error.message, true); return; }
+      soldRows.push(data);
+      renderSoldSummary();
+      renderSoldTiles();
+      showToast(`Sold: ${productName} · ${formatPrice(unitAmount)}`);
+    }
+
+    async function undoLastSale() {
+      const today = isoDate(new Date());
+      const last = [...soldRows].reverse().find(r => r.sale_date === today);
+      if (!last) return;
+      const btn = document.getElementById('sold-undo');
+      btn.disabled = true;
+      const { error } = await sb.from('booth_sales').delete().eq('id', last.id);
+      if (error) { showToast('Couldn’t undo: ' + error.message, true); renderSoldSummary(); return; }
+      soldRows = soldRows.filter(r => r.id !== last.id);
+      renderSoldSummary();
+      renderSoldTiles();
+      showToast(`Removed: ${last.product_name}`);
+    }
+
+    function groupSales(rows) {
+      const map = new Map();
+      rows.forEach(r => {
+        const cur = map.get(r.product_name) || { name: r.product_name, qty: 0, cents: 0 };
+        cur.qty += r.quantity;
+        cur.cents += r.quantity * r.unit_amount;
+        map.set(r.product_name, cur);
+      });
+      return [...map.values()].sort((a, b) => b.qty - a.qty || a.name.localeCompare(b.name));
+    }
+
+    function renderSoldSummary() {
+      const today = isoDate(new Date());
+      const todays = soldRows.filter(r => r.sale_date === today);
+      const totalCents = todays.reduce((s, r) => s + r.quantity * r.unit_amount, 0);
+      const items = todays.reduce((s, r) => s + r.quantity, 0);
+      document.getElementById('sold-hero-label').textContent = `Sold today · ${fmtPickupDate(today)}`;
+      document.getElementById('sold-total').textContent = formatPrice(totalCents);
+      document.getElementById('sold-count').textContent = `${items} item${items !== 1 ? 's' : ''} sold`;
+      document.getElementById('sold-undo').disabled = !todays.length;
+
+      const counts = groupSales(todays);
+      document.getElementById('sold-counts').innerHTML = counts.length
+        ? `<table class="analytics-table"><tbody>${counts.map(c => `<tr><td>${escHtml(c.name)}${isGfName(c.name) ? ' <span class="prep-gf">GF</span>' : ''}</td><td class="num-col">× ${c.qty}</td><td class="num-col">${formatPrice(c.cents)}</td></tr>`).join('')}</tbody></table>`
+          + (todays.length ? `<p class="sold-last">Last tap: ${escHtml(todays[todays.length - 1].product_name)} · ${formatPrice(todays[todays.length - 1].unit_amount)}</p>` : '')
+        : '<p class="empty-state">No walk-up sales yet today — tap a product above for each sale.</p>';
+
+      const byDay = new Map();
+      soldRows.filter(r => r.sale_date !== today).forEach(r => {
+        const arr = byDay.get(r.sale_date) || [];
+        arr.push(r);
+        byDay.set(r.sale_date, arr);
+      });
+      const days = [...byDay.entries()].sort((a, b) => b[0].localeCompare(a[0]));
+      document.getElementById('sold-past').innerHTML = days.length
+        ? days.map(([date, rows]) => {
+          const cents = rows.reduce((s, r) => s + r.quantity * r.unit_amount, 0);
+          return `<div class="sold-past-day"><div class="sold-past-head"><strong>${escHtml(fmtPickupDate(date))}</strong><span>${formatPrice(cents)}</span></div>
+            <div class="sold-past-items">${groupSales(rows).map(c => `${escHtml(c.name)} ×${c.qty}`).join(' · ')}</div></div>`;
+        }).join('')
+        : '<p class="empty-state">No earlier days yet (last 60 days are shown).</p>';
+    }
+
+    document.getElementById('sold-undo').addEventListener('click', undoLastSale);
+    document.getElementById('sold-show-all').addEventListener('change', renderSoldTiles);
+    document.getElementById('sold-price-override').addEventListener('change', renderSoldTiles);
 
     // ── Print Dialog ───────────────────────────────────────────────────────────
     let printOrders = [];
@@ -1816,11 +2174,15 @@
       const tickets = orders.map(order => {
         const p = order.profiles;
         const name = p ? [p.first_name, p.last_name].filter(Boolean).join(' ') || order.customer_name || 'Customer' : order.customer_name || 'Customer';
-        const phone = p?.phone || '';
-        const date = new Date(order.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+        const phone = order.phone || p?.phone || '';
+        const date = order.pickup_date
+          ? `Pickup ${fmtPickupDate(order.pickup_date)}`
+          : new Date(order.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
         const items = (order.order_items || []);
         const total = (order.total_amount || 0) / 100;
-        const statusLabel = order.status === 'picked_up' ? 'Picked Up' : (order.status || 'paid').charAt(0).toUpperCase() + (order.status || 'paid').slice(1);
+        // Booth orders can be unpaid — the ticket must say so (Order Sheet rule)
+        const statusLabel = order.paid === false ? 'UNPAID'
+          : order.status === 'picked_up' ? 'Picked Up' : (order.status || 'paid').charAt(0).toUpperCase() + (order.status || 'paid').slice(1);
 
         const ticket = document.createElement('div');
         ticket.className = 'print-ticket';
@@ -1898,6 +2260,13 @@
             ticket.appendChild(totalRow);
           }
         }
+        if (order.notes) {
+          ticket.appendChild(createDivider());
+          const note = document.createElement('div');
+          note.className = 'ticket-notes';
+          note.textContent = `Note: ${order.notes}`;
+          ticket.appendChild(note);
+        }
         return ticket;
       });
 
@@ -1912,69 +2281,90 @@
     }
 
     // ── Prep List ─────────────────────────────────────────────────────────────
-    document.getElementById('prep-list-btn').addEventListener('click', () => {
-      const orders = filteredOrders.filter(o => o.status !== 'cancelled');
-      if (!orders.length) { showToast('No orders to summarize', true); return; }
-
-      // Aggregate quantities by product + variation
-      const agg = {};
+    // Production sheet (Order Sheet "Prep List"): orders still to fill, grouped
+    // by pickup date + location, with per-product bake totals and GF flagged.
+    // Website orders don't carry a pickup date \u2014 they're delivered/picked up the
+    // Saturday after they're placed (Christina: deliveries are Saturday afternoon).
+    let prepGroupsCache = [];
+    function orderPickupDate(o) {
+      return o.pickup_date || nextSaturdayIso(new Date(o.created_at));
+    }
+    function buildPrepGroups(orders) {
+      const groups = new Map();
       orders.forEach(o => {
+        const date = orderPickupDate(o);
+        const location = o.pickup_location_name || 'No pickup location';
+        const key = `${date}|${location}`;
+        const g = groups.get(key) || { date, location, orders: 0, derived: false, items: new Map() };
+        g.orders += 1;
+        if (!o.pickup_date) g.derived = true;
         (o.order_items || []).forEach(item => {
           const name = item.product_name || item.stripe_product_id;
-          if (!agg[name]) agg[name] = { total: 0 };
-          agg[name].total += item.quantity;
+          const cur = g.items.get(name) || { name, qty: 0, gf: isGfName(name) };
+          cur.qty += item.quantity;
+          g.items.set(name, cur);
         });
+        groups.set(key, g);
       });
+      return [...groups.values()]
+        .map(g => ({ ...g, items: [...g.items.values()].sort((a, b) => a.name.localeCompare(b.name)) }))
+        .sort((a, b) => a.date.localeCompare(b.date) || a.location.localeCompare(b.location));
+    }
 
-      // Build table using DOM methods
+    document.getElementById('prep-list-btn').addEventListener('click', () => {
+      const orders = filteredOrders.filter(o => o.status !== 'cancelled' && o.status !== 'picked_up');
+      if (!orders.length) { showToast('Nothing to prep \u2014 no open orders in this view', true); return; }
+      prepGroupsCache = buildPrepGroups(orders);
+
       const body = document.getElementById('prep-list-body');
-      const table = document.createElement('table');
-      const thead = document.createElement('thead');
-      const headRow = document.createElement('tr');
-      const thProduct = document.createElement('th');
-      thProduct.textContent = 'Product';
-      const thQty = document.createElement('th');
-      thQty.textContent = 'Quantity';
-      headRow.appendChild(thProduct);
-      headRow.appendChild(thQty);
-      thead.appendChild(headRow);
-      table.appendChild(thead);
-
-      const tbody = document.createElement('tbody');
-      const sorted = Object.entries(agg).sort((a, b) => a[0].localeCompare(b[0]));
-      let grandTotal = 0;
-
-      sorted.forEach(([name, data]) => {
-        const row = document.createElement('tr');
-        const tdName = document.createElement('td');
-        tdName.className = 'prep-product-name';
-        tdName.textContent = name;
-        const tdQty = document.createElement('td');
-        tdQty.textContent = data.total;
-        row.appendChild(tdName);
-        row.appendChild(tdQty);
-        tbody.appendChild(row);
-        grandTotal += data.total;
+      const frag = document.createDocumentFragment();
+      prepGroupsCache.forEach(g => {
+        const section = document.createElement('section');
+        section.className = 'prep-group';
+        const h = document.createElement('h4');
+        h.className = 'prep-group-title';
+        h.textContent = `${fmtPickupDate(g.date)} \u00b7 ${g.location}`;
+        const sub = document.createElement('div');
+        sub.className = 'prep-group-sub';
+        sub.textContent = `${g.orders} open order${g.orders !== 1 ? 's' : ''}${g.derived ? ' \u00b7 website orders shown on the Saturday after they were placed' : ''}`;
+        const table = document.createElement('table');
+        const tbody = document.createElement('tbody');
+        let groupTotal = 0;
+        g.items.forEach(item => {
+          const row = document.createElement('tr');
+          const tdName = document.createElement('td');
+          tdName.className = 'prep-product-name';
+          tdName.textContent = item.name;
+          if (item.gf) {
+            const gf = document.createElement('span');
+            gf.className = 'prep-gf';
+            gf.textContent = 'GF';
+            tdName.appendChild(gf);
+          }
+          const tdQty = document.createElement('td');
+          tdQty.textContent = `\u00d7 ${item.qty}`;
+          row.append(tdName, tdQty);
+          tbody.appendChild(row);
+          groupTotal += item.qty;
+        });
+        const totalRow = document.createElement('tr');
+        totalRow.className = 'prep-total-row';
+        const tdTotalLabel = document.createElement('td');
+        tdTotalLabel.textContent = 'Total items';
+        const tdTotalVal = document.createElement('td');
+        tdTotalVal.textContent = groupTotal;
+        totalRow.append(tdTotalLabel, tdTotalVal);
+        tbody.appendChild(totalRow);
+        table.appendChild(tbody);
+        section.append(h, sub, table);
+        frag.appendChild(section);
       });
+      body.replaceChildren(frag);
 
-      // Total row
-      const totalRow = document.createElement('tr');
-      totalRow.className = 'prep-total-row';
-      const tdTotalLabel = document.createElement('td');
-      tdTotalLabel.textContent = 'Total Items';
-      const tdTotalVal = document.createElement('td');
-      tdTotalVal.textContent = grandTotal;
-      totalRow.appendChild(tdTotalLabel);
-      totalRow.appendChild(tdTotalVal);
-      tbody.appendChild(totalRow);
-      table.appendChild(tbody);
-      body.replaceChildren(table);
-
-      // Date label
       const dateFilter = document.getElementById('order-date-filter');
       const label = dateFilter.options[dateFilter.selectedIndex].text;
       document.getElementById('prep-date-label').textContent =
-        `${label} \u2014 ${orders.length} order${orders.length !== 1 ? 's' : ''}`;
+        `${label} \u2014 ${orders.length} open order${orders.length !== 1 ? 's' : ''} (picked-up and cancelled orders left out)`;
 
       document.getElementById('prep-modal').classList.remove('hidden');
     });
@@ -2003,9 +2393,8 @@
       dateLine.textContent = dateLabel;
       wrapper.appendChild(dateLine);
 
-      // Clone the table from the modal
-      const srcTable = document.querySelector('#prep-list-body table');
-      if (srcTable) wrapper.appendChild(srcTable.cloneNode(true));
+      // Clone every pickup group from the modal
+      document.querySelectorAll('#prep-list-body .prep-group').forEach(g => wrapper.appendChild(g.cloneNode(true)));
 
       area.replaceChildren(wrapper);
       setTimeout(() => window.print(), 100);
@@ -2013,14 +2402,11 @@
 
     // Download prep list as CSV
     document.getElementById('prep-download-btn').addEventListener('click', () => {
-      const rows = [['Product', 'Quantity']];
-      document.querySelectorAll('#prep-list-body tbody tr').forEach(tr => {
-        const cells = tr.querySelectorAll('td');
-        if (cells.length >= 2) {
-          rows.push([cells[0].textContent, cells[1].textContent]);
-        }
-      });
-      const csv = rows.map(r => r.map(c => `"${c.replace(/"/g, '""')}"`).join(',')).join('\n');
+      const rows = [['Pickup date', 'Location', 'Product', 'Quantity', 'Gluten free']];
+      prepGroupsCache.forEach(g => g.items.forEach(item => {
+        rows.push([g.date, g.location, item.name, String(item.qty), item.gf ? 'GF' : '']);
+      }));
+      const csv = rows.map(r => r.map(c => `"${String(c).replace(/"/g, '""')}"`).join(',')).join('\n');
       const blob = new Blob([csv], { type: 'text/csv' });
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
@@ -2075,14 +2461,16 @@
     }
 
     async function loadAnalytics() {
-      const [ordersRes, membersRes, refUsesRes] = await Promise.all([
+      const [ordersRes, membersRes, refUsesRes, salesRes] = await Promise.all([
         sb.from('orders').select('*, order_items(*)').order('created_at', { ascending: false }),
         sb.from('club_members').select('*'),
         sb.from('referral_uses').select('*'),
+        sb.from('booth_sales').select('sale_date, quantity, unit_amount'),
       ]);
       analyticsData.orders = ordersRes.data || [];
       analyticsData.members = membersRes.data || [];
       analyticsData.referralUses = refUsesRes.data || [];
+      analyticsData.boothSales = salesRes.error ? [] : (salesRes.data || []);
 
       // Fetch profiles for analytics customer insights
       const userIds = [...new Set(analyticsData.orders.map(o => o.user_id))];
@@ -2116,11 +2504,33 @@
       document.getElementById('kpi-aov').textContent = fmtUSD.format(aov / 100);
       document.getElementById('kpi-members').textContent = activeMembers;
 
+      renderSalesChannels(periodOrders, start, end);
       renderRevenueChart(periodOrders, start, end);
       renderTopProducts(periodOrders, revenue);
       renderStatusBreakdown(allPeriodOrders);
       renderCustomerInsights(periodOrders, start, end);
       renderClubStats(start, end);
+    }
+
+    // Website vs booth (Order Sheet analytics): booth = pre-orders entered in the
+    // admin plus Sold Today walk-up sales. Order totals above stay orders-only.
+    function renderSalesChannels(orders, start, end) {
+      const el = document.getElementById('sales-channels');
+      if (!el) return;
+      const startIso = isoDate(start), endIso = isoDate(end);
+      const sum = list => list.reduce((s, o) => s + (o.total_amount || 0), 0);
+      const website = orders.filter(o => o.source !== 'booth');
+      const booth = orders.filter(o => o.source === 'booth');
+      const walkUp = (analyticsData.boothSales || []).filter(s => s.sale_date >= startIso && s.sale_date <= endIso);
+      const walkUpCents = walkUp.reduce((s, r) => s + r.quantity * r.unit_amount, 0);
+      const walkUpItems = walkUp.reduce((s, r) => s + r.quantity, 0);
+      const unpaid = booth.filter(o => o.paid === false && o.status !== 'picked_up');
+      const card = (label, value, sub) => `<div class="insight-card"><div class="insight-value">${value}</div><div class="insight-label">${label}</div>${sub ? `<div class="insight-sub">${sub}</div>` : ''}</div>`;
+      el.innerHTML =
+        card('Website orders', fmtUSD.format(sum(website) / 100), `${website.length} order${website.length !== 1 ? 's' : ''}`)
+        + card('Booth pre-orders', fmtUSD.format(sum(booth) / 100), `${booth.length} order${booth.length !== 1 ? 's' : ''}`)
+        + card('Walk-up sales', fmtUSD.format(walkUpCents / 100), `${walkUpItems} item${walkUpItems !== 1 ? 's' : ''} · Sold Today`)
+        + card('All sales', fmtUSD.format((sum(orders) + walkUpCents) / 100), unpaid.length ? `${unpaid.length} booth order${unpaid.length !== 1 ? 's' : ''} unpaid (${fmtUSD.format(sum(unpaid) / 100)})` : 'orders + walk-up');
     }
 
     function renderRevenueChart(orders, start, end) {
