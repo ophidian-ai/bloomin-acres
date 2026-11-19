@@ -1147,9 +1147,7 @@
           booth.set(key, cur);
         });
         booth.forEach(c => rows.push([c.name, c.phone, c.email, 'Booth (no account)', String(c.orders), centsToDollars(c.cents)]));
-        // Prefix cells that a spreadsheet would read as a formula
-        const cell = v => { const s = String(v ?? ''); return `"${(/^[=+\-@]/.test(s) ? "'" + s : s).replace(/"/g, '""')}"`; };
-        const url = URL.createObjectURL(new Blob([rows.map(r => r.map(cell).join(',')).join('\n')], { type: 'text/csv' }));
+        const url = URL.createObjectURL(new Blob([rows.map(r => r.map(csvCell).join(',')).join('\n')], { type: 'text/csv' }));
         const a = document.createElement('a');
         a.href = url;
         a.download = `bloomin-acres-customers-${isoDate(new Date())}.csv`;
@@ -1553,6 +1551,13 @@
       return Number.isFinite(n) && n >= 0 ? Math.round(n * 100) : null;
     }
     const centsToDollars = c => (c / 100).toFixed(2);
+    // One CSV cell. Names come from customers (signups, checkouts), so a value a
+    // spreadsheet would run as a formula — even after leading spaces, tabs or
+    // line breaks — is prefixed with ' to keep it plain text.
+    const csvCell = v => {
+      const s = String(v ?? '');
+      return `"${(/^[\s]*[=+\-@\t\r]/.test(s) ? "'" + s : s).replace(/"/g, '""')}"`;
+    };
     // Gluten-free lines are flagged on the Prep List (same rule as the Order Sheet)
     const isGfName = name => /gluten\s*free|\bgf\b/i.test(name || '');
 
@@ -2406,7 +2411,7 @@
       prepGroupsCache.forEach(g => g.items.forEach(item => {
         rows.push([g.date, g.location, item.name, String(item.qty), item.gf ? 'GF' : '']);
       }));
-      const csv = rows.map(r => r.map(c => `"${String(c).replace(/"/g, '""')}"`).join(',')).join('\n');
+      const csv = rows.map(r => r.map(csvCell).join(',')).join('\n');
       const blob = new Blob([csv], { type: 'text/csv' });
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
