@@ -30,30 +30,62 @@ export default async function handler(req, res) {
   const { data: adminRow } = await sb.from('admins').select('user_id').eq('user_id', user.id).maybeSingle();
   if (!adminRow) return res.status(403).json({ error: 'Not an admin' });
 
-  // Validate request body
-  const { customer_name, customer_email, customer_user_id, items, pickup_location_name, total_amount } = req.body || {};
+  // Validate request body. Orders entered here are booth / phone pre-orders
+  // (the Order Sheet's Pre-Order tab): they can be unpaid, carry a pickup date,
+  // phone and notes, and may include custom items that aren't in Stripe.
+  const { customer_name, customer_email, customer_user_id, items, pickup_location_name,
+          phone, notes, pickup_date } = req.body || {};
+  const paid = req.body?.paid !== false; // default: paid
 
   if (!items || !Array.isArray(items) || items.length === 0) {
     return res.status(400).json({ error: 'At least one item is required' });
   }
+  if (items.length > 100) return res.status(400).json({ error: 'Too many items' });
   if (!customer_name || !customer_name.trim()) {
     return res.status(400).json({ error: 'Customer name is required' });
   }
-  for (const item of items) {
-    if (!item.stripe_product_id || !item.quantity || item.quantity < 1) {
-      return res.status(400).json({ error: 'Each item must have a product and quantity' });
-    }
+  if (pickup_date && !/^\d{4}-\d{2}-\d{2}$/.test(pickup_date)) {
+    return res.status(400).json({ error: 'Pickup date must be a date' });
   }
+  const cleanItems = [];
+  for (const item of items) {
+    const quantity = Number(item.quantity);
+    const unitAmount = Number(item.unit_amount);
+    const isCustom = !item.stripe_product_id || item.stripe_product_id === 'custom';
+    if (!Number.isInteger(quantity) || quantity < 1 || quantity > 999) {
+      return res.status(400).json({ error: 'Each item needs a quantity between 1 and 999' });
+    }
+    if (!Number.isInteger(unitAmount) || unitAmount < 0 || unitAmount > 1000000) {
+      return res.status(400).json({ error: 'Each item needs a price' });
+    }
+    if (isCustom && !String(item.product_name || '').trim()) {
+      return res.status(400).json({ error: 'Custom items need a name' });
+    }
+    cleanItems.push({
+      stripe_product_id: isCustom ? 'custom' : String(item.stripe_product_id),
+      product_name:      String(item.product_name || '').trim().slice(0, 200) || null,
+      quantity,
+      unit_amount:       unitAmount,
+    });
+  }
+  // The total is always the sum of the lines — never a number sent by the page
+  const totalAmount = cleanItems.reduce((sum, i) => sum + i.quantity * i.unit_amount, 0);
+  const trimOrNull = (v, max) => (typeof v === 'string' && v.trim() ? v.trim().slice(0, max) : null);
 
   try {
     const { data: order, error: orderErr } = await sb
       .from('orders')
       .insert({
         user_id:              customer_user_id || null,
-        status:               'paid',
-        total_amount:         total_amount || null,
-        customer_name:        customer_name.trim(),
-        customer_email:       customer_email?.trim() || null,
+        status:               'paid',            // "open / not picked up" — payment is the `paid` flag
+        paid,
+        source:               'booth',
+        total_amount:         totalAmount,
+        customer_name:        customer_name.trim().slice(0, 200),
+        customer_email:       trimOrNull(customer_email, 200),
+        phone:                trimOrNull(phone, 40),
+        notes:                trimOrNull(notes, 500),
+        pickup_date:          pickup_date || null,
         pickup_location_name: pickup_location_name || null,
         admin_created:        true,
       })
@@ -65,13 +97,7 @@ export default async function handler(req, res) {
       return res.status(500).json({ error: orderErr.message });
     }
 
-    const orderItemRows = items.map(item => ({
-      order_id:          order.id,
-      stripe_product_id: item.stripe_product_id,
-      product_name:      item.product_name || null,
-      quantity:          item.quantity,
-      unit_amount:       item.unit_amount || null,
-    }));
+    const orderItemRows = cleanItems.map(item => ({ order_id: order.id, ...item }));
 
     const { error: itemsErr } = await sb.from('order_items').insert(orderItemRows);
     if (itemsErr) {

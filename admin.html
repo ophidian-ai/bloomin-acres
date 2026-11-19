@@ -64,6 +64,10 @@
           <span class="tab-icon" aria-hidden="true">🧾</span>
           <span class="sidebar-label">Orders</span>
         </button>
+        <button type="button" class="tab-btn" role="tab" aria-selected="false" data-tab="sold">
+          <span class="tab-icon" aria-hidden="true">🛒</span>
+          <span class="sidebar-label">Sold Today</span>
+        </button>
         <button type="button" class="tab-btn" role="tab" aria-selected="false" data-tab="customers">
           <span class="tab-icon" aria-hidden="true">👥</span>
           <span class="sidebar-label">Customers</span>
@@ -505,6 +509,7 @@
       <div class="catalogue-header">
         <h2 class="section-heading">Customers</h2>
         <input type="search" class="search-input" id="customer-search" placeholder="Search by name or email…" aria-label="Search customers" />
+        <button type="button" class="btn-secondary" id="customers-csv-btn">Export CSV</button>
       </div>
       <p class="tab-desc" id="customer-summary">Every account registered on the site, including accounts created at guest checkout.</p>
 
@@ -636,9 +641,9 @@
       <div class="orders-header">
         <h2 class="section-heading">Orders</h2>
         <div class="orders-actions">
-          <button type="button" class="btn-secondary" id="create-order-btn" title="Create order manually">
+          <button type="button" class="btn-secondary" id="create-order-btn" title="Enter a booth or phone pre-order">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-            Create Order
+            New Booth Order
           </button>
           <button type="button" class="btn-secondary" id="prep-list-btn" title="View prep list">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/><path d="M9 14l2 2 4-4"/></svg>
@@ -739,6 +744,38 @@
       </div>
     </div><!-- /prep-modal -->
 
+    <!-- Tab: Sold Today (walk-up booth sales — from Christina's Order Sheet) -->
+    <div id="tab-sold" class="tab-panel">
+      <div class="orders-header">
+        <h2 class="section-heading">Sold Today</h2>
+      </div>
+      <div class="sold-hero" aria-live="polite">
+        <div class="sold-hero-label" id="sold-hero-label">Sold today</div>
+        <div class="sold-hero-total" id="sold-total">$0.00</div>
+        <div class="sold-hero-count" id="sold-count">0 items sold</div>
+      </div>
+      <div class="sold-controls">
+        <label class="sold-override">
+          <span class="admin-label">Price for next taps <span class="admin-label-note">(optional — leave blank to use the website price)</span></span>
+          <span class="co-price-wrap"><span aria-hidden="true">$</span><input type="text" inputmode="decimal" class="admin-input" id="sold-price-override" placeholder="Website price" aria-label="Price for next taps" /></span>
+        </label>
+        <label class="sold-all-toggle"><input type="checkbox" id="sold-show-all" /> Show all products, not just this week’s menu</label>
+      </div>
+      <div class="sold-tiles" id="sold-tiles"><div class="skeleton-card"></div></div>
+      <div class="sold-sheet hidden" id="sold-sheet" role="dialog" aria-label="Choose an option"></div>
+      <div class="sold-actions">
+        <button type="button" class="btn-secondary" id="sold-undo" disabled>Undo last tap</button>
+      </div>
+      <div class="analytics-section">
+        <h3 class="analytics-section-title">Counts today</h3>
+        <div id="sold-counts" class="sold-counts"></div>
+      </div>
+      <div class="analytics-section">
+        <h3 class="analytics-section-title">Past days</h3>
+        <div id="sold-past" class="sold-past"></div>
+      </div>
+    </div>
+
     <!-- Tab: Analytics -->
     <div id="tab-analytics" class="tab-panel">
       <div class="analytics-header">
@@ -780,6 +817,12 @@
           <div class="kpi-label">Active Members</div>
           <div class="kpi-value" id="kpi-members">--</div>
         </div>
+      </div>
+
+      <!-- Website vs booth (Order Sheet) -->
+      <div class="analytics-section">
+        <h3 class="analytics-section-title">Website vs Booth</h3>
+        <div class="customer-insights-grid sales-channels" id="sales-channels"></div>
       </div>
 
       <!-- Revenue Chart -->

@@ -1715,3 +1715,100 @@ body {
   .sidebar-nav { scroll-padding-inline: 1rem; }
   #toast { left: 1rem; right: 1rem; bottom: 1rem; max-width: none; text-align: center; }
 }
+
+/* ══════════════════════════════════════════════════════════
+   Order Sheet in the admin — booth orders, Prep List groups,
+   Sold Today, website vs booth (Christina's Muse app, rebuilt)
+   ══════════════════════════════════════════════════════════ */
+.badge-booth   { background: rgba(90,122,90,.16); color: #3F6B3F; }
+.badge-website { background: rgba(78,62,51,.08); color: var(--admin-ink-soft); }
+.badge-unpaid  { background: rgba(180,83,9,.14); color: #9A4A08; }
+.admin-order-notes { margin-top: .35rem; font-size: .84rem; font-style: italic; color: var(--admin-ink-soft); }
+.ticket-notes { font-size: 9pt; font-style: italic; margin-top: 3pt; }
+
+/* New Booth / Phone Order form */
+.co-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: .6rem; margin-top: .5rem; }
+.co-grid.co-grid-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); margin-top: 0; }
+.co-paid-toggle { display: flex; gap: .5rem; margin-top: .35rem; }
+.co-paid-btn {
+  flex: 1; min-height: 44px; border-radius: 10px; font-weight: 700; font-size: .95rem;
+  border: 2px solid rgba(78,62,51,.18); background: #fff; color: var(--admin-ink); cursor: pointer;
+}
+.co-paid-btn.active[data-paid="true"]  { background: #4a6b3a; border-color: #4a6b3a; color: #fff; }
+.co-paid-btn.active[data-paid="false"] { background: #b45309; border-color: #b45309; color: #fff; }
+.co-item-main { display: grid; grid-template-columns: minmax(0, 1fr) 64px 104px auto; align-items: center; gap: .5rem; }
+.co-item-main .co-qty-input { text-align: center; }
+.co-price-wrap { display: flex; align-items: center; gap: .3rem; color: var(--admin-ink-soft); }
+.co-price-wrap input { width: 100%; }
+
+/* Prep List grouped by pickup date + location */
+.prep-group { margin-bottom: 1rem; }
+.prep-group-title { font-family: 'Playfair Display', serif; font-size: 1.05rem; font-weight: 700; color: var(--admin-ink); margin: 0; }
+.prep-group-sub { font-size: .8rem; color: var(--admin-ink-soft); margin: .1rem 0 .4rem; }
+.prep-group table { width: 100%; border-collapse: collapse; }
+.prep-group td { padding: .35rem .4rem; border-bottom: 1px solid rgba(78,62,51,.1); font-size: .9rem; }
+.prep-group td:last-child { text-align: right; font-weight: 700; white-space: nowrap; }
+.prep-gf {
+  display: inline-block; margin-left: .4rem; padding: 0 .35rem; border-radius: 4px;
+  background: #b45309; color: #fff; font-size: .68rem; font-weight: 700; vertical-align: middle;
+}
+
+/* Sold Today */
+.sold-hero { background: #4a6b3a; color: #fff; border-radius: 14px; padding: 1.1rem 1rem; text-align: center; }
+.sold-hero-label { font-size: .78rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; opacity: .9; }
+.sold-hero-total { font-family: 'Playfair Display', serif; font-size: 2.6rem; font-weight: 700; line-height: 1.1; font-variant-numeric: lining-nums; }
+.sold-hero-count { font-size: .92rem; opacity: .9; }
+.sold-controls { display: flex; flex-wrap: wrap; align-items: flex-end; gap: .75rem 1.25rem; margin: 1rem 0 .75rem; }
+.sold-override { display: flex; flex-direction: column; gap: .25rem; min-width: 220px; }
+.sold-override .co-price-wrap { max-width: 160px; }
+.sold-all-toggle { display: flex; align-items: center; gap: .4rem; font-size: .88rem; color: var(--admin-ink); min-height: 44px; }
+.sold-tiles { display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: .65rem; }
+.sold-tile {
+  position: relative; display: flex; flex-direction: column; justify-content: space-between; gap: .4rem;
+  min-height: 96px; padding: .75rem; text-align: left; cursor: pointer;
+  background: var(--admin-panel, #FBF7F1); border: 2px solid rgba(78,62,51,.14); border-radius: 12px;
+  transition: transform .08s ease, border-color .15s;
+}
+.sold-tile:hover { border-color: var(--admin-accent, #C8956C); }
+.sold-tile:active { transform: scale(.98); }
+.sold-tile-custom { border-style: dashed; }
+.sold-tile-name { font-weight: 700; font-size: 1rem; color: var(--admin-ink); line-height: 1.25; }
+.sold-tile-sub { font-size: .8rem; color: var(--admin-ink-soft); }
+.sold-tile-count {
+  position: absolute; top: -9px; right: -6px; padding: .1rem .5rem; border-radius: 999px;
+  background: #4a6b3a; color: #fff; font-size: .74rem; font-weight: 700; box-shadow: 0 1px 3px rgba(0,0,0,.2);
+}
+.sold-sheet {
+  margin-top: .85rem; padding: 1rem; border: 2px solid var(--admin-accent, #C8956C);
+  border-radius: 12px; background: #fff;
+}
+.sold-sheet-title { font-weight: 700; font-size: 1rem; margin-bottom: .6rem; color: var(--admin-ink); }
+.sold-variations { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: .5rem; }
+.sold-variation {
+  display: flex; justify-content: space-between; align-items: center; gap: .5rem;
+  min-height: 48px; padding: .5rem .75rem; border-radius: 10px; cursor: pointer;
+  border: 2px solid rgba(78,62,51,.16); background: var(--admin-panel, #FBF7F1); font-weight: 600; text-align: left;
+}
+.sold-variation span { color: var(--admin-ink-soft); font-weight: 500; white-space: nowrap; }
+.sold-sheet-actions { display: flex; justify-content: flex-end; gap: .5rem; margin-top: .75rem; }
+.sold-actions { display: flex; gap: .6rem; margin: 1rem 0; }
+.sold-actions .btn-secondary { min-height: 46px; }
+.sold-last { margin-top: .5rem; font-size: .85rem; color: var(--admin-ink-soft); }
+.sold-past-day { padding: .6rem 0; border-bottom: 1px solid rgba(78,62,51,.1); }
+.sold-past-head { display: flex; justify-content: space-between; gap: .5rem; }
+.sold-past-items { font-size: .82rem; color: var(--admin-ink-soft); margin-top: .15rem; }
+.insight-sub { font-size: .76rem; color: var(--admin-ink-soft); margin-top: .2rem; }
+
+@media (max-width: 700px) {
+  .co-grid, .co-grid.co-grid-2 { grid-template-columns: 1fr; }
+  .co-item-main { grid-template-columns: minmax(0, 1fr) 56px 88px auto; }
+  .sold-tiles { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .sold-hero-total { font-size: 2.2rem; }
+}
+
+@media print {
+  .prep-list-printable .prep-group { break-inside: avoid; margin-bottom: 12pt; }
+  .prep-list-printable .prep-group-title { font-size: 12pt; }
+  .prep-list-printable .prep-group-sub { font-size: 9pt; color: #555; }
+  .prep-list-printable .prep-gf { background: none; color: #000; border: 1px solid #000; }
+}
