@@ -1068,6 +1068,15 @@ body::after {
 .picker-item-price { font-size: .72rem; color: var(--earth-mid); }
 .picker-in-box { font-size: .68rem; font-weight: 700; color: var(--sage-dark); letter-spacing: .05em; }
 .picker-empty { font-size: .875rem; color: rgba(78,62,51,.45); text-align: center; padding: 1rem; }
+/* No menu posted: the placeholder message on a centered card */
+.picker-closed-card {
+  grid-column: 1 / -1; justify-self: center;
+  width: 100%; max-width: 420px; margin: 1rem auto;
+  padding: 1.75rem 1.5rem; text-align: center;
+  background: var(--farm-cream); border: 1.5px solid rgba(213,176,123,.35); border-radius: 12px;
+}
+.picker-closed-title { font-family: 'Playfair Display', serif; font-size: 1.05rem; font-weight: 600; color: var(--earth-brown); margin: 0 0 .5rem; }
+.picker-closed-msg { font-size: .9rem; line-height: 1.6; color: rgba(78,62,51,.75); margin: 0; white-space: pre-line; }
 
 /* Referral dashboard */
 .referral-code-card {
