@@ -124,22 +124,18 @@ export default async function handler(req, res) {
         const orderItemRows = lineItems.data.map(item => ({
           order_id:          order.id,
           stripe_product_id: lineSource(item).productId,
+          variation_name:    lineSource(item).variation || null,
           product_name:      item.description,
           quantity:          item.quantity,
           unit_amount:       item.price?.unit_amount ?? null,
         }));
         await sb.from('order_items').insert(orderItemRows);
 
-        // Count down "item availability" (Admin → Catalogue). Runs once per order:
-        // a retried webhook can't insert the same stripe_session_id twice.
-        for (const item of lineItems.data) {
-          const { productId, variation } = lineSource(item);
-          if (!productId) continue;
-          const { error: stockErr } = await sb.rpc('decrement_product_stock', {
-            p_product_id: productId, p_variation: variation, p_qty: item.quantity || 0,
-          });
-          if (stockErr) console.error('[webhook] stock countdown failed:', productId, variation, stockErr.message);
-        }
+        // Count down "item availability" (Admin → Catalogue). take_order_stock
+        // runs once per order (orders.stock_counted), and cancelling the order
+        // later puts the items back.
+        const { error: stockErr } = await sb.rpc('take_order_stock', { p_order_id: order.id });
+        if (stockErr) console.error('[webhook] stock countdown failed:', order.id, stockErr.message);
 
         await sb.from('user_cart').delete().eq('user_id', userId);
         await notifyOrderPlaced(order, orderItemRows);

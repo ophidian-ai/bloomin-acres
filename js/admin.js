@@ -1720,7 +1720,8 @@
           }
           const basePrice = parseInt(productSel.selectedOptions[0]?.dataset.price || '0', 10);
           const variations = (adminProductDetails || {})[productId] || [];
-          const active = variations.filter(v => v.available !== false && (v.quantity === undefined || v.quantity > 0));
+          // Sold out online (count 0) can still be sold in person, so it's listed
+          const active = variations.filter(v => v.available !== false);
 
           if (active.length > 0) {
             variationSel.innerHTML = '<option value="" data-delta="0">Select variation…</option>' +
@@ -1839,17 +1840,19 @@
           const unitAmount = dollarsToCents(row.querySelector('.co-price-input').value);
           if (unitAmount == null) { problem = 'Every item needs a price — type it on the line'; return; }
           let productName;
+          let variationName = '';
           if (sel.value === 'custom') {
             productName = row.querySelector('.co-custom-name').value.trim();
             if (!productName) { problem = 'Type a name for the custom item'; return; }
           } else {
             const variationVisible = row.querySelector('.co-variation-row')?.style.display !== 'none';
-            const variationName = variationVisible ? (varOpt?.value || '') : '';
+            variationName = variationVisible ? (varOpt?.value || '') : '';
             productName = (opt?.dataset.name || sel.value) + (variationName ? ` — ${variationName}` : '');
           }
           items.push({
             stripe_product_id: sel.value,
             product_name: productName,
+            variation_name: variationName || null,
             quantity: qty,
             unit_amount: unitAmount,
           });
@@ -1962,9 +1965,10 @@
       el.querySelectorAll('.sold-tile').forEach(btn => btn.addEventListener('click', () => onSoldTap(btn.dataset.id)));
     }
 
+    // Every flavor/size that's switched on — one that's sold out online can
+    // still be on the booth table
     function activeVariations(productId) {
-      return ((adminProductDetails || {})[productId] || [])
-        .filter(v => v.available !== false && (v.quantity === undefined || v.quantity === null || v.quantity > 0));
+      return ((adminProductDetails || {})[productId] || []).filter(v => v.available !== false);
     }
 
     function soldOverrideCents() {
@@ -1993,7 +1997,7 @@
           if (!name) { showToast('Type the item name', true); return; }
           if (cents == null) { showToast('Type the price', true); return; }
           closeSoldSheet();
-          recordSale(null, name, cents);
+          recordSale(null, name, cents, null);
         });
         return;
       }
@@ -2002,7 +2006,7 @@
       const variations = activeVariations(id);
       if (!variations.length) {
         closeSoldSheet();
-        recordSale(id, product.name, soldOverrideCents() ?? (product.unit_amount || 0));
+        recordSale(id, product.name, soldOverrideCents() ?? (product.unit_amount || 0), null);
         return;
       }
       sheet.innerHTML = `
@@ -2018,7 +2022,7 @@
         const v = variations[parseInt(btn.dataset.i, 10)];
         const cents = soldOverrideCents() ?? ((product.unit_amount || 0) + (parseInt(v.price_delta || 0, 10) || 0));
         closeSoldSheet();
-        recordSale(id, `${product.name} — ${v.name}`, cents);
+        recordSale(id, `${product.name} — ${v.name}`, cents, v.name);
       }));
       sheet.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
     }
@@ -2029,10 +2033,13 @@
       sheet.replaceChildren();
     }
 
-    async function recordSale(productId, productName, unitAmount) {
+    // Saving the sale counts down item availability (database trigger);
+    // Undo deletes the row and puts the item back.
+    async function recordSale(productId, productName, unitAmount, variationName) {
       const { data, error } = await sb.from('booth_sales').insert({
         sale_date: isoDate(new Date()),
         stripe_product_id: productId,
+        variation_name: variationName || null,
         product_name: productName,
         quantity: 1,
         unit_amount: unitAmount,
