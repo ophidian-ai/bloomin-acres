@@ -1360,18 +1360,6 @@
 
   function renderProductPicker() {
     const grid = document.getElementById('picker-grid');
-    const search = document.getElementById('picker-search');
-    // No menu posted right now (outside the menu dates, or no items on it):
-    // show Christina's placeholder message on a card, same text as the Menu page
-    const noMenu = menuState?.loaded && (!menuState.open || !menuState.productIds.size);
-    search.classList.toggle('hidden', !!noMenu);
-    if (noMenu) {
-      grid.innerHTML = `<div class="picker-closed-card" role="status">
-        <p class="picker-closed-title">This week’s menu isn’t posted yet</p>
-        <p class="picker-closed-msg">${escHtml(menuState.message || 'Our menu isn’t available right now — check back soon!')}</p>
-      </div>`;
-      return;
-    }
     const choices = pickerChoices();
     if (!choices.length) {
       grid.innerHTML = `<p class="picker-empty">${!menuState ? 'Loading this week’s menu…'
