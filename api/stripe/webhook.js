@@ -95,7 +95,16 @@ export default async function handler(req, res) {
 
     // Handle one-time box order
     if (session.mode === 'payment' && userId) {
-      const lineItems = await stripe.checkout.sessions.listLineItems(session.id, { limit: 100 });
+      // Expand the product so flavor/size lines (ad-hoc Stripe products) can be
+      // traced back to the real catalog product via their metadata
+      const lineItems = await stripe.checkout.sessions.listLineItems(session.id, { limit: 100, expand: ['data.price.product'] });
+      const lineSource = item => {
+        const prod = item.price?.product;
+        if (prod && typeof prod === 'object') {
+          return { productId: prod.metadata?.stripe_product_id || prod.id, variation: prod.metadata?.variation_name || '' };
+        }
+        return { productId: prod ?? '', variation: '' };
+      };
 
       const { data: order, error: orderErr } = await sb
         .from('orders')
@@ -114,12 +123,24 @@ export default async function handler(req, res) {
       if (!orderErr && order) {
         const orderItemRows = lineItems.data.map(item => ({
           order_id:          order.id,
-          stripe_product_id: item.price?.product ?? '',
+          stripe_product_id: lineSource(item).productId,
           product_name:      item.description,
           quantity:          item.quantity,
           unit_amount:       item.price?.unit_amount ?? null,
         }));
         await sb.from('order_items').insert(orderItemRows);
+
+        // Count down "item availability" (Admin → Catalogue). Runs once per order:
+        // a retried webhook can't insert the same stripe_session_id twice.
+        for (const item of lineItems.data) {
+          const { productId, variation } = lineSource(item);
+          if (!productId) continue;
+          const { error: stockErr } = await sb.rpc('decrement_product_stock', {
+            p_product_id: productId, p_variation: variation, p_qty: item.quantity || 0,
+          });
+          if (stockErr) console.error('[webhook] stock countdown failed:', productId, variation, stockErr.message);
+        }
+
         await sb.from('user_cart').delete().eq('user_id', userId);
         await notifyOrderPlaced(order, orderItemRows);
       }
