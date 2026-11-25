@@ -1571,23 +1571,30 @@
         + (includeCustom ? '<optgroup label="Other"><option value="custom" data-price="" data-name="">Custom item (type a name and price)</option></optgroup>' : '');
     }
 
-    document.getElementById('create-order-btn').addEventListener('click', async () => {
-      await loadAdminOrderAssets();
-      openCreateOrderModal();
+    // The booth order form lives at the bottom of Sold Today (like the Order
+    // Sheet's Pre-Order screen). The Orders tab button jumps there.
+    document.getElementById('create-order-btn').addEventListener('click', () => {
+      document.querySelector('[data-tab="sold"]')?.click();
+      const card = document.getElementById('booth-order-card');
+      // Wait for Sold Today to finish loading, then bring the form into view
+      const go = () => {
+        if (!card.dataset.ready) return setTimeout(go, 100);
+        card.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        card.querySelector('#co-customer-search')?.focus({ preventScroll: true });
+      };
+      go();
     });
 
-    function openCreateOrderModal() {
+    function renderBoothOrderForm() {
       const locationOptions = adminPickupLocations.map(loc =>
         `<option value="${escHtml(loc.name)}">${escHtml(loc.name)}</option>`
       ).join('');
 
-      const modal = document.createElement('div');
-      modal.className = 'modal-overlay';
+      const modal = document.getElementById('booth-order-card');
       modal.innerHTML = `
-        <div class="modal-panel" style="max-width:600px;width:100%">
+        <div class="booth-order-panel">
           <div class="modal-header">
             <h3 class="modal-title">New Booth / Phone Order</h3>
-            <button class="modal-close" aria-label="Close">&times;</button>
           </div>
           <div class="modal-body" style="display:flex;flex-direction:column;gap:1.25rem">
 
@@ -1640,12 +1647,12 @@
 
           </div>
           <div class="modal-footer">
-            <button class="btn-ghost-sm" id="co-cancel-btn">Cancel</button>
-            <button class="btn-secondary" id="co-submit-btn">Create Order</button>
+            <button type="button" class="btn-ghost-sm" id="co-cancel-btn">Clear</button>
+            <button type="button" class="btn-secondary" id="co-submit-btn">Create Order</button>
           </div>
         </div>
       `;
-      document.body.appendChild(modal);
+      modal.dataset.ready = '1';
 
       // Product dropdown: this week's menu first, then everything else, then Custom
       const productOptions = productOptionsHtml(true);
@@ -1762,7 +1769,6 @@
           cents += (dollarsToCents(row.querySelector('.co-price-input').value) ?? 0) * qty;
         });
         modal.querySelector('#co-total-display').textContent = `Total: ${formatPrice(cents)}`;
-        modal._totalCents = cents;
       }
 
       // Customer search with debounce
@@ -1798,11 +1804,13 @@
         }, 300);
       });
 
-      // Close handlers
-      const close = () => modal.remove();
-      modal.querySelector('.modal-close').addEventListener('click', close);
-      modal.querySelector('#co-cancel-btn').addEventListener('click', close);
-      modal.addEventListener('click', e => { if (e.target === modal) close(); });
+      // Clear: start a fresh, empty order
+      modal.querySelector('#co-cancel-btn').addEventListener('click', () => {
+        const typed = modal.querySelector('#co-customer-name').value.trim()
+          || [...modal.querySelectorAll('.co-product-select')].some(s => s.value);
+        if (typed && !confirm('Clear this order and start over?')) return;
+        renderBoothOrderForm();
+      });
 
       // Submit
       modal.querySelector('#co-submit-btn').addEventListener('click', async () => {
@@ -1877,10 +1885,10 @@
             }),
           });
           if (res.ok) {
-            showToast('Order created');
-            modal.remove();
-            ordersLoaded = false;
-            await loadAllOrders();
+            showToast(`Order created for ${customerName}`);
+            renderBoothOrderForm();   // empty form, ready for the next customer
+            // Orders tab shows it next time it's opened (or now, if it's loaded)
+            if (ordersLoaded) await loadAllOrders();
           } else {
             const err = await res.json().catch(() => ({}));
             showToast(err.error || 'Failed to create order', true);
@@ -1909,6 +1917,7 @@
       await loadAdminOrderAssets();
       const { data: { session } } = await sb.auth.getSession();
       soldUserId = session?.user?.id || null;
+      renderBoothOrderForm();
       await refreshSold();
       renderSoldTiles();
     });
@@ -2374,8 +2383,15 @@
       document.getElementById('prep-modal').classList.remove('hidden');
     });
 
-    document.getElementById('prep-close').addEventListener('click', () => {
-      document.getElementById('prep-modal').classList.add('hidden');
+    // Close: Done, the X, tapping outside the card, or Escape
+    const closePrep = () => document.getElementById('prep-modal').classList.add('hidden');
+    document.getElementById('prep-close').addEventListener('click', closePrep);
+    document.getElementById('prep-close-x').addEventListener('click', closePrep);
+    document.getElementById('prep-modal').addEventListener('click', e => {
+      if (e.target.id === 'prep-modal') closePrep();
+    });
+    document.addEventListener('keydown', e => {
+      if (e.key === 'Escape' && !document.getElementById('prep-modal').classList.contains('hidden')) closePrep();
     });
 
     // Print prep list

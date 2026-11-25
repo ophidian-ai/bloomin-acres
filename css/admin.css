@@ -1053,7 +1053,13 @@ body {
   display: flex; align-items: center; justify-content: space-between;
   margin-bottom: .5rem;
 }
-.prep-modal-actions-top { display: flex; gap: .5rem; }
+.prep-modal-actions-top { display: flex; align-items: center; gap: .5rem; }
+/* .btn-ghost is light text meant for the dark header — on these cream cards it
+   was invisible (Prep List "Done", Print Tickets "Cancel") */
+.print-modal .btn-ghost { color: var(--earth-brown); border-color: rgba(78,62,51,.25); min-height: 40px; }
+.print-modal .btn-ghost:hover { color: var(--earth-brown); border-color: rgba(78,62,51,.45); background: rgba(78,62,51,.06); }
+/* Close X in the top-right corner; Print/Download sit 8px to its left */
+.prep-modal-x { margin-left: 8px; font-size: 1.6rem; min-width: 32px; min-height: 32px; }
 .prep-date-label {
   font-size: .82rem; color: rgba(78,62,51,.55);
   margin-bottom: 1rem;
@@ -1740,6 +1746,13 @@ body {
 .co-item-main .co-qty-input { text-align: center; }
 .co-price-wrap { display: flex; align-items: center; gap: .3rem; color: var(--admin-ink-soft); }
 .co-price-wrap input { width: 100%; }
+
+/* Booth order form, shown as a card at the bottom of Sold Today */
+.booth-order-card {
+  margin-top: 1.5rem; scroll-margin-top: 1rem;
+  background: #F6EADC; border: 1px solid rgba(78,62,51,.15); border-radius: 10px;
+}
+.booth-order-card:empty { display: none; }
 
 /* Prep List grouped by pickup date + location */
 .prep-group { margin-bottom: 1rem; }
