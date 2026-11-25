@@ -63,6 +63,8 @@ export default async function handler(req, res) {
     }
     cleanItems.push({
       stripe_product_id: isCustom ? 'custom' : String(item.stripe_product_id),
+      variation_name:    !isCustom && typeof item.variation_name === 'string' && item.variation_name.trim()
+                           ? item.variation_name.trim().slice(0, 200) : null,
       product_name:      String(item.product_name || '').trim().slice(0, 200) || null,
       quantity,
       unit_amount:       unitAmount,
@@ -106,6 +108,10 @@ export default async function handler(req, res) {
       await sb.from('orders').delete().eq('id', order.id);
       return res.status(500).json({ error: itemsErr.message });
     }
+
+    // Booth orders count down item availability too (custom items aren't tracked)
+    const { error: stockErr } = await sb.rpc('take_order_stock', { p_order_id: order.id });
+    if (stockErr) console.error('[admin/create-order] stock countdown failed:', order.id, stockErr.message);
 
     res.json({ order });
   } catch (err) {
