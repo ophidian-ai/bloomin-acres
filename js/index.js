@@ -24,6 +24,14 @@
         window.location.reload();
       });
     }
+
+    // Club members: the hero's "Join the Club" becomes "Your Clubhouse" → their Club tab
+    const { data: member } = await sb.from('club_members').select('status').eq('user_id', session.user.id).maybeSingle();
+    const heroClubBtn = document.getElementById('hero-club-btn');
+    if (heroClubBtn && ['active', 'past_due'].includes(member?.status)) {
+      heroClubBtn.textContent = 'Your Clubhouse';
+      heroClubBtn.href = 'account.html?tab=club';
+    }
   }
 
   // Load testimonials
