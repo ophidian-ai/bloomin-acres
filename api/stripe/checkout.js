@@ -76,7 +76,11 @@ export default async function handler(req, res) {
         return {
           price_data: {
             currency: price.currency || 'usd',
-            product_data: { name: `${product.name} — ${item.variation_name}` },
+            product_data: {
+              name: `${product.name} — ${item.variation_name}`,
+              // The webhook reads these to save the real product and count down its stock
+              metadata: { stripe_product_id: product.id, variation_name: String(item.variation_name).slice(0, 450) },
+            },
             unit_amount: (price.unit_amount || 0) + variationDelta,
           },
           quantity: item.quantity || 1,
